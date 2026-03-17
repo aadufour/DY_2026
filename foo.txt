@@ -1,6 +1,0 @@
-'minuscHDD', 'minuscHWB', 'minuscHj1',
-    'minuscHj3', 'minuscHu', 'minuscHd',
-    'minuscHl1', 'minuscHl3', 'minuscHe',
-    'minuscll1', 'minusclj1', 'minusclj3',
-    'minusceu',  'minusced',  'minuscje',
-    'minusclu',  'minuscld',
