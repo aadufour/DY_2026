@@ -4,13 +4,17 @@ Generate MG5 reweight_card.dat for SMEFT DY analysis.
 
 Base run: all active operators set to 0.9999...
 This card produces:
-  1   SM weight          (all C = 0)
-  17  single-operator    (one C = 1, rest = 0)
-  136 two-operator pairs (two C = 1, rest = 0)
+  1   SM          (all C = 0)
+  17  single +1   (one C = +1, rest = 0)
+  17  single -1   (one C = -1, rest = 0)
+  136 pairs       (two C = +1, rest = 0)
   ─────────────────────────────────────────────
-  154 launch blocks total
+  171 launch blocks total
+
+Writes to Cards/reweight_card.dat for every mass-window directory.
 """
 
+import os
 from itertools import combinations
 
 # Active operators in the base run (SMEFT block index : name)
@@ -34,11 +38,16 @@ OPERATORS = {
     121: 'cld',
 }
 
-OUTPUT = '/Users/albertodufour/MG5_2_9_18/mg5amcnlo/DY_all/Cards/reweight_card.dat'
+# Mass window directories to write cards for
+MG5_BASE  = '/Users/albertodufour/MG5_2_9_18/mg5amcnlo'
+MLL_EDGES = [50, 120, 200, 400, 600, 800, 1000, 3000]
+OUTPUTS   = [
+    os.path.join(MG5_BASE, f'DY_all_{lo}_{hi}', 'Cards', 'reweight_card.dat')
+    for lo, hi in zip(MLL_EDGES[:-1], MLL_EDGES[1:])
+]
 
 
 def format_block(rwgt_name, on_indices, value=1.0):
-    """Format a single launch block, setting on_indices to value and the rest to 0."""
     lines = [f'launch --rwgt_name={rwgt_name}']
     for idx in OPERATORS:
         val = value if idx in on_indices else 0
@@ -55,10 +64,11 @@ HEADER = """\
 #
 # Base run: all active operators set to 0.9999... (effectively C=1)
 #
-# This card generates 154 reweight points:
-#   1   SM          (all C = 0)
-#   17  single-op   (one C = 1, rest = 0)
-#   136 pairs       (two C = 1, rest = 0)
+# This card generates 171 reweight points:
+#   1   SM           (all C = 0)
+#   17  single +1    (one C = +1, rest = 0)
+#   17  single -1    (one C = -1, rest = 0)
+#   136 pairs        (two C = +1, rest = 0)
 #
 # CP-odd operators (SMEFTcpv block) are untouched throughout.
 #
@@ -68,27 +78,32 @@ change mode NLO
 
 """
 
+# ── Build blocks (same for every mass window) ──────────────────────────
 blocks = []
+op_items = list(OPERATORS.items())
 
-# ── 1. SM ──────────────────────────────────────────────────────────────
 blocks.append(format_block('SM', set()))
 
-# ── 2. Individual operators ────────────────────────────────────────────
-for idx, name in OPERATORS.items():
-    blocks.append(format_block(name, {idx}))
+for idx, name in op_items:
+    blocks.append(format_block(name,          {idx}, value= 1.0))
+for idx, name in op_items:
+    blocks.append(format_block(f'minus{name}', {idx}, value=-1.0))
 
-# ── 3. All two-operator pairs ──────────────────────────────────────────
-op_items = list(OPERATORS.items())
 for (idx1, name1), (idx2, name2) in combinations(op_items, 2):
     blocks.append(format_block(f'{name1}_{name2}', {idx1, idx2}))
 
-# ── Write ──────────────────────────────────────────────────────────────
-with open(OUTPUT, 'w') as f:
-    f.write(HEADER)
-    f.write('\n\n'.join(blocks))
-    f.write('\n')
+content = HEADER + '\n\n'.join(blocks) + '\n'
 
 n_single = len(OPERATORS)
-n_pairs  = len(blocks) - 1 - n_single
-print(f"Written to {OUTPUT}")
-print(f"  1 SM  +  {n_single} single-op  +  {n_pairs} pairs  =  {len(blocks)} blocks total")
+n_pairs  = len(blocks) - 1 - 2 * n_single
+print(f"1 SM  +  {n_single} (+1)  +  {n_single} (-1)  +  {n_pairs} pairs  =  {len(blocks)} blocks")
+
+# ── Write to each directory that exists ───────────────────────────────
+for path in OUTPUTS:
+    cards_dir = os.path.dirname(path)
+    if not os.path.isdir(cards_dir):
+        print(f"  SKIP (Cards/ dir not found): {path}")
+        continue
+    with open(path, 'w') as f:
+        f.write(content)
+    print(f"  Written: {path}")

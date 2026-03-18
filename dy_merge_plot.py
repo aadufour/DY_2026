@@ -9,9 +9,9 @@ Two ways to specify input files:
   1. Explicit list of LHE files:
        python dy_merge_plot.py f1.lhe f2.lhe f3.lhe --out plots/
 
-  2. Mass-binned pattern (like the original triple-diff setup):
+  2. Mass-binned pattern (specific drell yan case with binned mll in different folders):
        python dy_merge_plot.py --base /path/to/DY_all --bins 50 120 200 400 --out plots/
-       → reads /path/to/DY_all_50_120/myLHE/unweighted_events.lhe
+        reads /path/to/DY_all_50_120/myLHE/unweighted_events.lhe
                /path/to/DY_all_120_200/myLHE/unweighted_events.lhe
                /path/to/DY_all_200_400/myLHE/unweighted_events.lhe
 
@@ -39,7 +39,7 @@ def files_from_pattern(base: str, bins: list[int]) -> list[str]:
     Example:
         base = "/data/DY_all"
         bins = [50, 120, 200]
-        → ["/data/DY_all_50_120/myLHE/unweighted_events.lhe",
+        extracts ["/data/DY_all_50_120/myLHE/unweighted_events.lhe",
            "/data/DY_all_120_200/myLHE/unweighted_events.lhe"]
     """
     paths = []
@@ -110,7 +110,7 @@ def main():
         return
 
     print(f"\nTotal: {len(all_events)} events from {len(lhe_files)} file(s)")
-    print(f"Plotting {len(VARIABLES)} variables → {args.out}/\n")
+    print(f"Plotting {len(VARIABLES)} variables to {args.out}/\n")
     fill_and_plot(all_events, VARIABLES, args.out)
     print("\nDone.")
 

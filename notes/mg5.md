@@ -142,3 +142,55 @@ fare più stats su 800-1000 e 1000-3000: 100k eventi.
 
 !!!!!!!!!!!!
 Qusto andrà sicuramente in tesi!!
+
+
+
+
+-----------------------------------------------
+
+## COMBINE
+cfr presentazione Giacomo
+
+Likelihood = Prod(canali, spazio fasi) * Prod(bin) {Likelihood(mu, theta | data) * prior(theta)}
+
+spazi fasi devono esser blocchi statisticamente indipendenti (e.g. mll<50, mll>50 o anno 2016,2017,... o canali che non si parlano tipo jet=0 e jet=1,...)
+
+
+
+theta nuisance params: teoriche (QCD scale [ossia scale di rinormalizzaione e fattorizzazione], valore alpha strong, PDF,...) o sperimentali(trigger, muoni, ricostruzione, jet, JES e jet energy resolution -> incertezze sulla met, pileup reweighting, jet pilup ID)
+Inizialmente io introdurrò teoriche (non ho ancora MC)
+
+datacard hardcoded: devo definire un certo numero di variabili per combine (quanti nuisance params, quanti "bin" ossia phase space,...)
+
+(....)
+
+In fondo rate parameter: nuisance ma con flat prior (lognormal e.g. ce l'ha gauss): stiam data driven della xs di un fondo
+
+In fondo autoMCstat: incertezza statsitica del MC (==barlow biston).
+
+
+obiettivo: fare data card per DY EFT.
+Il problema dei fit EFT è che le interferenze possono essere negativi (LIN). Combine crasha se trovo valori neg (PDF non possono essere neg)
+trick riscrivendo in termini di roba ppos def (pag.11 slides, bottom right) -> scrivo datacard cosi
+
+
+devo linkargli i root file con le distribuzioni (inizio con mll, poi 3d unrolled)
+
+
+codice che crea datacard data osservabile e operatore.
+datacard diverse per operatore
+devo costruire i ROOT file con le distribuzioni (i.e. con gli istogrammi delle mie variabili tirate fuori da madgraph)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
