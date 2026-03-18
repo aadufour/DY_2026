@@ -27,6 +27,7 @@ Usage
 """
 
 import os
+import pickle
 import warnings
 import argparse
 import numpy as np
@@ -54,7 +55,9 @@ OPERATORS = [
 
 # ── Binning ───────────────────────────────────────────────────────────────────
 # mll: defining custom bin edges variable-width edges capturing the Z peak and high-mass tail (from GB)
-MLL_EDGES   = np.array([50, 64, 76, 82, 86, 90, 98, 103, 121, 127, 130, 133, 148, 151, 154, 157, 163, 166, 172, 178, 184, 205, 210, 220, 235, 240, 260, 265, 325, 345, 500, 530, 570, 618, 654, 708, 3000], dtype=float)
+# MLL_EDGES   = np.array([50, 64, 76, 82, 86, 90, 98, 103, 121, 127, 130, 133, 148, 151, 154, 157, 163, 166, 172, 178, 184, 205, 210, 220, 235, 240, 260, 265, 325, 345, 500, 530, 570, 618, 654, 708, 3000], dtype=float)
+# MLL_EDGES   = np.array([50, 70, 90, 110, 200, 800, 1400, 2000, 2400, 3000], dtype=float)
+MLL_EDGES   = np.array([50, 90,  200, 3000], dtype=float)
 RAP_EDGES   = np.array([0.0, 0.5, 1.0, 2.5], dtype=float)
 CSTAR_EDGES = np.array([-1, -0.5, 0.0, 0.5, 1], dtype=float) 
 
@@ -129,6 +132,8 @@ parser.add_argument('--changeC', type=float, default=1.0,
                     help='Wilson coefficient value C (default: 1.0)')
 parser.add_argument('--plot1d', action='store_true', default=False,
                     help='Also save 1D projection plots (mll, rap, cstar)')
+parser.add_argument('--rebuild-cache', action='store_true', default=False,
+                    help='Force re-reading LHE files even if cache exists')
 args   = parser.parse_args()
 C      = args.changeC
 requested   = [op for op in OPERATORS if getattr(args, op)]
@@ -138,75 +143,97 @@ print(f"C         : {C}")
 print(f"Unrolled bins: {N_TOT} = ({N_MLL} mll * {N_RAP} rap * {N_CSTAR} cstar)")
 
 
-# ── Read LHE — merge all mll bins ─────────────────────────────────────────────
-mll_vals   = []
-rap_vals   = []
-cstar_vals = []
-w_SM       = []
-w_p1       = {op: [] for op in ops_to_plot}
-w_m1       = {op: [] for op in ops_to_plot}
+# ── Load or build cache ───────────────────────────────────────────────────────
+CACHE_FILE = os.path.join(os.path.dirname(__file__), "lhe_cache.pkl")
 
-for lhe_file in LHE_FILES:
-    print(f"\nReading {lhe_file}")
-    if not os.path.exists(lhe_file):
-        print(f"  WARNING: file not found, skipping.")
-        continue
+if os.path.exists(CACHE_FILE) and not args.rebuild_cache:
+    print(f"Loading cache from {CACHE_FILE}")
+    with open(CACHE_FILE, 'rb') as f:
+        cache = pickle.load(f)
+    mll_arr   = cache['mll']
+    rap_arr   = cache['rap']
+    cstar_arr = cache['cstar']
+    wSM_arr   = cache['w_SM']
+    w_p1_all  = cache['w_p1']
+    w_m1_all  = cache['w_m1']
+    print(f"  {len(mll_arr)} events loaded\n")
+else:
+    if args.rebuild_cache:
+        print("--rebuild-cache set, re-reading LHE files.")
+    else:
+        print(f"No cache found at {CACHE_FILE}. Reading LHE files.")
+        print("  Tip: run rw_build_cache.py once to avoid this on future runs.\n")
 
-    n_before = len(mll_vals)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", DeprecationWarning)
-        events = pylhe.read_lhe_with_attributes(lhe_file)
+    mll_vals   = []
+    rap_vals   = []
+    cstar_vals = []
+    w_SM       = []
+    w_p1_all   = {op: [] for op in OPERATORS}
+    w_m1_all   = {op: [] for op in OPERATORS}
 
-        for i, event in enumerate(events):
-            if (i + 1) % 5000 == 0:
-                print(f"  processed {i + 1} events")
+    for lhe_file in LHE_FILES:
+        print(f"\nReading {lhe_file}")
+        if not os.path.exists(lhe_file):
+            print(f"  WARNING: file not found, skipping.")
+            continue
 
-            # final-state charged leptons
-            leptons = [
-                p for p in event.particles
-                if int(p.status) == 1 and abs(int(p.id)) in {11, 13}
-            ]
-            if len(leptons) < 2:
-                continue
+        n_before = len(mll_vals)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            events = pylhe.read_lhe_with_attributes(lhe_file)
 
-            # identify l- (id > 0) and l+ (id < 0)
-            lm = next((p for p in leptons if int(p.id) > 0), leptons[0])
-            lp = next((p for p in leptons if int(p.id) < 0), leptons[1])
+            for i, event in enumerate(events):
+                if (i + 1) % 5000 == 0:
+                    print(f"  processed {i + 1} events")
 
-            # 4-vectors as [px, py, pz, E]
-            v_lm = [lm.px, lm.py, lm.pz, lm.e]
-            v_lp = [lp.px, lp.py, lp.pz, lp.e]
+                leptons = [
+                    p for p in event.particles
+                    if int(p.status) == 1 and abs(int(p.id)) in {11, 13}
+                ]
+                if len(leptons) < 2:
+                    continue
 
-            m   = mll(v_lm, v_lp)
-            y   = rap(v_lm, v_lp)
-            cs  = cstar(v_lm, v_lp)
+                lm = next((p for p in leptons if int(p.id) > 0), leptons[0])
+                lp = next((p for p in leptons if int(p.id) < 0), leptons[1])
+                v_lm = [lm.px, lm.py, lm.pz, lm.e]
+                v_lp = [lp.px, lp.py, lp.pz, lp.e]
 
-            # range guard for rap and cstar
-            if not (MLL_EDGES[0] <= m <= MLL_EDGES[-1]):
-                continue
-            if not (RAP_EDGES[0] <= y <= RAP_EDGES[-1]):
-                continue
-            if not (-1.0 <= cs <= 1.0):
-                continue
+                m  = mll(v_lm, v_lp)
+                y  = rap(v_lm, v_lp)
+                cs = cstar(v_lm, v_lp)
 
-            mll_vals.append(m)
-            rap_vals.append(y)
-            cstar_vals.append(cs)
-            w_SM.append(event.weights['SM'])
-            for op in ops_to_plot:
-                w_p1[op].append(event.weights[op])
-                w_m1[op].append(event.weights[f'minus{op}'])
+                if not (MLL_EDGES[0] <= m <= MLL_EDGES[-1]):
+                    continue
+                if not (RAP_EDGES[0] <= y <= RAP_EDGES[-1]):
+                    continue
+                if not (-1.0 <= cs <= 1.0):
+                    continue
 
-    print(f"  {len(mll_vals) - n_before} events passed from this file")
+                mll_vals.append(m)
+                rap_vals.append(y)
+                cstar_vals.append(cs)
+                w_SM.append(event.weights['SM'])
+                for op in OPERATORS:
+                    w_p1_all[op].append(event.weights[op])
+                    w_m1_all[op].append(event.weights[f'minus{op}'])
 
-n_ev = len(mll_vals)
-print(f"\nTotal — {n_ev} events passed kinematic cuts\n")
+        print(f"  {len(mll_vals) - n_before} events passed from this file")
 
-# ── Convert to numpy ──────────────────────────────────────────────────────────
-mll_arr   = np.array(mll_vals)
-rap_arr   = np.array(rap_vals)
-cstar_arr = np.array(cstar_vals)
-wSM_arr   = np.array(w_SM)
+    mll_arr   = np.array(mll_vals)
+    rap_arr   = np.array(rap_vals)
+    cstar_arr = np.array(cstar_vals)
+    wSM_arr   = np.array(w_SM)
+    w_p1_all  = {op: np.array(v) for op, v in w_p1_all.items()}
+    w_m1_all  = {op: np.array(v) for op, v in w_m1_all.items()}
+
+    print(f"\nTotal — {len(mll_arr)} events passed kinematic cuts")
+    print(f"Saving cache to {CACHE_FILE}")
+    with open(CACHE_FILE, 'wb') as f:
+        pickle.dump({
+            'mll': mll_arr, 'rap': rap_arr, 'cstar': cstar_arr,
+            'w_SM': wSM_arr, 'w_p1': w_p1_all, 'w_m1': w_m1_all,
+        }, f)
+    print(f"  Cache saved ({os.path.getsize(CACHE_FILE)/1e6:.1f} MB)\n")
 
 # SM 3D histogram (shared)
 h3d_SM = make_3d()
@@ -246,8 +273,14 @@ def plot_1d_projections(h3d_SM, h3d_lin, h3d_quad, h3d_full, op, C, out_dir):
         ax.set_xlabel(xlabel)
         # ax.set_ylabel("Weighted events")
         ax.legend(frameon=False, loc="upper right", fontsize=8)
+        ax.semilogy()
 
-    hep.cms.label(f"{op}, $C={C}$", ax=axes[0], loc=0, data=True, lumi=None)
+    hep.style.use("CMS")
+    hep.cms.label(llabel="", rlabel=f"{op}={C}", ax=axes[0])
+    # hep.cms.label(f"", ax=axes[0], loc=0, data=True, lumi=None)
+    # hep.cms.label(f"{op}={C}", ax=axes[1], loc=0, data=True, lumi=None)
+    
+    # hep.cms.label(data=True, lumi=None)
 
     out_path = os.path.join(out_dir, f"1d_proj_{op}_C{C}.png")
     fig.savefig(out_path, dpi=150, bbox_inches="tight")
@@ -258,10 +291,11 @@ def plot_1d_projections(h3d_SM, h3d_lin, h3d_quad, h3d_full, op, C, out_dir):
 # ── Per-operator: fill, unroll, plot ──────────────────────────────────────────
 os.makedirs(OUT_DIR, exist_ok=True)
 hep.style.use("CMS")
+hep.cms.label(data=True, lumi=None)
 
 for op in ops_to_plot:
-    wp1 = np.array(w_p1[op])
-    wm1 = np.array(w_m1[op])
+    wp1 = w_p1_all[op]
+    wm1 = w_m1_all[op]
 
     w_lin  = 0.5 * (wp1 - wm1)
     w_quad = 0.5 * (wp1 + wm1) - wSM_arr
@@ -347,7 +381,7 @@ for op in ops_to_plot:
     ax.semilogy()
     # ax_ratio.set_xlabel(f"Unrolled bin  — mll fastest ({N_MLL}), rap×cstar ({N_RAP}×{N_CSTAR}) — {N_TOT} total")
     ax_ratio.set_xlabel(f"Unrolled bins")
-    hep.cms.label(f"{op}, $C={C}$", ax=ax, loc=0, data=True, lumi=None)
+    hep.cms.label(f"{op}={C}", ax=ax, loc=0, data=True, lumi=None)
 
     out_path = os.path.join(OUT_DIR, f"triple_diff_{op}_C{C}.png")
     fig.savefig(out_path, dpi=150, bbox_inches="tight")

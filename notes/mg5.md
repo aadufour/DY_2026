@@ -134,3 +134,11 @@ For tmrw:
 
 10k events are ok for each bin (so standard)
 there should be mìfuller tails and stuff (hopefully no empty bins anywhere)
+
+
+Ptl1/2, etal1/2, phi1/2, ptz, dr(l1,l2), Deltaphi, DeltaEta
+
+fare più stats su 800-1000 e 1000-3000: 100k eventi.
+
+!!!!!!!!!!!!
+Qusto andrà sicuramente in tesi!!
