@@ -1,0 +1,17 @@
+----------------------------------------------------------------------------------------------------------------------------------
+imax 1 #one channel (Drell Yan)
+jmax 3
+kmax 1
+-------------------------------------------------------------------
+shapes *                     triple_DY    /Users/albertodufour/code/DY2026/datacard_test/histograms.root $CHANNEL/$PROCESS $CHANNEL/$PROCESS_$SYSTEMATIC # * vuol dire che dentro histo.root ci sono tutti processi sotto (sm,...) (va nel root file, cicla sui canali (solo triple_DY) e sui processi (sm, quad_ced,...) !!qui non ho syst di tipo shape, non fa niente se non ho syst shape (!qui ho nome(channel)==nome(dir root))
+shapes data_obs              triple_DY    /Users/albertodufour/code/DY2026/datacard_test/histograms.root data_obs
+----------------------------------------------------------------------------------------------------------------------------------
+bin          triple_DY    
+observation     10                    #in questo bin ho observation
+----------------------------------------------------------------------------------------------------------------------------------
+bin         test          test               test         #tutti questi processi sono nel bin test
+process      sm          quad_ced      sm_lin_quad_ced     **** #questi devono essere i nomi degli hist nel .root (per non far casino con $CHANNEL/$PROCESS)
+process      -1             -2                -3             #qui dico se signla o bkg (non ci interessa)                                                                                                                                                                                          
+rate        6.56e+06        4.4e+04                6.61e+06         #integrale processo in triple_DY (bin)
+---------------------------------------------                                                                                                                                  
+lumi    lnN     1.02     1.02                1.02        

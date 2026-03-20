@@ -192,5 +192,42 @@ devo costruire i ROOT file con le distribuzioni (i.e. con gli istogrammi delle m
 
 
 
+cd /Users/albertodufour/combine
+text2workspace.py /Users/albertodufour/code/DY2026/datacard_test/datacard.txt -P HiggsAnalysis.CombinedLimit.AnomalousCouplingEFTNegative:analiticAnomalousCouplingEFTNegative -o model_ced.root --PO addToCompleteOperators=ced --PO eftOperators=ced --X-pack-asympows --optimize-simpdf-constraints=cms --X-optimizeMHDependency=fixed --X-allow-no-signal --X-allow-no-background
+
+
+
+1. datacard
+2. workspace : createWS.py 1 (argv[1] è il humero di operatori, se 2 fa tutte le combo di 2 op.)
+3. fit:
+    - initial fit
+    - likelihood scan
+
+    runScans.py <n_operatori> <action (= initial or scan)>
+    initial fa il best fit (minimizza chi2 una volta e trova minimo globale di tutti i paramteri definiti nella datacard: PoI (params of interest) come k_ced e nuisances tipo lumi)
+    per il likelihood scan fisso a il parameter of interest
+
+
+
+!!TODO: DEBUG
+runScans.py 1 scan --doSplitPoints=10
+
+
+poi da capire runPlots.py
+
+TODO:
+    likelihood scan per ogni operatore (singolarmente)
+        -> faccio una datacard con
+        process sm quad_ced am_lin_quad_ced quad_cHDD lin_quad_cHDD ....
+        poi seleziono con createWS.py --PO eftoperator....
+
+
+    capire a quali siamo più sensibili (cfr. tesi Bulla p.67)
+
+di fatto questo è un sensitivity scan, riproduco quell'articolo che mi ha mandato Giacomo...
+
+
+
+
 
 
