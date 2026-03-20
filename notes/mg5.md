@@ -1,4 +1,4 @@
-#running MadGraph5
+## running MadGraph5
 Installed locally via git clone.
 
 To run MG5
@@ -225,9 +225,3 @@ TODO:
     capire a quali siamo più sensibili (cfr. tesi Bulla p.67)
 
 di fatto questo è un sensitivity scan, riproduco quell'articolo che mi ha mandato Giacomo...
-
-
-
-
-
-
