@@ -56,8 +56,8 @@ OPERATORS = [
 # ── Binning ───────────────────────────────────────────────────────────────────
 # mll: defining custom bin edges variable-width edges capturing the Z peak and high-mass tail (from GB)
 # MLL_EDGES   = np.array([50, 64, 76, 82, 86, 90, 98, 103, 121, 127, 130, 133, 148, 151, 154, 157, 163, 166, 172, 178, 184, 205, 210, 220, 235, 240, 260, 265, 325, 345, 500, 530, 570, 618, 654, 708, 3000], dtype=float)
-# MLL_EDGES   = np.array([50, 70, 90, 110, 200, 800, 1400, 2000, 2400, 3000], dtype=float)
-MLL_EDGES   = np.array([50, 90,  200, 3000], dtype=float)
+MLL_EDGES   = np.array([50, 70, 90, 110, 200, 800, 1400, 2000, 2400, 3000], dtype=float)
+# MLL_EDGES   = np.array([50, 90,  200, 3000], dtype=float)
 RAP_EDGES   = np.array([0.0, 0.5, 1.0, 2.5], dtype=float)
 CSTAR_EDGES = np.array([-1, -0.5, 0.0, 0.5, 1], dtype=float) 
 

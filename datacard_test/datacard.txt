@@ -1,14 +1,14 @@
 ----------------------------------------------------------------------------------------------------------------------------------
-imax * #n spazi fase (bin)
-jmax * #n processi che entrano in **** = 1+n(n+3)/2 (n=n_operatori, qui =1 cG)
-kmax * #numero nuisance params. qui ho solo lumi, =1
+imax 1
+jmax 3
+kmax 1
 ----------------------------------------------------------------------------------------------------------------------------------
-bin          test   test2    #qui ho un solo bin che si chiama test, io avrò tipo triple_DY
-observation     368.93  #in questo bin ho observation
+bin          triple_DY    
+observation     368.93   #in questo bin ho observation
 ----------------------------------------------------------------------------------------------------------------------------------
 bin         test          test               test         #tutti questi processi sono nel bin test
 process      sm          quad_cG      sm_lin_quad_cG     ****
 process      3             1                2             #qui dico se signla o bkg (non ci interessa)                                                                                                                                                                                          
 rate        36.93        13.6                55.6         #integrale processo in triple_DY (bin)
 ---------------------------------------------                                                                                                                                  
-lumi    lnN     1.02     1.02                1.02            #incertezze, qui 2% (correlato su tutti i processi), può variare con sigma 2%
+lumi    lnN     1.02     1.02                1.02        
