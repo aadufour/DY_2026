@@ -96,3 +96,19 @@ di fatto questo è un sensitivity scan, riproduco quell'articolo che mi ha manda
     -> metadata.json
 2. createCombineJSon.py --datacard <path/to/datacards.txt>
 3. createWS.py [1,2,3] (num operatori): wrapper for text2workspace.py
+
+
+
+#23/03/2026
+debuggato tutto. Recap:
+
+1. build_datacard.py
+    -> fa histograms.root e costruisce datacard.txt
+2. createJSon.py --datacard <path/to/datacard.txt>
+    -> metadata.json !attenzione: da qui dentro si possono cambiare i limiti per il likelihood scan
+3. createCombineJSon.py --datacard <path/to/datacards.txt>
+    -> jsonComb.json
+4. createWS.py <n_op>
+5. runScans_fixed.py <n_op> initial
+6. runScans_fixed.py <n_op> scan --doSplitPoints=10
+7. runPlots.py <n_op>

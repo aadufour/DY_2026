@@ -2,12 +2,14 @@
 build_datacard.py
 
 Build the combine input ROOT file and datacard.txt from the LHE cache.
+Supports one or multiple EFT operators simultaneously.
 
 Usage:
-    python3 build_datacard.py
     python3 build_datacard.py --op cHDD
     python3 build_datacard.py --op cHDD --C 0.5 --lumi 59740
     python3 build_datacard.py --op cHDD --unrolled
+    python3 build_datacard.py --op cHDD cHW --C 1.0 0.5 --lumi 59740
+    python3 build_datacard.py --all_op --lumi 59740
     python3 build_datacard.py --op cHDD --output histograms.root --datacard datacard.txt --cache lhe_cache.pkl
 """
 
@@ -33,10 +35,15 @@ CSTAR_EDGES = np.array([-1.0, -0.5, 0.0, 0.5, 1.0], dtype=float)
 # ---- Args ----------------------------------------------------
 
 parser = argparse.ArgumentParser(description="Build combine ROOT file and datacard from LHE cache.")
-parser.add_argument("--op",       default="cHDD",
-                    help="Operator name (must be in cache, e.g. cHDD)")
-parser.add_argument("--C",        type=float, default=1.0,
-                    help="Reference Wilson coefficient for sm_lin_quad template (default: 1.0)")
+op_group = parser.add_mutually_exclusive_group(required=True)
+op_group.add_argument("--op",     nargs="+",
+                      help="One or more operator names (must be in cache, e.g. --op cHDD cHW)")
+op_group.add_argument("--all_op", action="store_true",
+                      help="Use all operators found in cache")
+parser.add_argument("--C",        type=float, nargs="+", default=[1.0],
+                    help="Reference Wilson coefficient(s) for sm_lin_quad template. "
+                         "One value is broadcast to all operators; "
+                         "or pass one per operator (default: 1.0)")
 parser.add_argument("--lumi",     type=float, default=1.0,
                     help="Luminosity in pb^-1 (default: 1.0 = raw weights in pb)")
 parser.add_argument("--unrolled", action="store_true",
@@ -46,18 +53,7 @@ parser.add_argument("--output",   default=OUTPUT_FILE, help="Output ROOT file pa
 parser.add_argument("--datacard", default=DATACARD_FILE, help="Output datacard path")
 args = parser.parse_args()
 
-OP   = args.op
-C    = args.C
 LUMI = args.lumi
-
-print(f"Operator   : {OP}")
-print(f"C_ref      : {C}")
-print(f"Luminosity : {LUMI} pb^-1")
-print(f"Observable : {'unrolled 3D' if args.unrolled else 'mll 1D'}")
-print(f"Cache      : {args.cache}")
-print(f"Output     : {args.output}")
-print(f"Datacard   : {args.datacard}")
-print()
 
 # ---- Load cache ----------------------------------------------
 
@@ -79,26 +75,46 @@ w_p1_all  = cache["w_p1"]
 w_m1_all  = cache["w_m1"]
 print(f"  {len(mll_arr):,} events loaded\n")
 
-if OP not in w_p1_all:
+# ---- Resolve operator list -----------------------------------
+
+if args.all_op:
+    OPERATORS = sorted(w_p1_all.keys())
+    print(f"--all_op: found {len(OPERATORS)} operators in cache: {OPERATORS}")
+else:
+    OPERATORS = args.op
+
+# Validate all requested operators exist in cache
+missing = [op for op in OPERATORS if op not in w_p1_all]
+if missing:
     available = sorted(w_p1_all.keys())
     raise KeyError(
-        f"Operator '{OP}' not found in cache.\n"
+        f"Operator(s) not found in cache: {missing}\n"
         f"Available: {available}\n"
-        f"Add '{OP}' to build_cache.py's OPERATORS list and rebuild."
+        f"Add them to build_cache.py's OPERATORS list and rebuild."
     )
 
-# ---- Weight decomposition ------------------------------------
+# ---- Resolve C values ----------------------------------------
 
-wp1 = w_p1_all[OP]
-wm1 = w_m1_all[OP]
+if len(args.C) == 1:
+    C_values = {op: args.C[0] for op in OPERATORS}
+elif len(args.C) == len(OPERATORS):
+    C_values = {op: c for op, c in zip(OPERATORS, args.C)}
+else:
+    raise ValueError(
+        f"--C expects either 1 value (broadcast) or {len(OPERATORS)} values "
+        f"(one per operator), got {len(args.C)}."
+    )
 
-w_lin         = 0.5 * (wp1 - wm1)
-w_quad        = 0.5 * (wp1 + wm1) - w_SM
-w_slq         = w_SM + C * w_lin + C**2 * w_quad
-w_quad_scaled = C**2 * w_quad
+# ---- Print summary -------------------------------------------
 
-if w_slq.sum() < 0:
-    print(f"WARNING: full cross section is negative at C={C} -- C may be outside EFT validity.\n")
+print(f"Operators  : {OPERATORS}")
+print(f"C_ref      : { {op: C_values[op] for op in OPERATORS} }")
+print(f"Luminosity : {LUMI} pb^-1")
+print(f"Observable : {'unrolled 3D' if args.unrolled else 'mll 1D'}")
+print(f"Cache      : {args.cache}")
+print(f"Output     : {args.output}")
+print(f"Datacard   : {args.datacard}")
+print()
 
 # ---- Histogram builders --------------------------------------
 
@@ -114,7 +130,7 @@ def _unrolled_axis():
 def make_mll_1d(weights, proc_label):
     h = bh.Histogram(_x_axis("m_{ll} [GeV]"), storage=bh.storage.Weight())
     h.fill(mll_arr, weight=weights * LUMI)
-    h.metadata = f"{proc_label} -- {CHANNEL} -- {OP}  C={C}"
+    h.metadata = proc_label
     return h
 
 
@@ -135,7 +151,7 @@ def unroll_3d(h3d, proc_label):
     h1d = bh.Histogram(_unrolled_axis(), storage=bh.storage.Weight())
     h1d.view()["value"]    = v["value"].T.flatten()
     h1d.view()["variance"] = v["variance"].T.flatten()
-    h1d.metadata = f"{proc_label} -- {CHANNEL} -- {OP}  C={C}"
+    h1d.metadata = proc_label
     return h1d
 
 
@@ -144,18 +160,31 @@ def make_hist(weights, proc_label):
         return unroll_3d(_make_3d_filled(weights), proc_label)
     return make_mll_1d(weights, proc_label)
 
-# ---- Fill histograms -----------------------------------------
+# ---- Weight decomposition and histograms ---------------------
 
-process_weights = {
-    "sm":                    (w_SM,          "SM"),
-    f"quad_{OP}":            (w_quad_scaled, f"quad  {OP}"),
-    f"sm_lin_quad_{OP}":     (w_slq,         f"SM+lin+quad  {OP}"),
-}
+# sm and data_obs are shared across all operators
+histograms = {}
+histograms["sm"]       = make_hist(w_SM, f"SM -- {CHANNEL}")
+histograms["data_obs"] = make_hist(w_SM, f"data_obs (= SM) -- {CHANNEL}")
 
-histograms = {name: make_hist(w, lbl) for name, (w, lbl) in process_weights.items()}
-histograms["data_obs"] = make_hist(w_SM, "data_obs (= SM)")
+for op in OPERATORS:
+    C   = C_values[op]
+    wp1 = w_p1_all[op]
+    wm1 = w_m1_all[op]
 
-# ---- Print summary -------------------------------------------
+    w_lin         = 0.5 * (wp1 - wm1)
+    w_quad        = 0.5 * (wp1 + wm1) - w_SM
+    w_slq         = w_SM + C * w_lin + C**2 * w_quad
+    w_quad_scaled = C**2 * w_quad
+
+    if w_slq.sum() < 0:
+        print(f"WARNING: [{op}] full cross section is negative at C={C} -- "
+              "C may be outside EFT validity.\n")
+
+    histograms[f"quad_{op}"]        = make_hist(w_quad_scaled, f"quad {op}  C={C} -- {CHANNEL}")
+    histograms[f"sm_lin_quad_{op}"] = make_hist(w_slq,         f"SM+lin+quad {op}  C={C} -- {CHANNEL}")
+
+# ---- Print histogram summary ---------------------------------
 
 print(f"{'Process':<32}  {'Integral':>14}  {'sqrt(SumW2)':>14}")
 print("-" * 64)
@@ -184,34 +213,39 @@ with uproot.recreate(args.output) as rf:
 
 print(f"\nOutput : {os.path.abspath(args.output)}")
 
-# ---- Compute rates -------------------------------------------
+# ---- Build process list and rates ----------------------------
 
-processes   = ["sm", f"quad_{OP}", f"sm_lin_quad_{OP}"]
+# Order: sm, then for each operator: quad_{op}, sm_lin_quad_{op}
+processes = ["sm"]
+for op in OPERATORS:
+    processes.append(f"quad_{op}")
+    processes.append(f"sm_lin_quad_{op}")
+
 rates       = {p: histograms[p].values().sum() for p in processes}
 observation = histograms["data_obs"].values().sum()
 
+# Process indices:
+#   sm              -> -1
+#   quad_{OPi}      -> -(2i+2)   (i = 0-based operator index)
+#   sm_lin_quad_{OPi} -> -(2i+3)
+proc_indices = {"sm": -1}
+for i, op in enumerate(OPERATORS):
+    proc_indices[f"quad_{op}"]        = -(2*i + 2)
+    proc_indices[f"sm_lin_quad_{op}"] = -(2*i + 3)
+
 # ---- Write datacard ------------------------------------------
 
-root_abs = os.path.abspath(args.output)
-
-# process indices: all signals -> 0, -1, -2, ...
-# sm_lin_quad is the "main" signal (index 0), sm and quad are auxiliary signals
-proc_indices = {
-    "sm":                 -1,
-    f"quad_{OP}":         -2,
-    f"sm_lin_quad_{OP}":  -3,
-}
-
-n_proc = len(processes)  # jmax = n_proc - 1
+root_abs  = os.path.abspath(args.output)
+n_proc    = len(processes)
 
 sep_long  = "-" * 130
 sep_short = "-" * 45
 
 lines = [
     sep_long,
-    f"imax 1",
+    "imax 1",
     f"jmax {n_proc - 1}",
-    f"kmax 1",
+    "kmax 1",
     sep_long,
     f"shapes *         {CHANNEL}    {root_abs} $CHANNEL/$PROCESS $CHANNEL/$PROCESS_$SYSTEMATIC",
     f"shapes data_obs  {CHANNEL}    {root_abs} $CHANNEL/data_obs",
@@ -222,10 +256,10 @@ lines = [
 ]
 
 # bin / process / process index / rate rows
-bin_row     = "bin         " + "".join(f"  {CHANNEL:<25}" for _ in processes)
-proc_row    = "process     " + "".join(f"  {p:<25}" for p in processes)
-idx_row     = "process     " + "".join(f"  {proc_indices[p]:<25}" for p in processes)
-rate_row    = "rate        " + "".join(f"  {rates[p]:<25.4g}" for p in processes)
+bin_row  = "bin         " + "".join(f"  {CHANNEL:<25}" for _ in processes)
+proc_row = "process     " + "".join(f"  {p:<25}" for p in processes)
+idx_row  = "process     " + "".join(f"  {proc_indices[p]:<25}" for p in processes)
+rate_row = "rate        " + "".join(f"  {rates[p]:<25.4g}" for p in processes)
 
 lines += [bin_row, proc_row, idx_row, rate_row, sep_short]
 
