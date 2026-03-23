@@ -18,6 +18,13 @@ Weight decomposition (per operator)
   Quad   : C^2  * (0.5*(w[op] + w[minus_op]) - w_SM)
   Full   : w_SM + C*w_lin + C^2*w_quad
 
+Cache
+-----
+  Parsed LHE data is stored in lhe_cache.pkl (same directory) to avoid
+  re-reading the LHE files on every run.  The cache is created either by
+  running build_cache.py once, or automatically by this script on the first
+  run.  Pass --rebuild-cache to force regeneration from the LHE files.
+
 Usage
 -----
   python3 rw_triple_diff.py                           # all 17 operators, C=1
@@ -144,6 +151,17 @@ print(f"Unrolled bins: {N_TOT} = ({N_MLL} mll * {N_RAP} rap * {N_CSTAR} cstar)")
 
 
 # ── Load or build cache ───────────────────────────────────────────────────────
+# The cache (lhe_cache.pkl) stores pre-parsed LHE event arrays so that
+# subsequent runs skip the slow pylhe parsing step.
+#
+# The cache can be produced in two ways:
+#   1. Standalone:  run build_cache.py once (recommended for first-time setup
+#                   or when the LHE files change).
+#   2. On-the-fly:  if lhe_cache.pkl is absent, this script reads the LHE
+#                   files directly and writes the cache itself before
+#                   proceeding to the histogram filling.
+#
+# To force a rebuild from LHE files, pass --rebuild-cache on the command line.
 CACHE_FILE = os.path.join(os.path.dirname(__file__), "lhe_cache.pkl")
 
 if os.path.exists(CACHE_FILE) and not args.rebuild_cache:
@@ -162,7 +180,7 @@ else:
         print("--rebuild-cache set, re-reading LHE files.")
     else:
         print(f"No cache found at {CACHE_FILE}. Reading LHE files.")
-        print("  Tip: run rw_build_cache.py once to avoid this on future runs.\n")
+        print("  Tip: run build_cache.py once to avoid this on future runs.\n")
 
     mll_vals   = []
     rap_vals   = []
@@ -360,7 +378,7 @@ for op in ops_to_plot:
     )
     ax_ratio.axhline(1.0, color="black", linewidth=0.8, linestyle="--")
     ax_ratio.set_ylabel("Full / SM")
-    ax_ratio.set_ylim(0.5, 1.5)
+    ax_ratio.set_ylim(0, 2)
 
     # slice separators on both panels
     for i_slice in range(1, N_RAP * N_CSTAR):
