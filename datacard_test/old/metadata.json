@@ -1,0 +1,13 @@
+{
+    "analysis": "datacard_test",
+    "card": "datacard.txt",
+    "operators": {
+        "ced": [
+            -1.0,
+            1.0
+        ]
+    },
+    "nuisances": [
+        "lumi"
+    ]
+}

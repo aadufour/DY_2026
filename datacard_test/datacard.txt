@@ -2,16 +2,16 @@
 imax 1
 jmax 2
 kmax 1
--------------------------------------------------------------------
-shapes *                     triple_DY    /Users/albertodufour/code/DY2026/datacard_test/histograms.root $CHANNEL/$PROCESS $CHANNEL/$PROCESS_$SYSTEMATIC 
-shapes data_obs              triple_DY    /Users/albertodufour/code/DY2026/datacard_test/histograms.root $CHANNEL/data_obs
 ----------------------------------------------------------------------------------------------------------------------------------
-bin          triple_DY    
-observation      6.56e+06                 
+shapes *         triple_DY    /Users/albertodufour/code/DY2026/datacard_test/histograms.root $CHANNEL/$PROCESS $CHANNEL/$PROCESS_$SYSTEMATIC
+shapes data_obs  triple_DY    /Users/albertodufour/code/DY2026/datacard_test/histograms.root $CHANNEL/data_obs
 ----------------------------------------------------------------------------------------------------------------------------------
-bin         triple_DY          triple_DY               triple_DY     
-process      sm                 quad_ced               sm_lin_quad_ced     
-process      -1                    -2                      -3                                                                                                                                                                                                 
-rate        6.56e+06              4.4e+04               6.61e+06         
----------------------------------------------                                                                                                                                  
-lumi    lnN     1.02             1.02                1.02        
+bin          triple_DY
+observation  6.507e+07
+----------------------------------------------------------------------------------------------------------------------------------
+bin           triple_DY                  triple_DY                  triple_DY                
+process       sm                         quad_ced                   sm_lin_quad_ced          
+process       -1                         -2                         -3                       
+rate          6.507e+07                  8.789e+04                  6.525e+07                
+---------------------------------------------
+lumi  lnN     1.02                       1.02                       1.02                     
