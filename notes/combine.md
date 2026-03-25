@@ -112,3 +112,11 @@ debuggato tutto. Recap:
 5. runScans_fixed.py <n_op> initial
 6. runScans_fixed.py <n_op> scan --doSplitPoints=10
 7. runPlots.py <n_op>
+
+
+
+da aggiungere pesi misti
+shape a datacard con sm_lin_quad_mixed_op1_op2
+
+
+provo a generare gli eventi sulle macchine llr: vorrei systematics (sbatti lhapdf)

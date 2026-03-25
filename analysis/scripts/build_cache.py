@@ -47,8 +47,8 @@ OPERATORS = [
 
 OP_PAIRS = list(combinations(OPERATORS, 2))
 
-CACHE_FILE      = "/Users/albertodufour/code/DY2026/triple_diff_test/lhe_cache.pkl"
-CHECKPOINT_FILE = "/Users/albertodufour/code/DY2026/triple_diff_test/lhe_cache_checkpoint.pkl"
+CACHE_FILE      = "/Users/albertodufour/code/DY2026/analysis/lhe_cache.pkl"
+CHECKPOINT_FILE = "/Users/albertodufour/code/DY2026/analysis/lhe_cache_checkpoint.pkl"
 
 # ── Kinematic functions ────────────────────────────────────────────────────────
 def mll(p1, p2):

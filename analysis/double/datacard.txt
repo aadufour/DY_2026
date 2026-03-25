@@ -1,0 +1,17 @@
+----------------------------------------------------------------------------------------------------------------------------------
+imax 1
+jmax 5
+kmax 1
+----------------------------------------------------------------------------------------------------------------------------------
+shapes *         triple_DY    /Users/albertodufour/code/DY2026/analysis/histograms.root $CHANNEL/$PROCESS $CHANNEL/$PROCESS_$SYSTEMATIC
+shapes data_obs  triple_DY    /Users/albertodufour/code/DY2026/analysis/histograms.root $CHANNEL/data_obs
+----------------------------------------------------------------------------------------------------------------------------------
+bin          triple_DY
+observation  6.507e+07
+----------------------------------------------------------------------------------------------------------------------------------
+bin           triple_DY                  triple_DY                  triple_DY                  triple_DY                  triple_DY                  triple_DY                
+process       sm                         quad_cHd                   sm_lin_quad_cHd            quad_cHe                   sm_lin_quad_cHe            sm_lin_quad_mixed_cHd_cHe
+process       -1                         -2                         -3                         -4                         -5                         -6                       
+rate          6.507e+07                  1.846e+05                  6.436e+07                  4.503e+05                  5.885e+07                  5.656e+04                
+---------------------------------------------
+lumi  lnN     1.02                       1.02                       1.02                       1.02                       1.02                       1.02                     

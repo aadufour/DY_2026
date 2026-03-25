@@ -24,9 +24,9 @@ import uproot
 
 # ---- Config --------------------------------------------------
 
-CACHE_FILE    = "/Users/albertodufour/code/DY2026/triple_diff_test/lhe_cache.pkl"
-OUTPUT_FILE   = "histograms.root"
-DATACARD_FILE = "datacard.txt"
+CACHE_FILE    = "/Users/albertodufour/code/DY2026/analysis/lhe_cache.pkl"
+OUTPUT_FILE   = "/Users/albertodufour/code/DY2026/analysis/histograms.root"
+DATACARD_FILE = "/Users/albertodufour/code/DY2026/analysis/datacard.txt"
 CHANNEL       = "triple_DY"
 
 MLL_EDGES   = np.array([50, 70, 90, 110, 200, 800, 1400, 2000, 2400, 3000], dtype=float)
