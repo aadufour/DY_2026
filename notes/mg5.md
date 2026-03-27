@@ -5,6 +5,7 @@ To run MG5
 cd /Users/albertodufour/MG5/mg5amcnlo
 ./bin/mg5_aMC
 
+    
     generate p p > e+ e-
     output filename
     launch
@@ -22,7 +23,7 @@ ln -s SMEFTsim/UFO_models/SMEFTsim_topU3l_MwScheme_UFO SMEFTsim_topU3l_MwScheme_
 ###(12/03/2026)
 ## CHOICE OF PARAMETERS
 NP<=1 means we can have New Physics (includes EFT operators. NP=(=)0 is only SM)
-NP^2=2 only selects EFT squared amplitude: ONLy diagrams with at least one NP operator (no SM). If NP^2<2(facciamo finta che sia la sintassi) we also consider interferences.
+NP^2=2 only selects EFT squared amplitude: ONLY diagrams with at least one NP operator (no SM). If NP^2<2(facciamo finta che sia la sintassi) we also consider interferences.
 Suppose the SM contributes with 8 diagrams and EFTs. with 40, SM suqred amplitudes will have 8, NP^2=2 will have 40, the interference has 48 (must consider all diagrams) (interference scales like C, squared like C^2).
 
 
@@ -41,7 +42,7 @@ DO NOT TOUCH (for now):
 
 Change one operator at a time from 0.00000... to 9.99999...e-01 (set to one: this is because 1.00000... gives problems with madgraph)
 If the operator does not contribute to any graph it does not plot any.
-The idea is to prepare restriction cards for each operator individually and make a table 8just yes or no)I.
+The idea is to prepare restriction cards for each operator individually and make a table (just yes or no).
 You can also run commands with madgraph as such: ./bin/mg5_aMC check_cjj11.txt
 where check_cjj.txt is just
     import model SMEFTsim_topU3l_MwScheme_UFO-all_contributing_massless
@@ -51,6 +52,9 @@ where check_cjj.txt is just
 !! syntax:
     import model SMEFTsim_topU3l_MwScheme_UFO-cjj_massless
     the dash - and then the name of the restiction card
+
+
+
 
 
 
@@ -149,3 +153,9 @@ Qusto andrà sicuramente in tesi!!
 
 #
 stampo anche plot triple diff con solo lin e uno con solo quad (senza log, si vede meglio la shape e le incertezze) (sempre unrolled)
+
+
+## fixing stuff
+import model SMEFTsim_topU3l_MwScheme_UFO-<operator>_massless (syntax UFO-[restrict]_operator_massless[.dat])
+define p = p b b~          (needed to cfr with giacomos model: bs are massive so they are not in p, for some reason)
+generate p p > l+ l- QCD=0

@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 """
-Scan all SMEFT operators for contributions to p p > mu+ mu- 
+Scan all SMEFT operators for contributions to p p > l+ l-
 Runs MG5 for each operator, parses diagram count from stdout,
 and produces an HTML summary table.
 
 Usage (run from MadGraph root):
-    python /Users/albertodufour/code/DY2026/restriction_table/scan_operators.pyscan_operators.py --mg5 ./bin/mg5_aMC
+    python scan_operators.py --mg5 ./bin/mg5_aMC
 """
 
 import os
 import re
 import subprocess
 import argparse
+import shutil
+import webbrowser
 
 params = [
     [' 1', 'cG'],
@@ -146,19 +148,26 @@ params = [
 ]
 
 MODEL = 'SMEFTsim_topU3l_MwScheme_UFO'
-PROCESS = 'p p > mu+ mu- SMHLOOP=0 NP=1 NP^2==2'
+PROCESS = 'p p > l+ l- QCD=0 SMHLOOP=0 NP=1 NP^2==2'
 
 MG5_INPUT_TEMPLATE = """\
 import model {model}-{name}_massless
+define p = p b b~
 generate {process}
 display processes
 quit
 """
 
+MG5_DIAGRAMS_TEMPLATE = """\
+import model {model}-{name}_massless
+define p = p b b~
+generate {process}
+output {outdir}
+quit
+"""
+
 def count_diagrams(stdout):
     """Parse mg5 stdout for diagram count. Returns int (0 if none found)."""
-    # mg5 prints lines like: "Process: p p > mu+ mu-  : 3 diagrams"
-    # or "2 diagrams" somewhere in output
     total = 0
     for m in re.finditer(r'(\d+)\s+diagram', stdout):
         total += int(m.group(1))
@@ -166,7 +175,6 @@ def count_diagrams(stdout):
 
 def install_card(mg5root, name):
     """Copy the restriction card into the MadGraph model directory."""
-    import shutil
     card_src = os.path.join(os.path.dirname(__file__), 'cards', f'restrict_{name}_massless.dat')
     model_dir = os.path.join(mg5root, 'models', MODEL)
     card_dst = os.path.join(model_dir, f'restrict_{name}_massless.dat')
@@ -177,10 +185,14 @@ def install_card(mg5root, name):
     shutil.copy2(card_src, card_dst)
     return card_dst
 
-def run_mg5(mg5_path, name, mg5root, debug=False):
+def run_mg5(mg5_path, name, mg5root, debug=False, verbose=False):
     import tempfile
     install_card(mg5root, name)
     mg5_input = MG5_INPUT_TEMPLATE.format(model=MODEL, name=name, process=PROCESS)
+    if verbose:
+        print(f'\n--- mg5 commands for {name} ---')
+        print(mg5_input)
+        print('--- end commands ---\n')
     with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as tmp:
         tmp.write(mg5_input)
         tmp_path = tmp.name
@@ -199,6 +211,40 @@ def run_mg5(mg5_path, name, mg5root, debug=False):
         print('--- end ---\n')
     n_diag = count_diagrams(stdout)
     return n_diag, stdout
+
+def run_mg5_diagrams(mg5_path, name, mg5root, outdir=None, verbose=False):
+    """Run MG5 with `output` to generate Feynman diagram HTML for a single operator."""
+    import tempfile
+    install_card(mg5root, name)
+
+    if outdir is None:
+        outdir = os.path.abspath(f'diagrams_{name}')
+
+    # MG5 will refuse to overwrite without interaction — remove first
+    if os.path.exists(outdir):
+        shutil.rmtree(outdir)
+
+    mg5_input = MG5_DIAGRAMS_TEMPLATE.format(model=MODEL, name=name, process=PROCESS, outdir=outdir)
+    if verbose:
+        print(f'\n--- mg5 commands for {name} (diagram mode) ---')
+        print(mg5_input)
+        print('--- end commands ---\n')
+
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as tmp:
+        tmp.write(mg5_input)
+        tmp_path = tmp.name
+    try:
+        subprocess.run([mg5_path, tmp_path], capture_output=False, text=True)
+    finally:
+        os.unlink(tmp_path)
+
+    index = os.path.join(outdir, 'HTML', 'index.html')
+    if os.path.isfile(index):
+        print(f'\nDiagrams written to: {index}')
+        webbrowser.open(f'file://{os.path.abspath(index)}')
+    else:
+        print(f'\nWarning: expected diagram index not found at {index}')
+        print(f'Output directory contents: {os.listdir(outdir) if os.path.isdir(outdir) else "(missing)"}')
 
 def write_html(results, outfile):
     contributing = [(n, d) for n, d, _ in results if d > 0]
@@ -226,7 +272,7 @@ def write_html(results, outfile):
 </style>
 </head>
 <body>
-<h1>pp &rarr; &mu;<sup>+</sup>&mu;<sup>-</sup> &mdash; SMEFT operator scan</h1>
+<h1>pp &rarr; l<sup>+</sup>l<sup>-</sup> &mdash; SMEFT operator scan</h1>
 <p>{len(contributing)} contributing / {len(not_contributing)} not contributing</p>
 <table>
   <tr><th style="padding:4px 12px">Operator</th><th style="padding:4px 12px">Diagrams</th></tr>
@@ -239,22 +285,48 @@ def write_html(results, outfile):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--mg5', required=True, help='Path to mg5_aMC executable, e.g. /path/to/MG5/bin/mg5_aMC')
+    parser.add_argument('--mg5', required=True, help='Path to mg5_aMC executable')
     parser.add_argument('--mg5root', default=None, help='MadGraph root directory (default: inferred from --mg5)')
     parser.add_argument('--out', default='operator_scan.html', help='Output HTML file')
     parser.add_argument('--debug', action='store_true', help='Print raw mg5 output for first operator then exit')
+    parser.add_argument('--verbose', action='store_true', help='Print the exact mg5 commands sent for each operator')
+    parser.add_argument('--operators', nargs='+', metavar='OP',
+                        help='Only scan these operators (e.g. --operators cHl1 cHl3 cHe)')
+    parser.add_argument('--show-diagrams', metavar='OP',
+                        help='Generate and open Feynman diagrams for a single operator (skips the scan)')
     args = parser.parse_args()
 
     mg5root = args.mg5root or os.path.dirname(os.path.dirname(os.path.abspath(args.mg5)))
     print(f'MadGraph root: {mg5root}')
     print(f'Model directory: {os.path.join(mg5root, "models", MODEL)}')
 
+    # Diagram-view mode: generate output for a single operator and open HTML
+    if args.show_diagrams:
+        name = args.show_diagrams
+        known = {p[1] for p in params}
+        if name not in known:
+            raise SystemExit(f'Unknown operator: {name}')
+        print(f'Generating diagrams for {name} ...')
+        run_mg5_diagrams(args.mg5, name, mg5root, verbose=args.verbose)
+        raise SystemExit(0)
+
+    # Filter operators if --operators was given
+    selected = params
+    if args.operators:
+        requested = set(args.operators)
+        selected = [p for p in params if p[1] in requested]
+        missing = requested - {p[1] for p in selected}
+        if missing:
+            print(f'Warning: unknown operators ignored: {", ".join(sorted(missing))}')
+        if not selected:
+            raise SystemExit('No matching operators found.')
+
     results = []
-    for i, param in enumerate(params):
+    for i, param in enumerate(selected):
         name = param[1]
-        print(f'[{i+1:3d}/{len(params)}] {name} ... ', end='', flush=True)
+        print(f'[{i+1:3d}/{len(selected)}] {name} ... ', end='', flush=True)
         debug_this = args.debug and i == 0
-        n_diag, stdout = run_mg5(args.mg5, name, mg5root, debug=debug_this)
+        n_diag, stdout = run_mg5(args.mg5, name, mg5root, debug=debug_this, verbose=args.verbose)
         if args.debug and i == 0:
             raise SystemExit('Debug mode: exiting after first operator.')
         status = f'{n_diag} diagram(s)' if n_diag > 0 else 'no diagrams'

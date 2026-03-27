@@ -120,3 +120,52 @@ shape a datacard con sm_lin_quad_mixed_op1_op2
 
 
 provo a generare gli eventi sulle macchine llr: vorrei systematics (sbatti lhapdf)
+
+
+
+
+
+## apptainer
+spritz: framework di analisi
+src/runners: codice principale
+modules -> leptoni,...
+
+flessibile: si configura co configs file
+
+sample definiti in data
+ogni anno c'è una production chain diversa
+samples.json: dati e MCs (nostro anno 2018)
+non avrò "fake" bkg (data driven), solo bkg MC
+
+!! cfr cmsweb das per vedere i datacenter con i file...
+
+
+5 stadi per girarlo
+
+1. config.py
+2. ricavo file e replicas: spritz-fileset
+3. fare i "chunks" (si raggruppano i file in base al numero di eventi): spritz-chunks
+4. fare i jobs: spritz-batch -dr (dr è dry run, non sottomette a condor)
+! per girare in locale devo girare runner.py per ogni batch, lungo
+-> ./run_local.sh
+5. collezionare output: spritz-merge
+6. postprocessing: spritz-postproc
+7/8: plots e datacard: spritz-plots e spritz-datacard
+
+
+grid proxy cerificate
+
+## apptainer
+apptainer shell -B /etc/grid-security/certificates:/etc/grid-security/certificates -B /cvmfs <PATH/A/spritz-env.sif>
+apptainer shell -B /etc/grid-security/certificates:/etc/grid-security/certificates -B /cvmfs spritz-env.sif
+
+
+/home/llr/cms/adufour/spritz/configs/vbfz-2018/config.py
+
+
+echo $X509_USER_PROXY
+
+
+Apptainer> ls condor
+job_0  job_1  job_2  job_3  job_4  job_5  job_6  job_7	runner.py  run.sh  submit.jdl
+Apptainer> for i in 0 1 2 3 4 5 6 7; do ./run_local.sh $i; done
