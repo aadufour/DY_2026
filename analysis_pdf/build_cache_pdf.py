@@ -30,7 +30,7 @@ import pylhe
 MLL_EDGES = [50, 120, 200, 400, 600, 800, 1000, 3000]
 
 LHE_FILES = [
-    f"/home/llr/cms/adufour/MG5/mg5amcnlo/DY_pdf_{lo}_{hi}/Events/run_01/unweighted_events.lhe.gz"
+    f"/home/llr/cms/adufour/MG5/mg5amcnlo/DY_pdf_{lo}_{hi}/Events/run_03/unweighted_events.lhe.gz"
     for lo, hi in zip(MLL_EDGES[:-1], MLL_EDGES[1:])
 ]
 
