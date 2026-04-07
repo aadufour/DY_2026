@@ -1,6 +1,10 @@
 #!/bin/bash
 # Usage: bash set_nevents.sh 50000
 
+#-----------------------------------------------------------
+# updates n_events in the run_card.dat for selected folders
+# ----------------------------------------------------------
+
 NEVENTS=$1
 BASE="/home/llr/cms/adufour/MG5/mg5amcnlo"
 

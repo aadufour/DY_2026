@@ -1,5 +1,11 @@
 #!/bin/bash
 
+
+#-----------------------------------------------------------
+# dividing mll intervals
+# copies BASE dir to BASE_MIN_MAX for MIN, MAX in BIN_EDGES
+# ----------------------------------------------------------
+
 # Bin edges for mll intervals
 BIN_EDGES=(50 120 200 400 600 800 1000 3000)
 
