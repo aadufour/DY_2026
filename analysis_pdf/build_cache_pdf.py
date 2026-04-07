@@ -66,15 +66,40 @@ def cstar(p1, p2):
     p1mag = np.sqrt(p1[0]**2 + p1[1]**2 + pz1_b**2)
     return pz1_b / p1mag
 
+# Single-lepton kinematic helpers (p = [px, py, pz, e])
+
+def ptl(p):
+    """Transverse momentum of a single lepton [GeV]."""
+    return np.sqrt(p[0]**2 + p[1]**2)
+
+def etal(p):
+    """Pseudorapidity of a single lepton."""
+    pT = np.sqrt(p[0]**2 + p[1]**2)
+    if pT < 1e-9:
+        return np.copysign(1e9, p[2])
+    theta = np.arctan2(pT, p[2])
+    return -np.log(np.tan(theta / 2.0))
+
+def phil(p):
+    """Azimuthal angle of a single lepton [rad], in (-pi, pi]."""
+    return np.arctan2(p[1], p[0])
+
 # ── Load checkpoint if it exists ──────────────────────────────────────────────
 
 if os.path.exists(CHECKPOINT_FILE):
     print(f"Resuming from checkpoint: {CHECKPOINT_FILE}")
     with open(CHECKPOINT_FILE, 'rb') as f:
         ckpt = pickle.load(f)
+    if 'ptl1' not in ckpt:
+        print("  WARNING: checkpoint predates ptl1/etal1/phil1 quantities.")
+        print("  Delete the checkpoint file and rerun to rebuild from scratch.")
+        raise SystemExit(1)
     acc_mll      = ckpt['mll']
     acc_rap      = ckpt['rap']
     acc_cstar    = ckpt['cstar']
+    acc_ptl1     = ckpt['ptl1']
+    acc_etal1    = ckpt['etal1']
+    acc_phil1    = ckpt['phil1']
     acc_central  = ckpt['w_central']
     acc_pdf      = ckpt['w_pdf']      # (100, N_so_far)
     acc_scale    = ckpt['w_scale']    # (8,   N_so_far)
@@ -84,6 +109,9 @@ else:
     acc_mll     = np.empty(0, dtype=np.float64)
     acc_rap     = np.empty(0, dtype=np.float64)
     acc_cstar   = np.empty(0, dtype=np.float64)
+    acc_ptl1    = np.empty(0, dtype=np.float64)
+    acc_etal1   = np.empty(0, dtype=np.float64)
+    acc_phil1   = np.empty(0, dtype=np.float64)
     acc_central = np.empty(0, dtype=np.float64)
     acc_pdf     = np.empty((100, 0), dtype=np.float64)
     acc_scale   = np.empty((8,   0), dtype=np.float64)
@@ -104,6 +132,9 @@ for lhe_file in LHE_FILES:
     buf_mll     = []
     buf_rap     = []
     buf_cstar   = []
+    buf_ptl1    = []
+    buf_etal1   = []
+    buf_phil1   = []
     buf_central = []
     buf_pdf     = [[] for _ in PDF_IDS]    # 100 lists
     buf_scale   = [[] for _ in SCALE_IDS] # 8 lists
@@ -128,9 +159,15 @@ for lhe_file in LHE_FILES:
             if not (MLL_EDGES[0] <= m <= MLL_EDGES[-1]):
                 continue
 
+            # Leading lepton (highest pT)
+            v_l1 = v_lm if ptl(v_lm) >= ptl(v_lp) else v_lp
+
             buf_mll.append(m)
             buf_rap.append(rap(v_lm, v_lp))
             buf_cstar.append(cstar(v_lm, v_lp))
+            buf_ptl1.append(ptl(v_l1))
+            buf_etal1.append(etal(v_l1))
+            buf_phil1.append(phil(v_l1))
             buf_central.append(ev.weights[CENTRAL_ID])
             for j, k in enumerate(PDF_IDS):
                 buf_pdf[j].append(ev.weights[k])
@@ -144,6 +181,9 @@ for lhe_file in LHE_FILES:
     acc_mll     = np.concatenate([acc_mll,     np.array(buf_mll,     dtype=np.float64)])
     acc_rap     = np.concatenate([acc_rap,     np.array(buf_rap,     dtype=np.float64)])
     acc_cstar   = np.concatenate([acc_cstar,   np.array(buf_cstar,   dtype=np.float64)])
+    acc_ptl1    = np.concatenate([acc_ptl1,    np.array(buf_ptl1,    dtype=np.float64)])
+    acc_etal1   = np.concatenate([acc_etal1,   np.array(buf_etal1,   dtype=np.float64)])
+    acc_phil1   = np.concatenate([acc_phil1,   np.array(buf_phil1,   dtype=np.float64)])
     acc_central = np.concatenate([acc_central, np.array(buf_central, dtype=np.float64)])
     acc_pdf     = np.concatenate([acc_pdf,     np.array(buf_pdf,     dtype=np.float64)], axis=1)
     acc_scale   = np.concatenate([acc_scale,   np.array(buf_scale,   dtype=np.float64)], axis=1)
@@ -154,6 +194,9 @@ for lhe_file in LHE_FILES:
         'mll':             acc_mll,
         'rap':             acc_rap,
         'cstar':           acc_cstar,
+        'ptl1':            acc_ptl1,
+        'etal1':           acc_etal1,
+        'phil1':           acc_phil1,
         'w_central':       acc_central,
         'w_pdf':           acc_pdf,
         'w_scale':         acc_scale,
@@ -174,6 +217,9 @@ cache = {
     'mll':       acc_mll,
     'rap':       acc_rap,
     'cstar':     acc_cstar,
+    'ptl1':      acc_ptl1,     # leading-lepton pT [GeV]
+    'etal1':     acc_etal1,    # leading-lepton pseudorapidity
+    'phil1':     acc_phil1,    # leading-lepton azimuthal angle [rad]
     'w_central': acc_central,
     'w_pdf':     acc_pdf,      # (100, N)
     'w_scale':   acc_scale,    # (8, N)
