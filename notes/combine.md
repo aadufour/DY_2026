@@ -146,8 +146,8 @@ non avrò "fake" bkg (data driven), solo bkg MC
 2. ricavo file e replicas: spritz-fileset
 3. fare i "chunks" (si raggruppano i file in base al numero di eventi): spritz-chunks
 4. fare i jobs: spritz-batch -dr (dr è dry run, non sottomette a condor)
-! per girare in locale devo girare runner.py per ogni batch, lungo
--> ./run_local.sh
+! per girare in locale devo girare runner.py per ogni batch, lungo -> ./run_local.sh (da modificare i path!!)
+    Apptainer> for i in 0 1 2 3 4 5 6 7; do ./run_local.sh $i; done
 5. collezionare output: spritz-merge
 6. postprocessing: spritz-postproc
 7/8: plots e datacard: spritz-plots e spritz-datacard
@@ -161,6 +161,8 @@ apptainer shell -B /etc/grid-security/certificates:/etc/grid-security/certificat
 
 
 /home/llr/cms/adufour/spritz/configs/vbfz-2018/config.py
+
+voms-proxy-init --rfc --voms cms -valid 192:00
 
 
 echo $X509_USER_PROXY

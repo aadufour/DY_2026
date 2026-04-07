@@ -10,7 +10,7 @@ for (( i=0; i<${#BIN_EDGES[@]}-1; i++ )); do
     MIN=${BIN_EDGES[$i]}
     MAX=${BIN_EDGES[$((i+1))]}
 
-    DST="${BASE_DST}/DY_all_${MIN}_${MAX}"
+    DST="${BASE_DST}/DY_b_${MIN}_${MAX}"
 
     echo "Creating ${DST} ..."
     cp -r "$BASE_SRC" "$DST"

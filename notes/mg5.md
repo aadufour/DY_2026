@@ -158,4 +158,12 @@ stampo anche plot triple diff con solo lin e uno con solo quad (senza log, si ve
 ## fixing stuff
 import model SMEFTsim_topU3l_MwScheme_UFO-<operator>_massless (syntax UFO-[restrict]_operator_massless[.dat])
 define p = p b b~          (needed to cfr with giacomos model: bs are massive so they are not in p, for some reason)
-generate p p > l+ l- QCD=0
+generate p p > mu+ mu- QCD=0 SMHLOOP=0 NP<=1 NP^2==2
+
+
+
+
+#---------------------
+## now working on ssh llrcms
+(1 apr 2026)
+
