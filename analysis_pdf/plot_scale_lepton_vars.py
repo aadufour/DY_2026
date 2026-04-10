@@ -170,7 +170,7 @@ for var in VARIABLES:
     ax_top.set_ylabel('Events  [a.u.]', fontsize=12)
     ax_top.legend(fontsize=10)
     ax_top.set_xlim(*xlim)
-    ax_top.set_title(f'QCD scale uncertainty  --  {title}', fontsize=12)
+    # ax_top.set_title(f'QCD scale uncertainty  --  {title}', fontsize=12)
 
     step(ax_bot, edges, delta_up,   color='tomato', lw=1.5, ls='--',
          label='(up $-$ nom) / nom')
@@ -284,10 +284,10 @@ for var in VARIABLES:
         ab.set_ylabel(r'$\delta$/nom', fontsize=9)
         ab.grid(axis='y', alpha=0.3)
 
-    fig_all.suptitle(
-        f'QCD scale variations -- all 8 points  ({title})',
-        fontsize=13, y=1.01
-    )
+    # fig_all.suptitle(
+    #     f'QCD scale variations -- all 8 points  ({title})',
+    #     fontsize=13, y=1.01
+    # )
     fig_all.tight_layout()
     out_all = f"{PLOT_DIR}/plot_scale_all_variations_{key}.pdf"
     fig_all.savefig(out_all, bbox_inches='tight')
