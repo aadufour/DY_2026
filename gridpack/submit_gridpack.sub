@@ -1,0 +1,38 @@
+# submit_gridpack.sub
+#
+# Condor submission: one job per mll bin, 10k events each.
+#
+# Submit with:
+#   condor_submit submit_gridpack.sub
+#
+# Monitor with:
+#   condor_q $USER
+#   condor_q $USER -format "%s " ClusterId -format "%s " ProcId -format "%s\n" Args
+
+universe              = vanilla
+executable            = /home/adufour/gridpack/run_gridpack.sh
+should_transfer_files = NO
+
+# Resources
+request_cpus   = 1
+request_memory = 2000 MB
+request_disk   = 5 GB
+
+# Logs (one file per job using the bin name)
+log    = /home/adufour/gridpack/logs/gridpack_$(bin).log
+output = /home/adufour/gridpack/logs/gridpack_$(bin).out
+error  = /home/adufour/gridpack/logs/gridpack_$(bin).err
+
+# Arguments: <bin> <nevents> <seed> <ncores>
+#   Seed is set per-bin so each job is statistically independent
+Arguments = $(bin) 10000 $(seed) 1
+
+# One job per mll bin
+#   bin         seed
+bin=50_120,     seed=1;    queue
+bin=120_200,    seed=2;    queue
+bin=200_400,    seed=3;    queue
+bin=400_600,    seed=4;    queue
+bin=600_800,    seed=5;    queue
+bin=800_1000,   seed=6;    queue
+bin=1000_3000,  seed=7;    queue
