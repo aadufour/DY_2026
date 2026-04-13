@@ -1,0 +1,1632 @@
+WARNING: In non-interactive mode release checks e.g. deprecated releases, production architectures are disabled.
+WARNING: There already exists /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/CMSSW_13_2_9 area for SCRAM_ARCH el9_amd64_gcc11.
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_70/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_71/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_72/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_73/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_74/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_75/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_76/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_77/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_78/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_79/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_80/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_81/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_82/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_83/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_84/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_85/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_86/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_87/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_88/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_89/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_90/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_91/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_92/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_93/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_94/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_95/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_96/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_97/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_98/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_99/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_100/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_101/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_102/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_103/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_104/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_105/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_106/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_107/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_108/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_109/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_110/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_111/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_112/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_113/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_114/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_115/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_116/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_117/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_118/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_119/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_120/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_121/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_122/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_123/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_124/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_125/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_126/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_127/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_128/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_129/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_130/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_131/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_132/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_133/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_134/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_135/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_136/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_137/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_138/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_139/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_140/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_141/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_142/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_143/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_144/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_145/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_146/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_147/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_148/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_149/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_150/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_151/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_152/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_153/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_154/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_155/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_156/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_157/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_158/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+Traceback (most recent call last):
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/./madevent/bin/gridrun", line 95, in <module>
+    cmd_line = cmd_interface.GridPackCmd(me_dir=root_path, nb_event=args[0], seed=args[1], gran=args[2])            
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 6466, in __init__
+    MadEventCmd.__init__(self, me_dir, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 2110, in __init__
+    CmdExtended.__init__(self, me_dir, options, *completekey, **stdin)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/madevent_interface.py", line 206, in __init__
+    super(CmdExtended, self).__init__(me_dir, options, *arg, **opt)
+  File "/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/bin/internal/common_run_interface.py", line 665, in __init__
+    raise AlreadyRunning(message)
+internal.common_run_interface.AlreadyRunning: Another instance of the program is currently running.
+                (for this exact same directory) Please wait that this is instance is 
+                closed. If no instance is running, you can delete the file
+                /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/RunWeb and try again.
+mv: cannot stat './Events/GridRun_159/unweighted_events.lhe.gz': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+ls: cannot access 'events*.lhe.gz': No such file or directory
+Couldn't open file events*.lhe.gz
+rm: cannot remove 'events_*.lhe.gz': No such file or directory
+rm: cannot remove 'banner.txt': No such file or directory
+gzip: events.lhe.gz: No such file or directory
+mv: cannot stat 'events.lhe.gz': No such file or directory
+mv: cannot stat '/grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/Events/GridRun_7/unweighted_events.lhe.gz': No such file or directory
+gzip: /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/events.lhe.gz: No such file or directory
+mv: cannot stat 'process/events.lhe': No such file or directory
+Unable to open /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll1000_3000/process/madevent/Events/GridRun_PostProc_7/events.lhe

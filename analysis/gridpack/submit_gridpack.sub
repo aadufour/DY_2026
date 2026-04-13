@@ -1,0 +1,28 @@
+Universe    = vanilla
+Executable  = /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/gridpack/run_gridpack.sh
+Arguments   = $(bin) 10000 $(seed) 1
+input       = /dev/null
+output      = /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/gridpack/logs/$(bin).out
+error       = /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/gridpack/logs/$(bin).err
+log         = /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/gridpack/logs/$(bin).log
+getenv      = true
+
+request_memory = 4G
+request_cpus   = 1
+
+T3Queue      = short
+WNTag        = el9
++SingularityCmd = ""
+include : /opt/exp_soft/cms/t3/t3queue |
+
+max_retries = 0
+
+queue bin, seed from (
+    50_120,    1
+    120_200,   2
+    200_400,   3
+    400_600,   4
+    600_800,   5
+    800_1000,  6
+    1000_3000, 7
+)

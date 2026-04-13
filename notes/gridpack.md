@@ -151,3 +151,59 @@ NOTES
     cards/SMEFTsim_topU3l_MwScheme_UFO.tar.gz
   via the custom patch in gridpack_generation.sh.
 =============================================================
+
+
+
+# submitting event generation to condor
+=============================================================
+EVENT GENERATION FROM GRIDPACKS - QUICK REFERENCE
+=============================================================
+
+PURPOSE
+-------
+Run pre-built SMEFT gridpacks to generate LHE events with
+EFT + scale/PDF weights, one job per mll bin.
+
+FILES
+-----
+All files live in:
+    /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/gridpack/
+
+1) run_gridpack.sh   - job script, runs runcmsgrid.sh for one bin
+2) submit_gridpack.sub - condor submission, 7 jobs (one per mll bin)
+
+GRIDPACKS
+---------
+    /grid_mnt/data__data.polcms/cms/adufour/gridpack_tests/DYSMEFTMll{bin}/
+
+OUTPUT
+------
+    /grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/DYSMEFTMll{bin}/Events/run_01/unweighted_events.lhe
+
+BEFORE SUBMITTING
+-----------------
+    voms-proxy-init --voms cms --valid 168:00 --out /grid_mnt/data__data.polcms/cms/adufour/.t3/proxy.cert
+    mkdir -p logs/
+
+SUBMIT
+------
+    condor_submit -name llrt3condor submit_gridpack.sub
+
+MONITOR
+-------
+    /opt/exp_soft/cms/t3/t3stat | grep adufour
+    watch -n 30 '/opt/exp_soft/cms/t3/t3stat | grep adufour'
+
+CHECK OUTPUT WHEN DONE
+----------------------
+    ls /grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/DYSMEFTMll*/Events/run_01/unweighted_events.lhe
+
+NOTES
+-----
+- runcmsgrid.sh must run from inside the gridpack dir (uses relative paths)
+- output is uncompressed .lhe (not .lhe.gz)
+- stale lock file fix: rm -f {gridpack_dir}/process/madevent/RunWeb
+- 10k events per bin, seeds 1-7
+- key condor settings: include /opt/exp_soft/cms/t3/t3queue, WNTag=el9
+- submit with -name llrt3condor or jobs go to wrong queue
+=============================================================

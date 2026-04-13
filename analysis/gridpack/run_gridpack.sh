@@ -8,19 +8,20 @@
 #   $2  number of events, e.g. 10000
 #   $3  random seed, e.g. 1
 #   $4  number of cores, e.g. 1
-#
-# Gridpack location  : /home/adufour/gridpack_tests/DYSMEFTMll${BIN}/
-# Output location    : /grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/DYSMEFTMll${BIN}/Events/run_01/
 
 set -e
+
+export X509_USER_PROXY=/grid_mnt/data__data.polcms/cms/adufour/.t3/proxy.cert
+
 
 BIN=$1
 NEVENTS=$2
 SEED=$3
 NCORES=$4
 
-GRIDPACK_DIR="/home/adufour/gridpack_tests/DYSMEFTMll${BIN}"
-OUTPUT_DIR="/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/DYSMEFTMll${BIN}/Events/run_01"
+GRID_BASE="/grid_mnt/data__data.polcms/cms/adufour"
+GRIDPACK_DIR="${GRID_BASE}/gridpack_tests/DYSMEFTMll${BIN}"
+OUTPUT_DIR="${GRID_BASE}/MG5/mg5amcnlo/DYSMEFTMll${BIN}/Events/run_01"
 
 echo "============================="
 echo "Bin      : ${BIN}"
@@ -36,8 +37,8 @@ if [ ! -d "${GRIDPACK_DIR}" ]; then
     echo "ERROR: gridpack directory not found: ${GRIDPACK_DIR}"
     exit 1
 fi
-if [ ! -f "${GRIDPACK_DIR}/runcmsgrid_LO.sh" ]; then
-    echo "ERROR: runcmsgrid_LO.sh not found in ${GRIDPACK_DIR}"
+if [ ! -f "${GRIDPACK_DIR}/runcmsgrid.sh" ]; then
+    echo "ERROR: runcmsgrid.sh not found in ${GRIDPACK_DIR}"
     exit 1
 fi
 
@@ -45,16 +46,15 @@ fi
 rm -rf "${OUTPUT_DIR}"
 mkdir -p "${OUTPUT_DIR}"
 
-# Run the gridpack from the output directory so all output lands there
-cd "${OUTPUT_DIR}"
-bash "${GRIDPACK_DIR}/runcmsgrid_LO.sh" "${NEVENTS}" "${SEED}" "${NCORES}"
+# Run from inside the gridpack directory (runcmsgrid.sh uses relative paths)
+cd "${GRIDPACK_DIR}"
+bash runcmsgrid.sh "${NEVENTS}" "${SEED}" "${NCORES}"
 
-# Rename to match the naming convention expected by build_cache.py
-if [ -f "cmsgrid_final.lhe.gz" ]; then
-    mv cmsgrid_final.lhe.gz unweighted_events.lhe.gz
-    echo "Renamed cmsgrid_final.lhe.gz -> unweighted_events.lhe.gz"
-fi
+# Move output to destination
+mv "${GRIDPACK_DIR}/cmsgrid_final.lhe" "${OUTPUT_DIR}/unweighted_events.lhe"
+echo "Output saved to ${OUTPUT_DIR}/unweighted_events.lhe.gz"
 
 echo ""
+
 echo "Done. Output in ${OUTPUT_DIR}"
 ls -lh "${OUTPUT_DIR}"

@@ -36,13 +36,17 @@ LHE_FILES = [
 MLL_LO = 50.0
 MLL_HI = 3000.0
 
+# updated with the "b quark" operators
 OPERATORS = [
-    'cHDD', 'cHWB', 'cHj1',
-    'cHj3', 'cHu',  'cHd',
-    'cHl1', 'cHl3', 'cHe',
-    'cll1', 'clj1', 'clj3',
-    'ceu',  'ced',  'cje',
-    'clu',  'cld',
+    'cHDD' , 'cHWB', 'cbWRe',
+    'cbBRe', 'cHj1', 'cHQ1' ,
+    'cHj3' , 'cHQ3', 'cHu'  ,
+    'cHd'  , 'cHbq', 'cHl1' ,
+    'cHl3' , 'cHe' , 'cll1' ,
+    'clj1' , 'clj3', 'cQl1' ,
+    'cQl3' , 'ceu' , 'ced'  ,
+    'cbe'  , 'cje' , 'cQe'  ,
+    'clu'  , 'cld' , 'cbl'
 ]
 
 OP_PAIRS = list(combinations(OPERATORS, 2))

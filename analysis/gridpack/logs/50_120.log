@@ -1,0 +1,90 @@
+000 (786943.000.000) 2026-04-13 11:01:14 Job submitted from host: <134.158.133.27:9618?addrs=134.158.133.27-9618&alias=llrt3condor.in2p3.fr&noUDP&sock=schedd_33061_acb1>
+...
+040 (786943.000.000) 2026-04-13 11:01:15 Started transferring input files
+	Transferring to host: <134.158.132.104:9618?addrs=134.158.132.104-9618&alias=llrgrwn010.in2p3.fr&noUDP&sock=slot1_1_1052239_50be_4881>
+...
+040 (786943.000.000) 2026-04-13 11:01:15 Finished transferring input files
+...
+001 (786943.000.000) 2026-04-13 11:01:16 Job executing on host: <134.158.132.104:9618?addrs=134.158.132.104-9618&alias=llrgrwn010.in2p3.fr&noUDP&sock=startd_989_f341>
+	SlotName: slot1_1@llrgrwn010.in2p3.fr
+	CondorScratchDir = "/var/lib/condor/execute/dir_2253571"
+	Cpus = 1
+	Disk = 2048
+	GPUs = 0
+	Memory = 4096
+...
+006 (786943.000.000) 2026-04-13 11:01:25 Image size of job updated: 11072
+	7  -  MemoryUsage of job (MB)
+	6928  -  ResidentSetSize of job (KB)
+...
+000 (786944.000.000) 2026-04-13 11:02:38 Job submitted from host: <134.158.133.27:9618?addrs=134.158.133.27-9618&alias=llrt3condor.in2p3.fr&noUDP&sock=schedd_33061_acb1>
+...
+040 (786944.000.000) 2026-04-13 11:02:39 Started transferring input files
+	Transferring to host: <134.158.132.104:9618?addrs=134.158.132.104-9618&alias=llrgrwn010.in2p3.fr&noUDP&sock=slot1_2_1052239_50be_4882>
+...
+040 (786944.000.000) 2026-04-13 11:02:39 Finished transferring input files
+...
+001 (786944.000.000) 2026-04-13 11:02:40 Job executing on host: <134.158.132.104:9618?addrs=134.158.132.104-9618&alias=llrgrwn010.in2p3.fr&noUDP&sock=startd_989_f341>
+	SlotName: slot1_2@llrgrwn010.in2p3.fr
+	CondorScratchDir = "/var/lib/condor/execute/dir_2254100"
+	Cpus = 1
+	Disk = 2048
+	GPUs = 0
+	Memory = 4096
+...
+006 (786944.000.000) 2026-04-13 11:02:48 Image size of job updated: 8052
+	8  -  MemoryUsage of job (MB)
+	8052  -  ResidentSetSize of job (KB)
+...
+006 (786944.000.000) 2026-04-13 11:05:02 Image size of job updated: 32660
+	8  -  MemoryUsage of job (MB)
+	8052  -  ResidentSetSize of job (KB)
+...
+040 (786944.000.000) 2026-04-13 11:05:02 Started transferring output files
+...
+040 (786944.000.000) 2026-04-13 11:05:02 Finished transferring output files
+...
+005 (786944.000.000) 2026-04-13 11:05:02 Job terminated.
+	(1) Normal termination (return value 1)
+		Usr 0 00:01:45, Sys 0 00:00:14  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:01:45, Sys 0 00:00:14  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	292797  -  Run Bytes Sent By Job
+	1588  -  Run Bytes Received By Job
+	292797  -  Total Bytes Sent By Job
+	1588  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated 
+	   Cpus                 :     0.48        1         1 
+	   Disk (KB)            :   309           2      2048 
+	   GPUs                 :                           0 
+	   Memory (MB)          :     8        4096      4096 
+	   TimeExecute (s)      :   142                       
+	   TimeSlotBusy (s)     :   144                       
+
+	Job terminated of its own accord at 2026-04-13T09:05:02Z with exit-code 1.
+...
+006 (786943.000.000) 2026-04-13 11:06:26 Image size of job updated: 105480
+	57  -  MemoryUsage of job (MB)
+	57768  -  ResidentSetSize of job (KB)
+...
+006 (786943.000.000) 2026-04-13 11:11:27 Image size of job updated: 105480
+	57  -  MemoryUsage of job (MB)
+	58252  -  ResidentSetSize of job (KB)
+...
+006 (786943.000.000) 2026-04-13 11:16:27 Image size of job updated: 105480
+	58  -  MemoryUsage of job (MB)
+	58628  -  ResidentSetSize of job (KB)
+...
+006 (786943.000.000) 2026-04-13 11:21:28 Image size of job updated: 105480
+	58  -  MemoryUsage of job (MB)
+	59056  -  ResidentSetSize of job (KB)
+...
+006 (786943.000.000) 2026-04-13 11:26:29 Image size of job updated: 105480
+	59  -  MemoryUsage of job (MB)
+	59432  -  ResidentSetSize of job (KB)
+...
+006 (786943.000.000) 2026-04-13 11:31:29 Image size of job updated: 105480
+	59  -  MemoryUsage of job (MB)
+	59804  -  ResidentSetSize of job (KB)
+...
