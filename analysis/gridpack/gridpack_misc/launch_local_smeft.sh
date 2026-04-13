@@ -68,7 +68,8 @@ for BIN in "${BINS[@]}"; do
 
     if [[ ! -f "${TARGET}/bin/generate_events" ]]; then
         echo "Copying compiled process to ${TAG} ..."
-        cp -r "$REFERENCE_DIR" "$TARGET"
+        mkdir -p "$TARGET"
+        cp -r "${REFERENCE_DIR}/." "${TARGET}/"
     else
         echo "${TAG} already initialized, skipping copy."
     fi
