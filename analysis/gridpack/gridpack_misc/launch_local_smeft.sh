@@ -1,18 +1,17 @@
 #!/bin/bash
 # Generate 10k events locally for each DYSMEFTMll bin
-# Run this script on llruicms01 from the mg5amcnlo directory:
-#   cd /grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo
-#   bash /path/to/launch_local_smeft.sh
+# Run this script on llruicms01:
+#   bash /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/gridpack/gridpack_misc/launch_local_smeft.sh
 
 set -e
 
 MG5_DIR="/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo"
-REWEIGHT_CARD="${MG5_DIR}/reweight_card.dat"
+REPO_DIR="/grid_mnt/data__data.polcms/cms/adufour/DY_2026"
+REWEIGHT_CARD="${REPO_DIR}/analysis/gridpack/gridpack_misc/cards/reweight_card.dat"
 
 # Check reweight card is present
 if [[ ! -f "$REWEIGHT_CARD" ]]; then
     echo "ERROR: reweight card not found at $REWEIGHT_CARD"
-    echo "Copy it first:  scp <local>:/Users/albertodufour/code/DY2026/analysis/gridpack/gridpack_misc/cards/reweight_card.dat ${REWEIGHT_CARD}"
     exit 1
 fi
 
