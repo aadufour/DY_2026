@@ -1,72 +1,111 @@
 #!/bin/bash
-# Generate 10k events locally for each DYSMEFTMll bin
-# Run this script on llruicms01:
+# Generate 10k SMEFT events locally for each DYSMEFTMll bin.
+#
+# Step 1: run mg5_aMC with the proc card to generate+output DYSMEFTMll50_120
+# Step 2: copy that compiled process to all other bins (MEs are identical)
+# Step 3: for each bin, patch the run_card and call generate_events
+#
+# Usage on llruicms01:
 #   bash /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/gridpack/gridpack_misc/launch_local_smeft.sh
 
 set -e
 
-MG5_DIR="/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo"
-REPO_DIR="/grid_mnt/data__data.polcms/cms/adufour/DY_2026"
-REWEIGHT_CARD="${REPO_DIR}/analysis/gridpack/gridpack_misc/cards/reweight_card.dat"
+MG5="/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo"
+REPO="/grid_mnt/data__data.polcms/cms/adufour/DY_2026"
+CARDS="${REPO}/analysis/gridpack/gridpack_misc/cards"
 
-# Check reweight card is present
-if [[ ! -f "$REWEIGHT_CARD" ]]; then
-    echo "ERROR: reweight card not found at $REWEIGHT_CARD"
-    exit 1
+REFERENCE_BIN="DYSMEFTMll50_120"
+REFERENCE_DIR="${MG5}/${REFERENCE_BIN}"
+
+BINS=(
+    "DYSMEFTMll50_120     50.0   120.0"
+    "DYSMEFTMll120_200   120.0   200.0"
+    "DYSMEFTMll200_400   200.0   400.0"
+    "DYSMEFTMll400_600   400.0   600.0"
+    "DYSMEFTMll600_800   600.0   800.0"
+    "DYSMEFTMll800_1000  800.0  1000.0"
+    "DYSMEFTMll1000_3000 1000.0 3000.0"
+)
+
+# -------------------------------------------------------
+# Step 1: generate+output the reference bin if not ready
+# -------------------------------------------------------
+if [[ ! -f "${REFERENCE_DIR}/bin/generate_events" ]]; then
+    echo "Initializing process in ${REFERENCE_BIN} via mg5_aMC ..."
+
+    # Write a temporary proc card that outputs to the reference bin
+    TMP_PROC=$(mktemp /tmp/smeft_proc_XXXX.mg5)
+    cat > "$TMP_PROC" <<EOF
+import model SMEFTsim_topU3l_MwScheme_UFO-all_massless
+define p = g u c d s u~ c~ d~ s~
+define j = g u c d s u~ c~ d~ s~
+define l+ = e+ mu+
+define l- = e- mu-
+define vl = ve vm vt
+define vl~ = ve~ vm~ vt~
+define p = p b b~
+generate p p > mu+ mu- QCD=0 SMHLOOP=0 NP<=1
+output ${REFERENCE_DIR}
+EOF
+
+    cd "$MG5"
+    ./bin/mg5_aMC "$TMP_PROC"
+    rm "$TMP_PROC"
+else
+    echo "Reference process directory already initialized, skipping generate step."
 fi
 
-# Bin name -> "mmll_min mmll_max"
-declare -A BINS
-BINS["DYSMEFTMll50_120"]="50.0 120.0"
-BINS["DYSMEFTMll120_200"]="120.0 200.0"
-BINS["DYSMEFTMll200_400"]="200.0 400.0"
-BINS["DYSMEFTMll400_600"]="400.0 600.0"
-BINS["DYSMEFTMll600_800"]="600.0 800.0"
-BINS["DYSMEFTMll800_1000"]="800.0 1000.0"
-BINS["DYSMEFTMll1000_3000"]="1000.0 3000.0"
+# -------------------------------------------------------
+# Step 2: copy reference to all other bins
+# -------------------------------------------------------
+for BIN in "${BINS[@]}"; do
+    read -r TAG MLL_MIN MLL_MAX <<< "$BIN"
+    TARGET="${MG5}/${TAG}"
 
-for FOLDER in "${!BINS[@]}"; do
-    PROC_DIR="${MG5_DIR}/${FOLDER}"
-
-    if [[ ! -d "$PROC_DIR" ]]; then
-        echo "WARNING: $PROC_DIR not found, skipping."
+    if [[ "$TAG" == "$REFERENCE_BIN" ]]; then
         continue
     fi
 
-    echo "=============================="
-    echo "Processing: $FOLDER"
-    echo "=============================="
+    if [[ ! -f "${TARGET}/bin/generate_events" ]]; then
+        echo "Copying compiled process to ${TAG} ..."
+        cp -r "$REFERENCE_DIR" "$TARGET"
+    else
+        echo "${TAG} already initialized, skipping copy."
+    fi
+done
 
-    read -r MLL_MIN MLL_MAX <<< "${BINS[$FOLDER]}"
+# -------------------------------------------------------
+# Step 3: for each bin, patch cards and generate events
+# -------------------------------------------------------
+for BIN in "${BINS[@]}"; do
+    read -r TAG MLL_MIN MLL_MAX <<< "$BIN"
+    PROC_DIR="${MG5}/${TAG}"
     CARDS_DIR="${PROC_DIR}/Cards"
 
-    # --- run_card.dat ---
-    # Set nevents, mmll, mmllmax
-    RUN_CARD="${CARDS_DIR}/run_card.dat"
-    if [[ ! -f "$RUN_CARD" ]]; then
-        echo "ERROR: $RUN_CARD not found, skipping $FOLDER."
-        continue
-    fi
+    echo "=============================="
+    echo "Bin: $TAG  [${MLL_MIN}, ${MLL_MAX}]"
+    echo "=============================="
 
+    # Install cards
+    cp "${CARDS}/run_card.dat"      "${CARDS_DIR}/run_card.dat"
+    cp "${CARDS}/reweight_card.dat" "${CARDS_DIR}/reweight_card.dat"
+
+    # Patch run_card for this bin
     sed -i \
         -e "s|^\s*[0-9]*\s*=\s*nevents.*|  10000 = nevents ! Number of unweighted events requested|" \
-        -e "s|^\s*[0-9.-]*\s*=\s*mmll\s.*|  ${MLL_MIN}  = mmll    ! min invariant mass of l+l- (same flavour) lepton pair|" \
-        -e "s|^\s*[0-9.-]*\s*=\s*mmllmax\s.*|  ${MLL_MAX}  = mmllmax ! max invariant mass of l+l- (same flavour) lepton pair|" \
-        "$RUN_CARD"
+        -e "s|^\s*[0-9.-]*\s*=\s*mmll\b.*|  ${MLL_MIN}  = mmll    ! min invariant mass of l+l- (same flavour) lepton pair|" \
+        -e "s|^\s*[0-9.-]*\s*=\s*mmllmax\b.*|  ${MLL_MAX}  = mmllmax ! max invariant mass of l+l- (same flavour) lepton pair|" \
+        -e "s|^\s*\S*\s*=\s*run_tag.*|  ${TAG} = run_tag ! name of the run|" \
+        "${CARDS_DIR}/run_card.dat"
 
-    echo "  Run card updated: nevents=10000, mmll=${MLL_MIN}, mmllmax=${MLL_MAX}"
+    echo "  run_card: nevents=10000, mmll=${MLL_MIN}, mmllmax=${MLL_MAX}"
 
-    # --- reweight_card.dat ---
-    cp "$REWEIGHT_CARD" "${CARDS_DIR}/reweight_card.dat"
-    echo "  Reweight card installed."
-
-    # --- launch generate_events ---
-    echo "  Launching generate_events for $FOLDER ..."
+    # Generate events
     cd "$PROC_DIR"
-    ./bin/generate_events -f 2>&1 | tee "${PROC_DIR}/generate_events.log"
-    cd "$MG5_DIR"
+    ./bin/generate_events -f 2>&1 | tee "${PROC_DIR}/generate_events_${TAG}.log"
+    cd - > /dev/null
 
-    echo "  Done: $FOLDER"
+    echo "  Done: output in ${PROC_DIR}/Events/"
 done
 
 echo ""
