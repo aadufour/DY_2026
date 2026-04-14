@@ -1,19 +1,15 @@
 #! /opt/anaconda3/envs/combine/bin/python3
-# Fixed copy of runScans.py
-# Change vs original: replaced multiprocessing.Pool with ThreadPoolExecutor
-# so that worker threads never try to re-import this script as __main__
-# (the root cause of the spawn-bootstrapping crash on macOS / Python 3.12).
 
 from itertools import combinations
-import sys
-import os
+import sys 
+import os 
 import json
 from optparse import OptionParser
 
 def multicore_run(command):
-    if getattr(multicore_run, "debug", False):
-        print("[DEBUG]", command)
-        return
+    if getattr(multicore_run, "debug", False):   
+        print("[DEBUG]", command)                
+        return                                   
     os.system(command)
 
 
@@ -87,7 +83,7 @@ if __name__ == "__main__":
         default="r",
         help="Comma separated list of parameters to freeze, by default r",
     )
-
+    
     parser.add_option(
         "--freezeGroups",
         type="str",
@@ -127,7 +123,7 @@ if __name__ == "__main__":
         default="",
         help="Track these parameters during the fit",
     )
-
+    
     parser.add_option(
         "--randomProf",
         type=int,
@@ -152,13 +148,13 @@ if __name__ == "__main__":
         help="Metadata file to use e.g. if you want to change ranges. By default metadata.json",
     )
 
-    parser.add_option(
-        "--debug",
-        dest="debug",
-        default=False,
-        action="store_true",
-        help="Debug mode: print commands only",
-    )
+    parser.add_option(                           
+        "--debug",                               
+        dest="debug",                            
+        default=False,                           
+        action="store_true",                     
+        help="Debug mode: print commands only",  
+    )       
 
     (options, args) = parser.parse_args()
 
@@ -178,6 +174,9 @@ if __name__ == "__main__":
     # initial or scan
     action__ = sys.argv[2]
 
+    # if len(sys.argv) > 3:
+    #     points = int(sys.argv[3])
+
     with open(options.metadata) as file:
         metadata = json.load(file)
 
@@ -190,37 +189,39 @@ if __name__ == "__main__":
     parametrs__ = ""
     if options.signalPOIs:
         parametrs__ = " -P " + " -P ".join([f"k_{op}" for op in options.signalPOIs.split(",")])
+    #if options.signalPOIs:
+    #    ops = options.signalPOIs.split(",")
 
     suffix__ = ""
     if len(sys.argv) > 3:
         if sys.argv[3] == "lin":
             suffix__ += "_linear"
-
+   
 
     asim = " -t -1 "
     if options.unblind: asim = " "
-    if options.dataasim: asim = " -t -1 --toysFreq "
-
-    # track
+    if options.dataasim: asim = " -t -1 --toysFreq " 
+    
+    # track 
     track_params = ",".join([i for i in options.track.split(",") if i != ""])
     if track_params != "":
         track_params = " --trackParameters " + track_params + " "
-
+        
     # freezing
     freeze = ""
     if options.stat: freeze += ",allConstrainedNuisances"
     if options.freeze: freeze += "," + options.freeze
-    if options.freezeGroups: freeze += " --freezeNuisanceGroups " + options.freezeGroups
+    if options.freezeGroups: freeze += " --freezeNuisanceGroups " + options.freezeGroups 
     if freeze.startswith(","): freeze = freeze[1:]
     if freeze != "": freeze = " --freezeParameters " + freeze
 
 
-    # create a list whose entries will contain the
+    # create a list whose entries will contain the 
     # operators for which we want to create the workspace
     combos = list(combinations(ops, mode__))
 
     cmds = []
-
+    
     for c in combos:
         print(c)
         operators = ",".join(c)
@@ -236,18 +237,18 @@ if __name__ == "__main__":
             outname = outname + "_unblind"
         if mode__ >=3:
             outname += "_profiled"
-
-
-        setvalue = "--setParameters r=1," + ",".join([f"k_{op}=0" for op in c])
-        if options.unblind:
-            if not options.freeze:
+                
+                
+        setvalue = "--setParameters r=1," + "," + ",".join([f"k_{op}=0" for op in c])
+        if options.unblind: 
+            if not options.freeze: 
                 setvalue=" "
-            elif "r" in options.freeze.split(","):
+            elif "r" in options.freeze.split(","): 
                 setvalue = " --setParameters r=1 "
 
 
         redefine = ",".join([f"k_{op}" for op in c])
-        if parametrs__ == "":
+        if parametrs__ == "": 
             pars = " -P " + " -P ".join([f"k_{op}" for op in c])
         else:
             pars = parametrs__
@@ -277,7 +278,7 @@ if __name__ == "__main__":
         elif action__ == "scan":
             add__ = "" if mode__ < 3 else " --floatOtherPOIs=1 "
 
-            if not os.path.isfile(f"higgsCombine.initialFit_{outname}.MultiDimFit.mH125.root"):
+            if not os.path.isfile(f"higgsCombine.initialFit_{outname}.MultiDimFit.mH125.root"): 
                 print("Continue")
                 continue
 
@@ -295,8 +296,8 @@ if __name__ == "__main__":
 
         elif action__ == "singles":
             add__ = "" if mode__ < 3 else " --floatOtherPOIs=1 "
-
-            if not os.path.isfile(f"higgsCombine.initialFit_{outname}.MultiDimFit.mH125.root"):
+            
+            if not os.path.isfile(f"higgsCombine.initialFit_{outname}.MultiDimFit.mH125.root"): 
                 print("Continue")
                 continue
 
@@ -310,28 +311,25 @@ if __name__ == "__main__":
 
     ## Get the number of cores available and run the commands in parallel
     multicore_run.debug = options.debug
-    import multiprocessing
-    from concurrent.futures import ThreadPoolExecutor  # FIX: threads instead of processes
-
+    import multiprocessing 
+    from multiprocessing import Pool
+    
     cpu_count = multiprocessing.cpu_count()
     num_cores_each_job = min(cpu_count - int(cpu_count/3), len(cmds))
 
-    if options.debug:
-        print("DEBUG mode: printing commands, not executing them")
-        for cmd in cmds:
-            multicore_run(cmd)
-    else:
-        # FIX: ThreadPoolExecutor uses OS threads, not Python subprocesses.
-        # With multiprocessing.Pool (spawn mode, macOS default), each worker
-        # re-imports this script as __main__ and hits the Pool() line again,
-        # crashing with "bootstrapping phase" RuntimeError.
-        # Threads share the process and never trigger that re-import.
-        print("Running the processes in multiprocessing mode: {} cores used".format(num_cores_each_job))
-        with ThreadPoolExecutor(max_workers=num_cores_each_job) as executor:
-            list(executor.map(multicore_run, cmds))
+    if options.debug:                                                
+            print("DEBUG mode: printing commands, not executing them")   
+            for cmd in cmds:                                             
+                multicore_run(cmd)                                       
+    else:                                                            
+        pool = Pool(processes=num_cores_each_job) 
+        print(("Running the processes in multiprocessing mode: {} cores used".format(num_cores_each_job)))
+        pool.map(multicore_run, cmds)
+        pool.close()
+        pool.join()
 
     print("All subprocesses finished")
-
+          
     if not options.debug and options.splitPoints != 0 and action__ == "scan":
         # Execute the hadd command
         print("Hadding the results!")
