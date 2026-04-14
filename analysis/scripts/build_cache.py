@@ -28,10 +28,21 @@ import pylhe
 
 # ── Config (must match rw_triple_diff.py) ─────────────────────────────────────
 MLL_BIN_EDGES = [50, 120, 200, 400, 600, 800, 1000, 3000]
+# LHE_FILES = [
+#     f"/Users/albertodufour/MG5_2_9_18/mg5amcnlo/DY_all_{lo}_{hi}/myLHE/unweighted_events.lhe"
+#     for lo, hi in zip(MLL_BIN_EDGES[:-1], MLL_BIN_EDGES[1:])
+# ]
+
+# updated for MG5 llr paths
 LHE_FILES = [
-    f"/Users/albertodufour/MG5_2_9_18/mg5amcnlo/DY_all_{lo}_{hi}/myLHE/unweighted_events.lhe"
+    f"/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/DY_pdf_{lo}_{hi}/Events/run_02/unweighted_events.lhe.gz"
     for lo, hi in zip(MLL_BIN_EDGES[:-1], MLL_BIN_EDGES[1:])
 ]
+
+
+
+
+
 
 MLL_LO = 50.0
 MLL_HI = 3000.0
@@ -51,8 +62,12 @@ OPERATORS = [
 
 OP_PAIRS = list(combinations(OPERATORS, 2))
 
-CACHE_FILE      = "/Users/albertodufour/code/DY2026/analysis/lhe_cache.pkl"
-CHECKPOINT_FILE = "/Users/albertodufour/code/DY2026/analysis/lhe_cache_checkpoint.pkl"
+# CACHE_FILE      = "/Users/albertodufour/code/DY2026/analysis/lhe_cache.pkl"
+# CHECKPOINT_FILE = "/Users/albertodufour/code/DY2026/analysis/lhe_cache_checkpoint.pkl"
+
+# updated for MG5 llr paths
+CACHE_FILE      = "/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/CACHE/lhe_cache.pkl"
+CHECKPOINT_FILE = "/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/CACHE/lhe_cache_chekpoint.pkl"
 
 # ── Kinematic functions ────────────────────────────────────────────────────────
 def mll(p1, p2):
