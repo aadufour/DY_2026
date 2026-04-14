@@ -35,7 +35,7 @@ MLL_BIN_EDGES = [50, 120, 200, 400, 600, 800, 1000, 3000]
 
 # updated for MG5 llr paths
 LHE_FILES = [
-    f"/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/DYSMEFTMll{lo}_{hi}/Events/run_02/unweighted_events.lhe.gz"
+    f"/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/DYSMEFTMll{lo}_{hi}/Events/run_01/unweighted_events.lhe.gz"
     for lo, hi in zip(MLL_BIN_EDGES[:-1], MLL_BIN_EDGES[1:])
 ]
 
