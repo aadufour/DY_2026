@@ -1,16 +1,26 @@
 """
 build_datacard.py
 
-Build the combine input ROOT file and datacard.txt from the LHE cache.
+Build the Combine input ROOT file and datacard.txt from the LHE cache.
 Supports one or multiple EFT operators simultaneously.
+
+Systematics implemented
+────────────────────────
+  lumi       lnN    2% flat on all processes
+  qcd_scale  shape  Envelope of MUR/MUF variations (factorised from SM)
+  pdf        shape  RMS over PDF replicas (NNPDF MC method, factorised from SM)
+
+Factorisation assumption for EFT templates:
+  The relative shape variation is taken from the SM template and applied
+  multiplicatively to all EFT components (quad, sm_lin_quad, mixed).
+  This is standard practice for LO EFT analyses.
 
 Usage:
     python3 build_datacard.py --op cHDD
     python3 build_datacard.py --op cHDD --C 0.5 --lumi 59740
     python3 build_datacard.py --op cHDD --unrolled
-    python3 build_datacard.py --op cHDD cHW --C 1.0 0.5 --lumi 59740
+    python3 build_datacard.py --op cHDD cHWB --C 1.0 --lumi 59740
     python3 build_datacard.py --all_op --lumi 59740
-    python3 build_datacard.py --op cHDD --output histograms.root --datacard datacard.txt --cache lhe_cache.pkl
 """
 
 import argparse
@@ -22,230 +32,233 @@ import boost_histogram as bh
 import numpy as np
 import uproot
 
-# ---- Config --------------------------------------------------
+# ── Config ─────────────────────────────────────────────────────────────────────
 
-CACHE_FILE    = "/Users/albertodufour/code/DY2026/analysis/lhe_cache.pkl"
-OUTPUT_FILE   = "/Users/albertodufour/code/DY2026/analysis/histograms.root"
-DATACARD_FILE = "/Users/albertodufour/code/DY2026/analysis/datacard.txt"
+CACHE_FILE    = "/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/CACHE/lhe_cache.pkl"
+OUTPUT_FILE   = "/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/combine/histograms.root"
+DATACARD_FILE = "/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/combine/datacard.txt"
 CHANNEL       = "triple_DY"
 
 MLL_EDGES   = np.array([50, 70, 90, 110, 200, 800, 1400, 2000, 2400, 3000], dtype=float)
 RAP_EDGES   = np.array([0.0, 0.5, 1.0, 2.5], dtype=float)
 CSTAR_EDGES = np.array([-1.0, -0.5, 0.0, 0.5, 1.0], dtype=float)
 
-# ---- Args ----------------------------------------------------
+# ── Args ───────────────────────────────────────────────────────────────────────
 
-parser = argparse.ArgumentParser(description="Build combine ROOT file and datacard from LHE cache.")
+parser = argparse.ArgumentParser()
 op_group = parser.add_mutually_exclusive_group(required=True)
-op_group.add_argument("--op",     nargs="+",
-                      help="One or more operator names (must be in cache, e.g. --op cHDD cHW)")
-op_group.add_argument("--all_op", action="store_true",
-                      help="Use all operators found in cache")
-parser.add_argument("--C",        type=float, nargs="+", default=[1.0],
-                    help="Reference Wilson coefficient(s) for sm_lin_quad template. "
-                         "One value is broadcast to all operators; "
-                         "or pass one per operator (default: 1.0)")
+op_group.add_argument("--op",     nargs="+")
+op_group.add_argument("--all_op", action="store_true")
+parser.add_argument("--C",        type=float, nargs="+", default=[1.0])
 parser.add_argument("--lumi",     type=float, default=1.0,
                     help="Luminosity in pb^-1 (default: 1.0 = raw weights in pb)")
-parser.add_argument("--unrolled", action="store_true",
-                    help="Use unrolled 3D (mll x rap x cstar) histogram instead of 1D mll")
-parser.add_argument("--cache",    default=CACHE_FILE, help="Path to lhe_cache.pkl")
-parser.add_argument("--output",   default=OUTPUT_FILE, help="Output ROOT file path")
-parser.add_argument("--datacard", default=DATACARD_FILE, help="Output datacard path")
+parser.add_argument("--unrolled", action="store_true")
+parser.add_argument("--cache",    default=CACHE_FILE)
+parser.add_argument("--output",   default=OUTPUT_FILE)
+parser.add_argument("--datacard", default=DATACARD_FILE)
 args = parser.parse_args()
 
 LUMI = args.lumi
 
-# ---- Load cache ----------------------------------------------
+# ── Load cache ─────────────────────────────────────────────────────────────────
 
 if not os.path.exists(args.cache):
-    raise FileNotFoundError(
-        f"Cache not found: {args.cache}\n"
-        "Run build_cache.py first to generate it."
-    )
+    raise FileNotFoundError(f"Cache not found: {args.cache}\nRun build_cache.py first.")
 
 print("Loading cache ...")
 with open(args.cache, "rb") as f:
     cache = pickle.load(f)
 
-mll_arr   = cache["mll"]
-rap_arr   = cache["rap"]
-cstar_arr = cache["cstar"]
-w_SM      = cache["w_SM"]
-w_p1_all  = cache["w_p1"]
-w_m1_all  = cache["w_m1"]
-w_pp_all  = cache.get("w_pp", {})
-print(f"  {len(mll_arr):,} events loaded\n")
+mll_arr     = cache["mll"]
+rap_arr     = cache["rap"]
+cstar_arr   = cache["cstar"]
+w_SM        = cache["w_SM"]
+w_p1_all    = cache["w_p1"]
+w_m1_all    = cache["w_m1"]
+w_pp_all    = cache.get("w_pp",    {})
+w_scale_all = cache.get("w_scale", {})
+w_pdf_all   = cache.get("w_pdf",   {})
 
-# ---- Resolve operator list -----------------------------------
+has_scale = bool(w_scale_all)
+has_pdf   = bool(w_pdf_all)
+
+print(f"  {len(mll_arr):,} events loaded")
+print(f"  Scale variation keys : {len(w_scale_all)}"
+      + ("" if has_scale else "  (none — will be skipped)"))
+print(f"  PDF replica keys     : {len(w_pdf_all)}"
+      + ("" if has_pdf else "  (none — will be skipped)"))
+print()
+
+# ── Operator list ──────────────────────────────────────────────────────────────
 
 if args.all_op:
     OPERATORS = sorted(w_p1_all.keys())
-    print(f"--all_op: found {len(OPERATORS)} operators in cache: {OPERATORS}")
+    print(f"--all_op: {len(OPERATORS)} operators found in cache")
 else:
     OPERATORS = args.op
 
-# Validate all requested operators exist in cache
 missing = [op for op in OPERATORS if op not in w_p1_all]
 if missing:
-    available = sorted(w_p1_all.keys())
-    raise KeyError(
-        f"Operator(s) not found in cache: {missing}\n"
-        f"Available: {available}\n"
-        f"Add them to build_cache.py's OPERATORS list and rebuild."
-    )
+    raise KeyError(f"Operators not in cache: {missing}\nAvailable: {sorted(w_p1_all.keys())}")
 
-# ---- Resolve C values ----------------------------------------
+# ── C values ───────────────────────────────────────────────────────────────────
 
 if len(args.C) == 1:
     C_values = {op: args.C[0] for op in OPERATORS}
 elif len(args.C) == len(OPERATORS):
     C_values = {op: c for op, c in zip(OPERATORS, args.C)}
 else:
-    raise ValueError(
-        f"--C expects either 1 value (broadcast) or {len(OPERATORS)} values "
-        f"(one per operator), got {len(args.C)}."
-    )
+    raise ValueError(f"--C: expected 1 or {len(OPERATORS)} values, got {len(args.C)}")
 
-# ---- Print summary -------------------------------------------
+# ── Summary ────────────────────────────────────────────────────────────────────
 
 print(f"Operators  : {OPERATORS}")
 print(f"C_ref      : { {op: C_values[op] for op in OPERATORS} }")
 print(f"Luminosity : {LUMI} pb^-1")
-print(f"Observable : {'unrolled 3D' if args.unrolled else 'mll 1D'}")
-print(f"Cache      : {args.cache}")
-print(f"Output     : {args.output}")
-print(f"Datacard   : {args.datacard}")
+print(f"Observable : {'unrolled 3D (mll x rap x cstar)' if args.unrolled else '1D mll'}")
+syst_list = ["lumi"] + (["qcd_scale"] if has_scale else []) + (["pdf"] if has_pdf else [])
+print(f"Systematics: {', '.join(syst_list)}")
 print()
 
-# ---- Histogram builders --------------------------------------
+# ── Histogram builders ─────────────────────────────────────────────────────────
 
-def _x_axis(label):
-    return bh.axis.Variable(MLL_EDGES, metadata=label)
-
-
-def _unrolled_axis():
-    n = (len(MLL_EDGES)-1) * (len(RAP_EDGES)-1) * (len(CSTAR_EDGES)-1)
-    return bh.axis.Regular(n, 0, n, metadata="Unrolled bin (m_{ll} #times y_{ll} #times cos#theta*)")
-
-
-def make_mll_1d(weights, proc_label):
-    h = bh.Histogram(_x_axis("m_{ll} [GeV]"), storage=bh.storage.Weight())
-    h.fill(mll_arr, weight=weights * LUMI)
-    h.metadata = proc_label
-    return h
-
-
-def _make_3d_filled(weights):
-    h = bh.Histogram(
-        bh.axis.Variable(MLL_EDGES),
-        bh.axis.Variable(RAP_EDGES),
-        bh.axis.Variable(CSTAR_EDGES),
-        storage=bh.storage.Weight(),
-    )
-    h.fill(mll_arr, rap_arr, cstar_arr, weight=weights * LUMI)
-    return h
-
-
-def unroll_3d(h3d, proc_label):
-    v   = h3d.view()
-    n   = v["value"].size
-    h1d = bh.Histogram(_unrolled_axis(), storage=bh.storage.Weight())
-    h1d.view()["value"]    = v["value"].T.flatten()
-    h1d.view()["variance"] = v["variance"].T.flatten()
-    h1d.metadata = proc_label
-    return h1d
-
-
-def make_hist(weights, proc_label):
+def make_hist(weights, label=""):
     if args.unrolled:
-        return unroll_3d(_make_3d_filled(weights), proc_label)
-    return make_mll_1d(weights, proc_label)
+        h3 = bh.Histogram(
+            bh.axis.Variable(MLL_EDGES),
+            bh.axis.Variable(RAP_EDGES),
+            bh.axis.Variable(CSTAR_EDGES),
+            storage=bh.storage.Weight())
+        h3.fill(mll_arr, rap_arr, cstar_arr, weight=weights * LUMI)
+        v  = h3.view()
+        n  = (len(MLL_EDGES)-1) * (len(RAP_EDGES)-1) * (len(CSTAR_EDGES)-1)
+        ax = bh.axis.Regular(n, 0, n,
+            metadata="Unrolled bin (m_{ll} x y_{ll} x cos(theta*))")
+        h1 = bh.Histogram(ax, storage=bh.storage.Weight())
+        h1.view()["value"]    = v["value"].T.flatten()
+        h1.view()["variance"] = v["variance"].T.flatten()
+        h1.metadata = label
+        return h1
+    else:
+        h = bh.Histogram(
+            bh.axis.Variable(MLL_EDGES, metadata="m_{ll} [GeV]"),
+            storage=bh.storage.Weight())
+        h.fill(mll_arr, weight=weights * LUMI)
+        h.metadata = label
+        return h
 
-# ---- Weight decomposition and histograms ---------------------
+def _apply_ratio(h_nom, ratio):
+    """Return copy of h_nom with bins multiplied by ratio array."""
+    h = h_nom.copy()
+    h.view()["value"]    = h_nom.view()["value"]    * ratio
+    h.view()["variance"] = h_nom.view()["variance"] * ratio**2
+    return h
 
-# sm and data_obs are shared across all operators
+def _safe_ratio(var_vals, nom_vals):
+    with np.errstate(divide='ignore', invalid='ignore'):
+        return np.where(nom_vals > 0, var_vals / nom_vals, 1.0)
+
+# ── Pre-compute per-bin systematic ratios relative to SM nominal ───────────────
+# All EFT templates share the same ratio (factorisation assumption).
+
+sm_nom_vals = make_hist(w_SM).values()
+
+scale_up_ratio = scale_down_ratio = None
+pdf_up_ratio   = pdf_down_ratio   = None
+
+if has_scale:
+    print("Computing QCD scale envelope ...")
+    scale_var_vals = np.array([
+        make_hist(w_scale_all[k]).values() for k in w_scale_all
+    ])
+    # Exclude central point (MUR=1, MUF=1, PDF=central)
+    central_idx = next(
+        (i for i, k in enumerate(w_scale_all)
+         if "1.0" in k and k.lower().count("1.") >= 2),
+        None)
+    if central_idx is not None:
+        scale_var_vals = np.delete(scale_var_vals, central_idx, axis=0)
+    ratios           = _safe_ratio(scale_var_vals, sm_nom_vals)
+    scale_up_ratio   = ratios.max(axis=0)
+    scale_down_ratio = ratios.min(axis=0)
+    print(f"  Envelope over {len(ratios)} non-central scale variations\n")
+
+if has_pdf:
+    print("Computing PDF uncertainty (NNPDF RMS) ...")
+    pdf_var_vals = np.array([
+        make_hist(w_pdf_all[k]).values() for k in w_pdf_all
+    ])
+    pdf_ratios     = _safe_ratio(pdf_var_vals, sm_nom_vals)
+    pdf_mean       = pdf_ratios.mean(axis=0)
+    pdf_std        = pdf_ratios.std(axis=0)
+    pdf_up_ratio   = pdf_mean + pdf_std
+    pdf_down_ratio = np.maximum(pdf_mean - pdf_std, 0.0)
+    print(f"  RMS over {len(pdf_var_vals)} PDF replicas\n")
+
+# ── Build nominal process histograms ──────────────────────────────────────────
+
 histograms = {}
-histograms["sm"]       = make_hist(w_SM, f"SM -- {CHANNEL}")
-histograms["data_obs"] = make_hist(w_SM, f"data_obs (= SM) -- {CHANNEL}")
+histograms["sm"]       = make_hist(w_SM, "SM")
+histograms["data_obs"] = make_hist(w_SM, "data_obs (Asimov = SM)")
 
 for op in OPERATORS:
-    C   = C_values[op]
-    wp1 = w_p1_all[op]
-    wm1 = w_m1_all[op]
-
-    w_lin         = 0.5 * (wp1 - wm1)
-    w_quad        = 0.5 * (wp1 + wm1) - w_SM
-    w_slq         = w_SM + C * w_lin + C**2 * w_quad
-    w_quad_scaled = C**2 * w_quad
-
+    C      = C_values[op]
+    wp1    = w_p1_all[op]
+    wm1    = w_m1_all[op]
+    w_lin  = 0.5 * (wp1 - wm1)
+    w_quad = 0.5 * (wp1 + wm1) - w_SM
+    w_slq  = w_SM + C * w_lin + C**2 * w_quad
     if w_slq.sum() < 0:
-        print(f"WARNING: [{op}] full cross section is negative at C={C} -- "
-              "C may be outside EFT validity.\n")
-
-    histograms[f"quad_{op}"]        = make_hist(w_quad_scaled, f"quad {op}  C={C} -- {CHANNEL}")
-    histograms[f"sm_lin_quad_{op}"] = make_hist(w_slq,         f"SM+lin+quad {op}  C={C} -- {CHANNEL}")
-
-# ---- Interference (mixed) terms for operator pairs -----------
+        print(f"WARNING: [{op}] total cross section negative at C={C}")
+    histograms[f"quad_{op}"]        = make_hist(C**2 * w_quad, f"quad {op} C={C}")
+    histograms[f"sm_lin_quad_{op}"] = make_hist(w_slq,         f"SM+lin+quad {op} C={C}")
 
 OP_PAIRS = list(combinations(OPERATORS, 2))
-if len(OPERATORS) >= 2 and not w_pp_all:
-    print("WARNING: cache has no 'w_pp' cross-term weights -- skipping interference shapes.\n"
-          "         Rebuild the cache with the updated build_cache.py to include them.")
-
 for op1, op2 in OP_PAIRS:
-    pair = (op1, op2)
+    pair = (op1, op2) if (op1, op2) in w_pp_all else (op2, op1)
     if pair not in w_pp_all:
-        pair = (op2, op1)
-    if pair not in w_pp_all:
-        print(f"WARNING: no cross-weight found for ({op1}, {op2}), skipping.")
+        print(f"WARNING: no cross-weight for ({op1},{op2}), skipping.")
         continue
+    C1, C2  = C_values[op1], C_values[op2]
+    w_inter = w_pp_all[pair] - w_p1_all[op1] - w_p1_all[op2] + w_SM
+    histograms[f"sm_lin_quad_mixed_{op1}_{op2}"] = \
+        make_hist(C1 * C2 * w_inter, f"mixed {op1}x{op2}")
 
-    C1 = C_values[op1]
-    C2 = C_values[op2]
+# ── Build Up/Down shape variants for all processes (except data_obs) ───────────
 
-    # w_inter = coefficient of C1*C2 per event
-    # Derived from: w_pp = w_SM + A1 + A2 + B11 + B22 + B12
-    #               w_p1[op] = w_SM + A + B  =>  w_inter = w_pp - w_p1[op1] - w_p1[op2] + w_SM
-    w_inter        = w_pp_all[pair] - w_p1_all[op1] - w_p1_all[op2] + w_SM
-    w_inter_scaled = C1 * C2 * w_inter
+nominal_procs = [k for k in histograms if k != "data_obs"]
 
-    name = f"sm_lin_quad_mixed_{op1}_{op2}"
-    histograms[name] = make_hist(w_inter_scaled, f"mixed {op1}x{op2}  C1={C1} C2={C2} -- {CHANNEL}")
+for proc in nominal_procs:
+    h = histograms[proc]
+    if has_scale:
+        histograms[f"{proc}_qcd_scaleUp"]   = _apply_ratio(h, scale_up_ratio)
+        histograms[f"{proc}_qcd_scaleDown"] = _apply_ratio(h, scale_down_ratio)
+    if has_pdf:
+        histograms[f"{proc}_pdfUp"]   = _apply_ratio(h, pdf_up_ratio)
+        histograms[f"{proc}_pdfDown"] = _apply_ratio(h, pdf_down_ratio)
 
-# ---- Print histogram summary ---------------------------------
+# ── Print nominal summary ──────────────────────────────────────────────────────
 
-print(f"{'Process':<32}  {'Integral':>14}  {'sqrt(SumW2)':>14}")
-print("-" * 64)
-for name, h in histograms.items():
+print(f"{'Process':<42}  {'Integral':>14}  {'sqrt(SumW2)':>14}")
+print("-" * 74)
+for name in nominal_procs + ["data_obs"]:
+    h    = histograms[name]
     intg = h.values().sum()
     unc  = np.sqrt(h.variances().sum())
-    print(f"  {name:<30}  {intg:>14.4e}  {unc:>14.4e}")
-
-n_bins = histograms["sm"].values().size
-print(f"\nHistogram bins : {n_bins}")
-if args.unrolled:
-    n_m = len(MLL_EDGES)   - 1
-    n_r = len(RAP_EDGES)   - 1
-    n_c = len(CSTAR_EDGES) - 1
-    print(f"  = {n_m} mll x {n_r} rap x {n_c} cstar")
+    print(f"  {name:<40}  {intg:>14.4e}  {unc:>14.4e}")
 print()
 
-# ---- Write ROOT file -----------------------------------------
+# ── Write ROOT file ────────────────────────────────────────────────────────────
 
+os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
 print(f"Writing {args.output} ...")
 with uproot.recreate(args.output) as rf:
     for name, h in histograms.items():
-        key = f"{CHANNEL}/{name}"
-        rf[key] = h
-        print(f"  wrote {key}")
+        rf[f"{CHANNEL}/{name}"] = h
+print(f"  {len(histograms)} histograms written\n")
 
-print(f"\nOutput : {os.path.abspath(args.output)}")
+# ── Process list, indices, rates ──────────────────────────────────────────────
 
-# ---- Build process list and rates ----------------------------
-
-# Order: sm, then for each operator: quad_{op}, sm_lin_quad_{op},
-#        then for each pair: sm_lin_quad_mixed_{op1}_{op2}
 processes = ["sm"]
 for op in OPERATORS:
     processes.append(f"quad_{op}")
@@ -258,12 +271,7 @@ for op1, op2 in OP_PAIRS:
 rates       = {p: histograms[p].values().sum() for p in processes}
 observation = histograms["data_obs"].values().sum()
 
-# Process indices (all EFT templates get negative indices):
-#   sm                           -> -1
-#   quad_{OPi}                   -> -(2i+2)
-#   sm_lin_quad_{OPi}            -> -(2i+3)
-#   sm_lin_quad_mixed_{OPi_OPj}  -> -(2*N+2 + k)  (k = 0-based pair index)
-n_ops = len(OPERATORS)
+n_ops        = len(OPERATORS)
 proc_indices = {"sm": -1}
 for i, op in enumerate(OPERATORS):
     proc_indices[f"quad_{op}"]        = -(2*i + 2)
@@ -273,47 +281,47 @@ for k, (op1, op2) in enumerate(OP_PAIRS):
     if name in histograms:
         proc_indices[name] = -(2*n_ops + 2 + k)
 
-# ---- Write datacard ------------------------------------------
+# ── Write datacard ─────────────────────────────────────────────────────────────
 
-root_abs  = os.path.abspath(args.output)
-n_proc    = len(processes)
-
+n_syst    = 1 + (1 if has_scale else 0) + (1 if has_pdf else 0)
+col       = lambda s: f"  {str(s):<28}"
 sep_long  = "-" * 130
 sep_short = "-" * 45
 
 lines = [
     sep_long,
     "imax 1",
-    f"jmax {n_proc - 1}",
-    "kmax 1",
+    f"jmax {len(processes) - 1}",
+    f"kmax {n_syst}",
     sep_long,
-    f"shapes *         {CHANNEL}    {root_abs} $CHANNEL/$PROCESS $CHANNEL/$PROCESS_$SYSTEMATIC",
-    f"shapes data_obs  {CHANNEL}    {root_abs} $CHANNEL/data_obs",
+    (f"shapes *         {CHANNEL}  {os.path.abspath(args.output)}"
+     f"  $CHANNEL/$PROCESS  $CHANNEL/$PROCESS_$SYSTEMATIC"),
+    (f"shapes data_obs  {CHANNEL}  {os.path.abspath(args.output)}"
+     f"  $CHANNEL/data_obs"),
     sep_long,
     f"bin          {CHANNEL}",
-    f"observation  {observation:.4g}",
+    f"observation  {observation:.6g}",
     sep_long,
+    "bin         " + "".join(col(CHANNEL)           for _ in processes),
+    "process     " + "".join(col(p)                 for p in processes),
+    "process     " + "".join(col(proc_indices[p])   for p in processes),
+    "rate        " + "".join(col(f"{rates[p]:.6g}") for p in processes),
+    sep_short,
+    "lumi        lnN  " + "".join(col("1.02") for _ in processes),
 ]
 
-# bin / process / process index / rate rows
-bin_row  = "bin         " + "".join(f"  {CHANNEL:<25}" for _ in processes)
-proc_row = "process     " + "".join(f"  {p:<25}" for p in processes)
-idx_row  = "process     " + "".join(f"  {proc_indices[p]:<25}" for p in processes)
-rate_row = "rate        " + "".join(f"  {rates[p]:<25.4g}" for p in processes)
+if has_scale:
+    lines.append("qcd_scale   shape" + "".join(col("1") for _ in processes))
+if has_pdf:
+    lines.append("pdf         shape" + "".join(col("1") for _ in processes))
 
-lines += [bin_row, proc_row, idx_row, rate_row, sep_short]
-
-# systematics
-lumi_row = "lumi  lnN   " + "".join(f"  {1.02:<25}" for _ in processes)
-lines.append(lumi_row)
 lines.append("")
-
 datacard_text = "\n".join(lines)
 
-print(f"\nWriting {args.datacard} ...")
+os.makedirs(os.path.dirname(os.path.abspath(args.datacard)), exist_ok=True)
+print(f"Writing {args.datacard} ...")
 with open(args.datacard, "w") as f:
     f.write(datacard_text)
 
-print(f"Datacard : {os.path.abspath(args.datacard)}")
-print()
+print(f"\n{'-'*72}")
 print(datacard_text)
