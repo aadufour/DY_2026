@@ -7,3 +7,4 @@ ssh.md
 *.lhe
 genproductions
 MG5
+.venv
