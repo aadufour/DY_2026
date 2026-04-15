@@ -157,21 +157,23 @@ if os.path.exists(CHECKPOINT_FILE):
     acc_w_p1        = ckpt["w_p1"]
     acc_w_m1        = ckpt["w_m1"]
     acc_w_pp        = ckpt["w_pp"]
-    acc_w_scale     = ckpt.get("w_scale", {})
-    acc_w_pdf       = ckpt.get("w_pdf",   {})
-    completed_files = ckpt["completed_files"]
+    acc_w_scale       = ckpt.get("w_scale",       {})
+    acc_w_pdf         = ckpt.get("w_pdf",         {})
+    acc_w_pdf_central = ckpt.get("w_pdf_central", np.empty(0, dtype=np.float64))
+    completed_files   = ckpt["completed_files"]
     print(f"  {len(completed_files)} file(s) done, {len(acc_mll):,} events loaded\n")
 else:
-    acc_mll         = np.empty(0, dtype=np.float64)
-    acc_rap         = np.empty(0, dtype=np.float64)
-    acc_cstar       = np.empty(0, dtype=np.float64)
-    acc_w_SM        = np.empty(0, dtype=np.float64)
-    acc_w_p1        = {op:   np.empty(0, dtype=np.float64) for op   in OPERATORS}
-    acc_w_m1        = {op:   np.empty(0, dtype=np.float64) for op   in OPERATORS}
-    acc_w_pp        = {pair: np.empty(0, dtype=np.float64) for pair in OP_PAIRS}
-    acc_w_scale     = {}
-    acc_w_pdf       = {}
-    completed_files = []
+    acc_mll           = np.empty(0, dtype=np.float64)
+    acc_rap           = np.empty(0, dtype=np.float64)
+    acc_cstar         = np.empty(0, dtype=np.float64)
+    acc_w_SM          = np.empty(0, dtype=np.float64)
+    acc_w_p1          = {op:   np.empty(0, dtype=np.float64) for op   in OPERATORS}
+    acc_w_m1          = {op:   np.empty(0, dtype=np.float64) for op   in OPERATORS}
+    acc_w_pp          = {pair: np.empty(0, dtype=np.float64) for pair in OP_PAIRS}
+    acc_w_scale       = {}
+    acc_w_pdf         = {}
+    acc_w_pdf_central = np.empty(0, dtype=np.float64)
+    completed_files   = []
 
 # ---- Main loop ---------------------------------------------------
 
@@ -199,8 +201,9 @@ for lhe_file in LHE_FILES:
     buf_w_p1    = {op:   [] for op   in OPERATORS}
     buf_w_m1    = {op:   [] for op   in OPERATORS}
     buf_w_pp    = {pair: [] for pair in OP_PAIRS}
-    buf_w_scale = {k: [] for k in scale_ids}
-    buf_w_pdf   = {k: [] for k in pdf_ids}
+    buf_w_scale       = {k: [] for k in scale_ids}
+    buf_w_pdf         = {k: [] for k in pdf_ids}
+    buf_w_pdf_central = []
 
     pp_keys = {}
 
@@ -255,6 +258,9 @@ for lhe_file in LHE_FILES:
             for k in scale_ids:
                 buf_w_scale[k].append(wkeys.get(k, wkeys['SM']))
 
+            if central_id is not None:
+                buf_w_pdf_central.append(wkeys.get(central_id, wkeys['SM']))
+
             for k in pdf_ids:
                 buf_w_pdf[k].append(wkeys.get(k, wkeys['SM']))
 
@@ -282,6 +288,8 @@ for lhe_file in LHE_FILES:
         prev = acc_w_pdf.get(k, np.empty(0, dtype=np.float64))
         acc_w_pdf[k] = np.concatenate([prev, np.array(buf_w_pdf[k], dtype=np.float64)])
 
+    acc_w_pdf_central = np.concatenate([acc_w_pdf_central, np.array(buf_w_pdf_central, dtype=np.float64)])
+
     # Save checkpoint
     completed_files.append(lhe_file)
     ckpt = {
@@ -294,6 +302,7 @@ for lhe_file in LHE_FILES:
         "w_pp":            acc_w_pp,
         "w_scale":         acc_w_scale,
         "w_pdf":           acc_w_pdf,
+        "w_pdf_central":   acc_w_pdf_central,
         "completed_files": completed_files,
     }
     with open(CHECKPOINT_FILE, "wb") as f:
@@ -314,8 +323,9 @@ cache = {
     'w_p1':    acc_w_p1,
     'w_m1':    acc_w_m1,
     'w_pp':    acc_w_pp,
-    'w_scale': acc_w_scale,
-    'w_pdf':   acc_w_pdf,
+    'w_scale':       acc_w_scale,
+    'w_pdf':         acc_w_pdf,
+    'w_pdf_central': acc_w_pdf_central,
 }
 
 with open(CACHE_FILE, 'wb') as f:
