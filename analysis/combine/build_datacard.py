@@ -183,29 +183,29 @@ if has_scale:
     print(f"  Envelope over {len(ratios)} non-central scale variations\n")
 
 if has_pdf:
-    print("Computing PDF uncertainty (asymmetric NNPDF RMS) ...")
+    print("Computing PDF uncertainty (asymmetric RMS of replica values) ...")
     pdf_var_vals = np.array([
         make_hist(w_pdf_all[k]).values() for k in w_pdf_all
     ])
-    # Asymmetric RMS: separate replicas above/below nominal per bin
-    deviations = pdf_var_vals - sm_nom_vals[np.newaxis, :]
-    n_bins     = sm_nom_vals.shape[0] if sm_nom_vals.ndim == 1 else sm_nom_vals.size
-    sigma_up   = np.zeros_like(sm_nom_vals)
-    sigma_down = np.zeros_like(sm_nom_vals)
-    flat_dev = deviations.reshape(len(pdf_var_vals), -1)
-    flat_nom = sm_nom_vals.flatten()
-    sigma_up_flat   = np.zeros(flat_nom.shape)
-    sigma_down_flat = np.zeros(flat_nom.shape)
+    # Giacomo's prescription: for each bin, split replicas into those
+    # above/below nominal, then take RMS of the raw VALUES (not deviations).
+    # h_up[b]   = sqrt(mean(h_i(b)^2 for replicas i where h_i(b) > nominal(b)))
+    # h_down[b] = sqrt(mean(h_i(b)^2 for replicas i where h_i(b) < nominal(b)))
+    flat_reps = pdf_var_vals.reshape(len(pdf_var_vals), -1)  # (100, N_bins)
+    flat_nom  = sm_nom_vals.flatten()                        # (N_bins,)
+    h_pdf_up   = np.copy(flat_nom)
+    h_pdf_down = np.copy(flat_nom)
     for b in range(flat_nom.shape[0]):
-        dev = flat_dev[:, b]
-        up_devs  = dev[dev > 0]
-        dn_devs  = dev[dev < 0]
-        if len(up_devs) > 0:
-            sigma_up_flat[b]   = np.sqrt(np.mean(up_devs**2))
-        if len(dn_devs) > 0:
-            sigma_down_flat[b] = np.sqrt(np.mean(dn_devs**2))
-    pdf_up_ratio   = _safe_ratio(flat_nom + sigma_up_flat, flat_nom).reshape(sm_nom_vals.shape)
-    pdf_down_ratio = _safe_ratio(np.maximum(flat_nom - sigma_down_flat, 0), flat_nom).reshape(sm_nom_vals.shape)
+        vals = flat_reps[:, b]
+        nom  = flat_nom[b]
+        up_vals   = vals[vals > nom]
+        down_vals = vals[vals < nom]
+        if len(up_vals) > 0:
+            h_pdf_up[b]   = np.sqrt(np.mean(up_vals**2))
+        if len(down_vals) > 0:
+            h_pdf_down[b] = np.sqrt(np.mean(down_vals**2))
+    pdf_up_ratio   = _safe_ratio(h_pdf_up, flat_nom).reshape(sm_nom_vals.shape)
+    pdf_down_ratio = _safe_ratio(h_pdf_down, flat_nom).reshape(sm_nom_vals.shape)
     print(f"  Asymmetric RMS over {len(pdf_var_vals)} PDF replicas\n")
 
 # ---- Build nominal process histograms -----------------------------------------------------------
