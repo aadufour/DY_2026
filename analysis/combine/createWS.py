@@ -1,4 +1,4 @@
-#! /home/llr/cms/adufour//mg5-fortran12/bin/python3
+#!/usr/bin/env python3
 
 from itertools import combinations
 import sys 

@@ -1,4 +1,4 @@
-#! /home/llr/cms/adufour//mg5-fortran12/bin/python3
+#!/usr/bin/env python3
 
 """
 File: createCombineJson.py
@@ -7,13 +7,8 @@ Date: 2024-08-07
 Description: create a json file with the bin names and operators in them
 """
 
-import sys
 from optparse import OptionParser
 import json
-
-#roba orrenda aggiunto io
-sys.path.append("/grid_mnt/data__data.polcms/cms/adufour/CMSSW_14_1_0_pre4/src/")
-
 
 from HiggsAnalysis.CombinedLimit.DatacardParser import *
 from python.DatacardHelpers import datacardHelper
