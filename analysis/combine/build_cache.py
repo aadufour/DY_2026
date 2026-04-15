@@ -26,7 +26,7 @@ from itertools import combinations
 import numpy as np
 import pylhe
 
-# ── Config ─────────────────────────────────────────────────────────────────────
+# ---- Config ------------------------------------------------------------------------------------------------------------------------------------------
 
 MLL_BIN_EDGES = [50, 120, 200, 400, 600, 800, 1000, 3000]
 
@@ -53,7 +53,7 @@ CHECKPOINT_FILE = "/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/CACHE/l
 
 CENTRAL_PDF = 303600
 
-# ── Parse LHE header to resolve weight IDs ────────────────────────────────────
+# ---- Parse LHE header to resolve weight IDs -----------------------
 
 def parse_weight_ids(lhe_file):
     """
@@ -122,7 +122,7 @@ def parse_weight_ids(lhe_file):
 
     return scale_ids, pdf_ids, central_id
 
-# ── Kinematic functions ────────────────────────────────────────────────────────
+# ---- Kinematic functions ------------------------------------
 
 def mll(p1, p2):
     p = np.array(p1) + np.array(p2)
@@ -144,7 +144,7 @@ def cstar(p1, p2):
     p1mag = np.sqrt(p1[0]**2 + p1[1]**2 + pz1_b**2)
     return pz1_b / p1mag
 
-# ── Load checkpoint ────────────────────────────────────────────────────────────
+# ---- Load checkpoint -----------------------------------------
 
 if os.path.exists(CHECKPOINT_FILE):
     print(f"Resuming from checkpoint: {CHECKPOINT_FILE}")
@@ -173,7 +173,7 @@ else:
     acc_w_pdf       = {}
     completed_files = []
 
-# ── Main loop ──────────────────────────────────────────────────────────────────
+# ---- Main loop ---------------------------------------------------
 
 for lhe_file in LHE_FILES:
     if lhe_file in completed_files:

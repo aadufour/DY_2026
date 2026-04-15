@@ -5,7 +5,7 @@ Build the Combine input ROOT file and datacard.txt from the LHE cache.
 Supports one or multiple EFT operators simultaneously.
 
 Systematics implemented
-────────────────────────
+-----------------------------------
   lumi       lnN    2% flat on all processes
   qcd_scale  shape  Envelope of MUR/MUF variations (factorised from SM)
   pdf        shape  RMS over PDF replicas (NNPDF MC method, factorised from SM)
@@ -13,7 +13,6 @@ Systematics implemented
 Factorisation assumption for EFT templates:
   The relative shape variation is taken from the SM template and applied
   multiplicatively to all EFT components (quad, sm_lin_quad, mixed).
-  This is standard practice for LO EFT analyses.
 
 Usage:
     python3 build_datacard.py --op cHDD
@@ -32,7 +31,7 @@ import boost_histogram as bh
 import numpy as np
 import uproot
 
-# ── Config ─────────────────────────────────────────────────────────────────────
+# --------- Config ---------------------------------------
 
 CACHE_FILE    = "/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/CACHE/lhe_cache.pkl"
 OUTPUT_FILE   = "/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/combine/histograms.root"
@@ -43,7 +42,7 @@ MLL_EDGES   = np.array([50, 70, 90, 110, 200, 800, 1400, 2000, 2400, 3000], dtyp
 RAP_EDGES   = np.array([0.0, 0.5, 1.0, 2.5], dtype=float)
 CSTAR_EDGES = np.array([-1.0, -0.5, 0.0, 0.5, 1.0], dtype=float)
 
-# ── Args ───────────────────────────────────────────────────────────────────────
+# ---------- Args ----------------------------------------------
 
 parser = argparse.ArgumentParser()
 op_group = parser.add_mutually_exclusive_group(required=True)
@@ -60,7 +59,7 @@ args = parser.parse_args()
 
 LUMI = args.lumi
 
-# ── Load cache ─────────────────────────────────────────────────────────────────
+# --------------- Load cache ----------------------------------------
 
 if not os.path.exists(args.cache):
     raise FileNotFoundError(f"Cache not found: {args.cache}\nRun build_cache.py first.")
@@ -89,7 +88,7 @@ print(f"  PDF replica keys     : {len(w_pdf_all)}"
       + ("" if has_pdf else "  (none — will be skipped)"))
 print()
 
-# ── Operator list ──────────────────────────────────────────────────────────────
+# -------------- Operator list ---------------------------------------
 
 if args.all_op:
     OPERATORS = sorted(w_p1_all.keys())
@@ -101,7 +100,7 @@ missing = [op for op in OPERATORS if op not in w_p1_all]
 if missing:
     raise KeyError(f"Operators not in cache: {missing}\nAvailable: {sorted(w_p1_all.keys())}")
 
-# ── C values ───────────────────────────────────────────────────────────────────
+# -------------- C values -----------------------------------------
 
 if len(args.C) == 1:
     C_values = {op: args.C[0] for op in OPERATORS}
@@ -110,7 +109,7 @@ elif len(args.C) == len(OPERATORS):
 else:
     raise ValueError(f"--C: expected 1 or {len(OPERATORS)} values, got {len(args.C)}")
 
-# ── Summary ────────────────────────────────────────────────────────────────────
+# -------------------- Summary ----------------------------------------
 
 print(f"Operators  : {OPERATORS}")
 print(f"C_ref      : { {op: C_values[op] for op in OPERATORS} }")
@@ -120,7 +119,7 @@ syst_list = ["lumi"] + (["qcd_scale"] if has_scale else []) + (["pdf"] if has_pd
 print(f"Systematics: {', '.join(syst_list)}")
 print()
 
-# ── Histogram builders ─────────────────────────────────────────────────────────
+# ------------------ Histograms ----------------------------------
 
 def make_hist(weights, label=""):
     if args.unrolled:
@@ -158,7 +157,7 @@ def _safe_ratio(var_vals, nom_vals):
     with np.errstate(divide='ignore', invalid='ignore'):
         return np.where(nom_vals > 0, var_vals / nom_vals, 1.0)
 
-# ── Pre-compute per-bin systematic ratios relative to SM nominal ───────────────
+# ----------- Pre-compute per-bin systematic ratios relative to SM nominal ---------------------
 # All EFT templates share the same ratio (factorisation assumption).
 
 sm_nom_vals = make_hist(w_SM).values()
@@ -195,7 +194,7 @@ if has_pdf:
     pdf_down_ratio = np.maximum(pdf_mean - pdf_std, 0.0)
     print(f"  RMS over {len(pdf_var_vals)} PDF replicas\n")
 
-# ── Build nominal process histograms ──────────────────────────────────────────
+# ---- Build nominal process histograms ------------------------------------------------------------------------------------
 
 histograms = {}
 histograms["sm"]       = make_hist(w_SM, "SM")
@@ -224,7 +223,7 @@ for op1, op2 in OP_PAIRS:
     histograms[f"sm_lin_quad_mixed_{op1}_{op2}"] = \
         make_hist(C1 * C2 * w_inter, f"mixed {op1}x{op2}")
 
-# ── Build Up/Down shape variants for all processes (except data_obs) ───────────
+# ---- Build Up/Down shape variants for all processes (except data_obs) ----------------------
 
 nominal_procs = [k for k in histograms if k != "data_obs"]
 
@@ -233,11 +232,34 @@ for proc in nominal_procs:
     if has_scale:
         histograms[f"{proc}_qcd_scaleUp"]   = _apply_ratio(h, scale_up_ratio)
         histograms[f"{proc}_qcd_scaleDown"] = _apply_ratio(h, scale_down_ratio)
-    if has_pdf:
-        histograms[f"{proc}_pdfUp"]   = _apply_ratio(h, pdf_up_ratio)
-        histograms[f"{proc}_pdfDown"] = _apply_ratio(h, pdf_down_ratio)
+    #this is for easier, symmetric pdf rms
+    # if has_pdf:
+    #     histograms[f"{proc}_pdfUp"]   = _apply_ratio(h, pdf_up_ratio)
+    #     histograms[f"{proc}_pdfDown"] = _apply_ratio(h, pdf_down_ratio)
 
-# ── Print nominal summary ──────────────────────────────────────────────────────
+    #implementing asymmetric pdf 
+    if has_pdf:
+        pdf_var_vals = np.array([make_hist(w_pdf_all[k]).values() for k in w_pdf_all])
+        
+        up_sum   = np.zeros_like(sm_nom_vals)
+        dn_sum   = np.zeros_like(sm_nom_vals)
+        up_count = np.zeros_like(sm_nom_vals)
+        dn_count = np.zeros_like(sm_nom_vals)
+        
+        for rep in pdf_var_vals:
+            above = rep > sm_nom_vals
+            up_sum   += np.where(above, (rep - sm_nom_vals)**2, 0)
+            dn_sum   += np.where(~above, (rep - sm_nom_vals)**2, 0)
+            up_count += above
+            dn_count += ~above
+        
+        sigma_up = np.sqrt(np.where(up_count > 0, up_sum / up_count, 0))
+        sigma_dn = np.sqrt(np.where(dn_count > 0, dn_sum / dn_count, 0))
+        
+        pdf_up_ratio   = _safe_ratio(sm_nom_vals + sigma_up, sm_nom_vals)
+        pdf_down_ratio = _safe_ratio(np.maximum(sm_nom_vals - sigma_dn, 0), sm_nom_vals)
+
+# ---- Print nominal summary --------------------------------------------------------
 
 print(f"{'Process':<42}  {'Integral':>14}  {'sqrt(SumW2)':>14}")
 print("-" * 74)
@@ -248,7 +270,7 @@ for name in nominal_procs + ["data_obs"]:
     print(f"  {name:<40}  {intg:>14.4e}  {unc:>14.4e}")
 print()
 
-# ── Write ROOT file ────────────────────────────────────────────────────────────
+# ---- Write ROOT file ------------------------------------------------------------------------------------------------------------------------
 
 os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
 print(f"Writing {args.output} ...")
@@ -257,7 +279,7 @@ with uproot.recreate(args.output) as rf:
         rf[f"{CHANNEL}/{name}"] = h
 print(f"  {len(histograms)} histograms written\n")
 
-# ── Process list, indices, rates ──────────────────────────────────────────────
+# ---- Process list, indices, rates ----------------------
 
 processes = ["sm"]
 for op in OPERATORS:
@@ -281,7 +303,7 @@ for k, (op1, op2) in enumerate(OP_PAIRS):
     if name in histograms:
         proc_indices[name] = -(2*n_ops + 2 + k)
 
-# ── Write datacard ─────────────────────────────────────────────────────────────
+# ---- Write datacard -------------------------
 
 n_syst    = 1 + (1 if has_scale else 0) + (1 if has_pdf else 0)
 col       = lambda s: f"  {str(s):<28}"
