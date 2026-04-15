@@ -31,9 +31,9 @@ os.makedirs(args.outdir, exist_ok=True)
 # ── Load ROOT file ───────────────────────────────────────────────────────────
 
 f = uproot.open(args.input)
-keys = [k for k, v in f.classnames().items() if v.startswith("TH")]
+# strip ROOT cycle suffix (";1") from all keys
+all_keys = set(k.split(";")[0] for k, v in f.classnames().items() if v.startswith("TH"))
 
-# find nominal processes (no Up/Down suffix, not data_obs)
 channel = args.channel
 syst    = args.syst
 
@@ -41,7 +41,7 @@ if args.procs:
     nominal_procs = args.procs
 else:
     nominal_procs = sorted([
-        k.split("/")[1] for k in keys
+        k.split("/")[1] for k in all_keys
         if k.startswith(f"{channel}/")
         and not k.endswith("Up")
         and not k.endswith("Down")
@@ -57,7 +57,7 @@ for proc in nominal_procs:
     up_key  = f"{channel}/{proc}_{syst}Up"
     dn_key  = f"{channel}/{proc}_{syst}Down"
 
-    if up_key not in [k for k in f.classnames()]:
+    if up_key not in all_keys:
         print(f"  Skipping {proc} — no {syst}Up/Down found")
         continue
 
