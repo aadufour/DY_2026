@@ -210,3 +210,20 @@ Analysis:
 using combine through CMSSW
 cd /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/combine
 source env_llr.sh
+
+
+
+cd /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/combine
+
+# steps 1-2: analysis python
+source env_llr.sh analysis
+python3 build_cache.py
+python3 build_datacard.py --op cHDD
+
+# steps 3-7: combine
+source env_llr.sh
+python3 createJson.py --datacard datacard.txt
+python3 createCombineJson.py --datacard datacard.txt
+python3 createWS.py 1
+python3 runScans.py 1 initial
+python3 runScans.py 1 scan
