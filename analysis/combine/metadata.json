@@ -1,0 +1,15 @@
+{
+    "analysis": "combine",
+    "card": "datacard.txt",
+    "operators": {
+        "cHDD": [
+            -1.0,
+            1.0
+        ]
+    },
+    "nuisances": [
+        "lumi",
+        "qcd_scale",
+        "pdf"
+    ]
+}

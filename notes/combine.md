@@ -171,3 +171,34 @@ echo $X509_USER_PROXY
 Apptainer> ls condor
 job_0  job_1  job_2  job_3  job_4  job_5  job_6  job_7	runner.py  run.sh  submit.jdl
 Apptainer> for i in 0 1 2 3 4 5 6 7; do ./run_local.sh $i; done
+
+
+
+
+
+# generating events to work on systematics on llr (14/04/2026)
+
+DY SMEFT LHE → Cache → Datacard workflow
+─────────────────────────────────────────
+Repo: /grid_mnt/data__data.polcms/cms/adufour/DY_2026
+MG5:  /grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo
+venv: /grid_mnt/data__data.polcms/cms/adufour/dy_venv
+cache output: MG5/.../CACHE/lhe_cache.pkl
+
+Activate env:
+  source /grid_mnt/data__data.polcms/cms/adufour/dy_venv/bin/activate
+  export SETUPTOOLS_USE_DISTUTILS=stdlib
+  export PATH=/grid_mnt/data__data.polcms/cms/adufour/dy_venv/bin:$PATH
+
+Event generation (7 bins from DYSMEFTMll50_120 to DYSMEFTMll1000_3000):
+  - reweight_card.dat must be in Cards/ before generate_events -f
+  - reweight card: analysis/gridpack/gridpack_misc/cards/reweight_card.dat
+  - 406 reweight points: 1 SM + 27×(+1) + 27×(-1) + 351 pairs
+  - PDF: lhapdf / 303600 (NNPDF31_nnlo_as_0118)
+  - numpy==1.26.4 required for f2py (numpy 2.x breaks it)
+
+Analysis:
+  1. python3 analysis/combine/build_cache.py     → lhe_cache.pkl
+  2. python3 analysis/combine/build_datacard.py --op cHDD --lumi 59740
+     → histograms.root + datacard.txt
+  3. createWS.py / runScans_fixed.py / runPlots.py (see notes/combine.md)

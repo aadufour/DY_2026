@@ -11,8 +11,11 @@ import sys
 from optparse import OptionParser
 import json
 
-# from HiggsAnalysis.CombinedLimit.DatacardParser import *
-from /grid_mnt/data__data.polcms/cms/adufour/CMSSW_14_1_0_pre4/src/HiggsAnalysis.CombinedLimit.DatacardParser import *
+#roba orrenda aggiunto io
+sys.path.append("/grid_mnt/data__data.polcms/cms/adufour/CMSSW_14_1_0_pre4/src/")
+
+
+from HiggsAnalysis.CombinedLimit.DatacardParser import *
 from python.DatacardHelpers import datacardHelper
 
 if __name__ == "__main__":
