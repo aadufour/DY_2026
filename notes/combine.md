@@ -202,3 +202,11 @@ Analysis:
   2. python3 analysis/combine/build_datacard.py --op cHDD --lumi 59740
      → histograms.root + datacard.txt
   3. createWS.py / runScans_fixed.py / runPlots.py (see notes/combine.md)
+
+
+
+
+# new setup
+using combine through CMSSW
+cd /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/combine
+source env_llr.sh
