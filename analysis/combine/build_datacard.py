@@ -183,18 +183,32 @@ if has_scale:
     print(f"  Envelope over {len(ratios)} non-central scale variations\n")
 
 if has_pdf:
-    print("Computing PDF uncertainty (NNPDF RMS) ...")
+    print("Computing PDF uncertainty (asymmetric NNPDF RMS) ...")
     pdf_var_vals = np.array([
         make_hist(w_pdf_all[k]).values() for k in w_pdf_all
     ])
-    pdf_ratios     = _safe_ratio(pdf_var_vals, sm_nom_vals)
-    pdf_mean       = pdf_ratios.mean(axis=0)
-    pdf_std        = pdf_ratios.std(axis=0)
-    pdf_up_ratio   = pdf_mean + pdf_std
-    pdf_down_ratio = np.maximum(pdf_mean - pdf_std, 0.0)
-    print(f"  RMS over {len(pdf_var_vals)} PDF replicas\n")
+    # Asymmetric RMS: separate replicas above/below nominal per bin
+    deviations = pdf_var_vals - sm_nom_vals[np.newaxis, :]
+    n_bins     = sm_nom_vals.shape[0] if sm_nom_vals.ndim == 1 else sm_nom_vals.size
+    sigma_up   = np.zeros_like(sm_nom_vals)
+    sigma_down = np.zeros_like(sm_nom_vals)
+    flat_dev = deviations.reshape(len(pdf_var_vals), -1)
+    flat_nom = sm_nom_vals.flatten()
+    sigma_up_flat   = np.zeros(flat_nom.shape)
+    sigma_down_flat = np.zeros(flat_nom.shape)
+    for b in range(flat_nom.shape[0]):
+        dev = flat_dev[:, b]
+        up_devs  = dev[dev > 0]
+        dn_devs  = dev[dev < 0]
+        if len(up_devs) > 0:
+            sigma_up_flat[b]   = np.sqrt(np.mean(up_devs**2))
+        if len(dn_devs) > 0:
+            sigma_down_flat[b] = np.sqrt(np.mean(dn_devs**2))
+    pdf_up_ratio   = _safe_ratio(flat_nom + sigma_up_flat, flat_nom).reshape(sm_nom_vals.shape)
+    pdf_down_ratio = _safe_ratio(np.maximum(flat_nom - sigma_down_flat, 0), flat_nom).reshape(sm_nom_vals.shape)
+    print(f"  Asymmetric RMS over {len(pdf_var_vals)} PDF replicas\n")
 
-# ---- Build nominal process histograms ------------------------------------------------------------------------------------
+# ---- Build nominal process histograms -----------------------------------------------------------
 
 histograms = {}
 histograms["sm"]       = make_hist(w_SM, "SM")
@@ -233,31 +247,31 @@ for proc in nominal_procs:
         histograms[f"{proc}_qcd_scaleUp"]   = _apply_ratio(h, scale_up_ratio)
         histograms[f"{proc}_qcd_scaleDown"] = _apply_ratio(h, scale_down_ratio)
     #this is for easier, symmetric pdf rms
-    # if has_pdf:
-    #     histograms[f"{proc}_pdfUp"]   = _apply_ratio(h, pdf_up_ratio)
-    #     histograms[f"{proc}_pdfDown"] = _apply_ratio(h, pdf_down_ratio)
+    if has_pdf:
+        histograms[f"{proc}_pdfUp"]   = _apply_ratio(h, pdf_up_ratio)
+        histograms[f"{proc}_pdfDown"] = _apply_ratio(h, pdf_down_ratio)
 
     #implementing asymmetric pdf 
-    if has_pdf:
-        pdf_var_vals = np.array([make_hist(w_pdf_all[k]).values() for k in w_pdf_all])
+    # if has_pdf:
+    #     pdf_var_vals = np.array([make_hist(w_pdf_all[k]).values() for k in w_pdf_all])
         
-        up_sum   = np.zeros_like(sm_nom_vals)
-        dn_sum   = np.zeros_like(sm_nom_vals)
-        up_count = np.zeros_like(sm_nom_vals)
-        dn_count = np.zeros_like(sm_nom_vals)
+    #     up_sum   = np.zeros_like(sm_nom_vals)
+    #     dn_sum   = np.zeros_like(sm_nom_vals)
+    #     up_count = np.zeros_like(sm_nom_vals)
+    #     dn_count = np.zeros_like(sm_nom_vals)
         
-        for rep in pdf_var_vals:
-            above = rep > sm_nom_vals
-            up_sum   += np.where(above, (rep - sm_nom_vals)**2, 0)
-            dn_sum   += np.where(~above, (rep - sm_nom_vals)**2, 0)
-            up_count += above
-            dn_count += ~above
+    #     for rep in pdf_var_vals:
+    #         above = rep > sm_nom_vals
+    #         up_sum   += np.where(above, (rep - sm_nom_vals)**2, 0)
+    #         dn_sum   += np.where(~above, (rep - sm_nom_vals)**2, 0)
+    #         up_count += above
+    #         dn_count += ~above
         
-        sigma_up = np.sqrt(np.where(up_count > 0, up_sum / up_count, 0))
-        sigma_dn = np.sqrt(np.where(dn_count > 0, dn_sum / dn_count, 0))
+    #     sigma_up = np.sqrt(np.where(up_count > 0, up_sum / up_count, 0))
+    #     sigma_dn = np.sqrt(np.where(dn_count > 0, dn_sum / dn_count, 0))
         
-        pdf_up_ratio   = _safe_ratio(sm_nom_vals + sigma_up, sm_nom_vals)
-        pdf_down_ratio = _safe_ratio(np.maximum(sm_nom_vals - sigma_dn, 0), sm_nom_vals)
+    #     pdf_up_ratio   = _safe_ratio(sm_nom_vals + sigma_up, sm_nom_vals)
+    #     pdf_down_ratio = _safe_ratio(np.maximum(sm_nom_vals - sigma_dn, 0), sm_nom_vals)
 
 # ---- Print nominal summary --------------------------------------------------------
 
@@ -270,7 +284,7 @@ for name in nominal_procs + ["data_obs"]:
     print(f"  {name:<40}  {intg:>14.4e}  {unc:>14.4e}")
 print()
 
-# ---- Write ROOT file ------------------------------------------------------------------------------------------------------------------------
+# ---- Write ROOT file --------------------------------------
 
 os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
 print(f"Writing {args.output} ...")
