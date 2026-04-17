@@ -3,11 +3,13 @@
     "card": "datacard.txt",
     "operators": {
         "cHDD": [
-            -0.01,
-            0.01
+            -0.02,
+            0.02
         ]
     },
     "nuisances": [
-        "lumi"
+        "lumi",
+        "qcd_scale",
+        "pdf"
     ]
 }

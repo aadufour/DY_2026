@@ -4,7 +4,7 @@ plot_pdf_syst.py
 
 Two-panel plot per process:
   TOP    — nominal mll distribution
-  BOTTOM — PDF uncertainty per bin (+σ_up / -σ_down) in %
+  BOTTOM — PDF uncertainty per bin (+sigma_up / -sigma_down) in %
 
 Reads nominal/up/down directly from histograms.root (built by build_datacard.py).
 """
@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import uproot
 
-# ── Args ────────────────────────────────────────────────────────────────────
+# -- Args --------------------------------------------------------------------
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--input",   default="histograms.root")
@@ -28,10 +28,9 @@ args = parser.parse_args()
 
 os.makedirs(args.outdir, exist_ok=True)
 
-# ── Load ROOT file ───────────────────────────────────────────────────────────
+# -- Load ROOT file -----------------------------------------------------------
 
 f = uproot.open(args.input)
-# strip ROOT cycle suffix (";1") from all keys
 all_keys = set(k.split(";")[0] for k, v in f.classnames().items() if v.startswith("TH"))
 
 channel = args.channel
@@ -50,7 +49,7 @@ else:
 
 print(f"Plotting systematics '{syst}' for: {nominal_procs}")
 
-# ── Plot one figure per process ──────────────────────────────────────────────
+# -- Plot one figure per process ----------------------------------------------
 
 for proc in nominal_procs:
     nom_key = f"{channel}/{proc}"
@@ -82,7 +81,7 @@ for proc in nominal_procs:
     frac_up   =  (up_vals - nom_vals) / safe_nom * 100
     frac_down = -(nom_vals - dn_vals) / safe_nom * 100
 
-    # ── Figure ───────────────────────────────────────────────────────────────
+    # -- Figure ---------------------------------------------------------------
 
     fig, (ax_top, ax_bot) = plt.subplots(
         2, 1, figsize=(9, 7), sharex=True,
@@ -122,7 +121,7 @@ for proc in nominal_procs:
 
     out = os.path.join(args.outdir, f"{proc}_{syst}.pdf")
     fig.savefig(out, bbox_inches="tight")
-    print(f"  Saved → {out}")
+    print(f"  Saved -> {out}")
     plt.close(fig)
 
 print("Done.")

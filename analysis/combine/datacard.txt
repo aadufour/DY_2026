@@ -1,18 +1,19 @@
 ----------------------------------------------------------------------------------------------------------------------------------
 imax 1
 jmax 2
-kmax 1
+kmax 3
 ----------------------------------------------------------------------------------------------------------------------------------
 shapes *         triple_DY  /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/combine/histograms.root  $CHANNEL/$PROCESS  $CHANNEL/$PROCESS_$SYSTEMATIC
 shapes data_obs  triple_DY  /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/combine/histograms.root  $CHANNEL/data_obs
 ----------------------------------------------------------------------------------------------------------------------------------
 bin          triple_DY
-observation  6.04875e+07
+observation  8.5518e+06
 ----------------------------------------------------------------------------------------------------------------------------------
 bin           triple_DY                     triple_DY                     triple_DY                   
 process       sm                            quad_cHDD                     sm_lin_quad_cHDD            
 process       -1                            -2                            -3                          
-rate          6.04875e+07                   649570                        5.98666e+07                 
+rate          8.5518e+06                    84869.3                       8.54074e+06                 
 ---------------------------------------------
 lumi        lnN    1.02                          1.02                          1.02                        
-                     
+qcd_scale   shape  1                             1                             1                           
+pdf         shape  1                             1                             1                           
