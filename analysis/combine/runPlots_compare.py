@@ -120,7 +120,7 @@ if __name__ == "__main__":
         if options.label:
             cmd += f' -mll "{options.label}"'
         if options.others:
-            cmd += f' --others {options.others}'
+            cmd += f' --others "{options.others}"'
 
         cmds.append(cmd)
 
