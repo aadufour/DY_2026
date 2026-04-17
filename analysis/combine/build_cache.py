@@ -14,8 +14,10 @@ Systematic weight IDs are resolved by parsing the LHE header once:
 
 Usage:
     python3 build_cache.py
+    python3 build_cache.py --nodoubles   # skip operator-pair weights (reweight card without pairs)
 """
 
+import argparse
 import gzip
 import os
 import pickle
@@ -25,6 +27,15 @@ from itertools import combinations
 
 import numpy as np
 import pylhe
+
+# ---- Argument parsing --------------------------------------------------------
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--nodoubles', action='store_true',
+                    help='Skip operator-pair (quadratic cross) weights — use when reweight card has no pairs')
+args = parser.parse_args()
+
+SKIP_PAIRS = args.nodoubles
 
 # ---- Config ------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -46,7 +57,7 @@ OPERATORS = [
     'clu',  'cld',  'cbl',
 ]
 
-OP_PAIRS = list(combinations(OPERATORS, 2))
+OP_PAIRS = [] if SKIP_PAIRS else list(combinations(OPERATORS, 2))
 
 CACHE_FILE      = "/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/CACHE/lhe_cache.pkl"
 CHECKPOINT_FILE = "/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/CACHE/lhe_cache_checkpoint.pkl"
@@ -236,7 +247,7 @@ for lhe_file in LHE_FILES:
 
             wkeys = event.weights
 
-            if not pp_keys:
+            if not pp_keys and not SKIP_PAIRS:
                 for op1, op2 in OP_PAIRS:
                     pp_keys[(op1, op2)] = (
                         f'{op1}_{op2}' if f'{op1}_{op2}' in wkeys
@@ -252,8 +263,9 @@ for lhe_file in LHE_FILES:
                 buf_w_p1[op].append(wkeys[op])
                 buf_w_m1[op].append(wkeys[f'minus{op}'])
 
-            for pair in OP_PAIRS:
-                buf_w_pp[pair].append(wkeys[pp_keys[pair]])
+            if not SKIP_PAIRS:
+                for pair in OP_PAIRS:
+                    buf_w_pp[pair].append(wkeys[pp_keys[pair]])
 
             for k in scale_ids:
                 buf_w_scale[k].append(wkeys.get(k, wkeys['SM']))

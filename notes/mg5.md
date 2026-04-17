@@ -165,5 +165,82 @@ generate p p > mu+ mu- QCD=0 SMHLOOP=0 NP<=1 NP^2==2
 
 #---------------------
 ## now working on ssh llrcms
-(1 apr 2026)
+(16 apr 2026)
 
+source /grid_mnt/data__data.polcms/cms/adufour/dy_venv/bin/activate
+export SETUPTOOLS_USE_DISTUTILS=stdlib
+export LD_LIBRARY_PATH=/cvmfs/cms.cern.ch/el9_amd64_gcc12/external/gcc/12.3.1-40d504be6370b5a30e3947a6e575ca28/lib:$LD_LIBRARY_PATH
+
+#single bin
+cd /grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/DYSMEFTMll50_120
+./bin/generate_events -f
+
+
+
+
+
+MG5 Event Generation on LLR
+Environment
+venv: /grid_mnt/data__data.polcms/cms/adufour/dy_venv (numpy==1.26.4, six)
+7 bins: DYSMEFTMll50_120 → DYSMEFTMll1000_3000
+10k events/bin, reweight card: SM + 27 ops ±1 (no pairs = 55 EFT points)
+Systematics: 145 weights/event (scale + PDF replicas)
+Launch all 7 bins in parallel screens
+
+MG5=/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo
+VENV=/grid_mnt/data__data.polcms/cms/adufour/dy_venv
+ISL_LIB=/cvmfs/cms.cern.ch/el9_amd64_gcc12/external/gcc/12.3.1-40d504be6370b5a30e3947a6e575ca28/lib
+LHAPDF_PY=/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/HEPTools/lhapdf6_py3/lib64/python3.9/site-packages
+LHAPDF_LIB=/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/HEPTools/lhapdf6_py3/lib
+
+for PAIR in "50 120" "120 200" "200 400" "400 600" "600 800" "800 1000" "1000 3000"; do
+  LO=$(echo $PAIR | cut -d' ' -f1)
+  HI=$(echo $PAIR | cut -d' ' -f2)
+  DIR="${MG5}/DYSMEFTMll${LO}_${HI}"
+  screen -dmS "${LO}_${HI}" bash -c "
+    source ${VENV}/bin/activate
+    export SETUPTOOLS_USE_DISTUTILS=stdlib
+    export LD_LIBRARY_PATH=${ISL_LIB}:${LHAPDF_LIB}:\$LD_LIBRARY_PATH
+    export PYTHONPATH=${LHAPDF_PY}:\$PYTHONPATH
+    cd ${DIR}
+    rm -rf Events/run_*
+    ./bin/generate_events -f > generate_events.log 2>&1
+  "
+  echo "Launched screen ${LO}_${HI}"
+done
+
+
+
+#--------- screen commands------------
+screen -ls                   # list all screens
+screen -r 50_120             # attach to a screen
+Ctrl-A D                   # detach (leave it running)
+Ctrl-C                     # kill the running process
+
+#----------Monitor output (from outside screen)---------
+- Tail log for one bin
+
+tail -f /grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/DYSMEFTMll50_120/generate_events.log
+
+- Quick status of all bins at once
+
+for BIN in 50_120 120_200 200_400 400_600 600_800 800_1000 1000_3000; do
+  echo -n "${BIN}: "
+  tail -3 /grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/DYSMEFTMll${BIN}/generate_events.log 2>/dev/null | tr '\n' ' '
+  echo
+done
+
+
+#--------- Check if jobs are done ----------
+
+- All 7 LHE files present and recent?
+
+ls -lh /grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/DYSMEFTMll*/Events/run_01/unweighted_events.lhe.gz
+
+- Verify systematics weights in each file (expect 145)
+
+for BIN in 50_120 120_200 200_400 400_600 600_800 800_1000 1000_3000; do
+  N=$(zcat /grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/DYSMEFTMll${BIN}/Events/run_01/unweighted_events.lhe.gz \
+      | grep "weight id" | grep -v "set param_card" | wc -l)
+  echo "${BIN}: ${N} systematic weights (expect 145)"
+done
