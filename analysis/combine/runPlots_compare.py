@@ -199,8 +199,15 @@ if __name__ == "__main__":
 
         cmd = f"mkEFTScan.py {fn} -p {op_pois} -maxNLL 10 -lumi 138 -cms -preliminary -o scan_{outname} -ff png pdf root"
 
-        if options.label:
-            cmd += f' -mll "{options.label}"'
+        # Determine main label — required for legend to appear in mkEFTScan.py
+        main_label = options.label
+        if not main_label:
+            if options.compare_stat:
+                main_label = "Stat + Syst"
+            elif options.compare_syst:
+                main_label = "Stat only"
+        if main_label:
+            cmd += f' -ml "{main_label}"'
 
         # build auto-comparison --others string
         others_str = options.others  # start with manual value (may be empty)
