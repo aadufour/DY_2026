@@ -14,7 +14,8 @@ Systematic weight IDs are resolved by parsing the LHE header once:
 
 Usage:
     python3 build_cache.py
-    python3 build_cache.py --nodoubles   # skip operator-pair weights (reweight card without pairs)
+    python3 build_cache.py --nodoubles          # skip operator-pair weights (reweight card without pairs)
+    python3 build_cache.py --nevents 20000       # read at most N events per LHE file
 """
 
 import argparse
@@ -33,9 +34,12 @@ import pylhe
 parser = argparse.ArgumentParser()
 parser.add_argument('--nodoubles', action='store_true',
                     help='Skip operator-pair (quadratic cross) weights — use when reweight card has no pairs')
+parser.add_argument('--nevents', type=int, default=None,
+                    help='Maximum number of events to read per LHE file (default: all)')
 args = parser.parse_args()
 
 SKIP_PAIRS = args.nodoubles
+MAX_EVENTS = args.nevents
 
 # ---- Config ------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -223,6 +227,8 @@ for lhe_file in LHE_FILES:
         events = pylhe.read_lhe_with_attributes(lhe_file)
 
         for i, event in enumerate(events):
+            if MAX_EVENTS is not None and i >= MAX_EVENTS:
+                break
             if (i + 1) % 5000 == 0:
                 print(f"  {i + 1} events processed")
 
