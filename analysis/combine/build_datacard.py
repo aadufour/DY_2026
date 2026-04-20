@@ -161,27 +161,17 @@ def _safe_ratio(var_vals, nom_vals):
 # ----------- Pre-compute per-bin systematic ratios relative to SM nominal ---------------------
 # All EFT templates share the same ratio (factorisation assumption).
 
-sm_nom_vals = make_hist(w_SM).values()
+pdf_up_ratio = pdf_down_ratio = None
 
-scale_up_ratio = scale_down_ratio = None
-pdf_up_ratio   = pdf_down_ratio   = None
-
+scale_keys = []
 if has_scale:
-    print("Computing QCD scale envelope ...")
-    scale_var_vals = np.array([
-        make_hist(w_scale_all[k]).values() for k in w_scale_all
-    ])
-    # Exclude central point (MUR=1, MUF=1, PDF=central)
+    all_scale_keys = list(w_scale_all.keys())
     central_idx = next(
-        (i for i, k in enumerate(w_scale_all)
+        (i for i, k in enumerate(all_scale_keys)
          if "1.0" in k and k.lower().count("1.") >= 2),
         None)
-    if central_idx is not None:
-        scale_var_vals = np.delete(scale_var_vals, central_idx, axis=0)
-    ratios           = _safe_ratio(scale_var_vals, sm_nom_vals)
-    scale_up_ratio   = ratios.max(axis=0)
-    scale_down_ratio = ratios.min(axis=0)
-    print(f"  Envelope over {len(ratios)} non-central scale variations\n")
+    scale_keys = [k for i, k in enumerate(all_scale_keys) if i != central_idx]
+    print(f"QCD scale: {len(scale_keys)} non-central variations\n")
 
 if has_pdf:
     print("Computing PDF uncertainty (asymmetric RMS) ...")
@@ -207,17 +197,19 @@ if has_pdf:
         if len(dn_dev)  > 0: sigma_down[b] = np.sqrt(np.mean(dn_dev**2))
     # Ratios relative to PDF central — captures pure PDF shape uncertainty.
     # Applied to w_SM templates via factorisation assumption.
-    pdf_up_ratio   = _safe_ratio(flat_central + sigma_up, flat_central).reshape(sm_nom_vals.shape)
-    pdf_down_ratio = _safe_ratio(np.maximum(flat_central - sigma_down, 0), flat_central).reshape(sm_nom_vals.shape)
+    pdf_up_ratio   = _safe_ratio(flat_central + sigma_up, flat_central).reshape(pdf_central_vals.shape)
+    pdf_down_ratio = _safe_ratio(np.maximum(flat_central - sigma_down, 0), flat_central).reshape(pdf_central_vals.shape)
     print(f"  {len(pdf_var_vals)} replicas vs PDF central (weight ID 45)")
     print(f"  Up ratio range  : [{pdf_up_ratio.min():.4f}, {pdf_up_ratio.max():.4f}]")
     print(f"  Down ratio range: [{pdf_down_ratio.min():.4f}, {pdf_down_ratio.max():.4f}]\n")
 
 # ---- Build nominal process histograms -----------------------------------------------------------
 
-histograms = {}
+histograms   = {}
+proc_weights = {}
 histograms["sm"]       = make_hist(w_SM, "SM")
 histograms["data_obs"] = make_hist(w_SM, "data_obs (Asimov = SM)")
+proc_weights["sm"]     = w_SM
 
 for op in OPERATORS:
     C      = C_values[op]
@@ -230,6 +222,8 @@ for op in OPERATORS:
         print(f"WARNING: [{op}] total cross section negative at C={C}")
     histograms[f"quad_{op}"]        = make_hist(C**2 * w_quad, f"quad {op} C={C}")
     histograms[f"sm_lin_quad_{op}"] = make_hist(w_slq,         f"SM+lin+quad {op} C={C}")
+    proc_weights[f"quad_{op}"]        = C**2 * w_quad
+    proc_weights[f"sm_lin_quad_{op}"] = w_slq
 
 OP_PAIRS = list(combinations(OPERATORS, 2))
 for op1, op2 in OP_PAIRS:
@@ -239,19 +233,25 @@ for op1, op2 in OP_PAIRS:
         continue
     C1, C2  = C_values[op1], C_values[op2]
     w_inter = w_pp_all[pair] - w_p1_all[op1] - w_p1_all[op2] + w_SM
-    histograms[f"sm_lin_quad_mixed_{op1}_{op2}"] = \
-        make_hist(C1 * C2 * w_inter, f"mixed {op1}x{op2}")
+    w_mixed = C1 * C2 * w_inter
+    histograms[f"sm_lin_quad_mixed_{op1}_{op2}"]  = make_hist(w_mixed, f"mixed {op1}x{op2}")
+    proc_weights[f"sm_lin_quad_mixed_{op1}_{op2}"] = w_mixed
 
 # ---- Build Up/Down shape variants for all processes (except data_obs) ----------------------
 
 nominal_procs = [k for k in histograms if k != "data_obs"]
 
 for proc in nominal_procs:
-    h = histograms[proc]
+    h     = histograms[proc]
+    w_nom = proc_weights[proc]
     if has_scale:
+        scale_var_vals = np.array([
+            make_hist(w_nom * w_scale_all[k]).values() for k in scale_keys
+        ])
+        scale_up_ratio   = _safe_ratio(scale_var_vals.max(axis=0), h.values())
+        scale_down_ratio = _safe_ratio(scale_var_vals.min(axis=0), h.values())
         histograms[f"{proc}_qcd_scaleUp"]   = _apply_ratio(h, scale_up_ratio)
         histograms[f"{proc}_qcd_scaleDown"] = _apply_ratio(h, scale_down_ratio)
-    #this is for easier, symmetric pdf rms
     if has_pdf:
         histograms[f"{proc}_pdfUp"]   = _apply_ratio(h, pdf_up_ratio)
         histograms[f"{proc}_pdfDown"] = _apply_ratio(h, pdf_down_ratio)
