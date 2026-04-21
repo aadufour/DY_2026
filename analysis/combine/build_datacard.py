@@ -143,34 +143,26 @@ def make_hist(weights, label=""):
         h.metadata = label
         return h
 
-def _apply_ratio(h_nom, ratio):
-    """Return copy of h_nom with bins multiplied by ratio array."""
-    h = h_nom.copy()
-    h.view()["value"]    = h_nom.view()["value"]    * ratio
-    h.view()["variance"] = h_nom.view()["variance"] * ratio**2
-    return h
-
-def _safe_ratio(var_vals, nom_vals):
-    with np.errstate(divide='ignore', invalid='ignore'):
-        return np.where(nom_vals > 0, var_vals / nom_vals, 1.0)
-
-def _pdf_updown(w_nom, h_nom):
-    """Asymmetric RMS envelope over PDF replicas for a given process weight array."""
-    central_vals = make_hist(w_nom * w_pdf_central).values().flatten()
-    rep_vals     = np.array([make_hist(w_nom * w_pdf_all[k]).values().flatten()
-                             for k in w_pdf_all])
-    sigma_up   = np.zeros_like(central_vals)
-    sigma_down = np.zeros_like(central_vals)
-    for b in range(central_vals.shape[0]):
-        dev = rep_vals[:, b] - central_vals[b]
+def _pdf_updown(w_nom):
+    """Asymmetric RMS over PDF replicas. Returns (h_up, h_down) histograms."""
+    h_central  = make_hist(w_nom * w_pdf_central)
+    central    = h_central.values().flatten()
+    rep_vals   = np.array([make_hist(w_nom * w_pdf_all[k]).values().flatten()
+                           for k in w_pdf_all])
+    sigma_up   = np.zeros_like(central)
+    sigma_down = np.zeros_like(central)
+    for b in range(len(central)):
+        dev    = rep_vals[:, b] - central[b]
         up_dev = dev[dev > 0]
         dn_dev = dev[dev < 0]
         if len(up_dev) > 0: sigma_up[b]   = np.sqrt(np.mean(up_dev**2))
         if len(dn_dev) > 0: sigma_down[b] = np.sqrt(np.mean(dn_dev**2))
-    shape = h_nom.values().shape
-    up_ratio = _safe_ratio((central_vals + sigma_up).reshape(shape),          h_nom.values())
-    dn_ratio = _safe_ratio(np.maximum(central_vals - sigma_down, 0).reshape(shape), h_nom.values())
-    return _apply_ratio(h_nom, up_ratio), _apply_ratio(h_nom, dn_ratio)
+    shape = h_central.values().shape
+    h_up = h_central.copy()
+    h_up.view()["value"] = (central + sigma_up).reshape(shape)
+    h_dn = h_central.copy()
+    h_dn.view()["value"] = np.maximum(central - sigma_down, 0).reshape(shape)
+    return h_up, h_dn
 
 # ----------- Pre-compute scale variation keys (exclude central) ------------------------------
 
@@ -226,37 +218,17 @@ for proc in nominal_procs:
     h     = histograms[proc]
     w_nom = proc_weights[proc]
     if has_scale:
-        scale_var_vals = np.array([
-            make_hist(w_nom * w_scale_all[k]).values() for k in scale_keys
-        ])
-        scale_up_ratio   = _safe_ratio(scale_var_vals.max(axis=0), h.values())
-        scale_down_ratio = _safe_ratio(scale_var_vals.min(axis=0), h.values())
-        histograms[f"{proc}_qcd_scaleUp"]   = _apply_ratio(h, scale_up_ratio)
-        histograms[f"{proc}_qcd_scaleDown"] = _apply_ratio(h, scale_down_ratio)
+        scale_hists = [make_hist(w_nom * w_scale_all[k]) for k in scale_keys]
+        all_vals    = np.array([s.values() for s in scale_hists])
+        h_up = scale_hists[0].copy()
+        h_up.view()["value"] = all_vals.max(axis=0)
+        h_dn = scale_hists[0].copy()
+        h_dn.view()["value"] = all_vals.min(axis=0)
+        histograms[f"{proc}_qcd_scaleUp"]   = h_up
+        histograms[f"{proc}_qcd_scaleDown"] = h_dn
     if has_pdf:
-        histograms[f"{proc}_pdfUp"], histograms[f"{proc}_pdfDown"] = _pdf_updown(w_nom, h)
+        histograms[f"{proc}_pdfUp"], histograms[f"{proc}_pdfDown"] = _pdf_updown(w_nom)
 
-    #implementing asymmetric pdf 
-    # if has_pdf:
-    #     pdf_var_vals = np.array([make_hist(w_pdf_all[k]).values() for k in w_pdf_all])
-        
-    #     up_sum   = np.zeros_like(sm_nom_vals)
-    #     dn_sum   = np.zeros_like(sm_nom_vals)
-    #     up_count = np.zeros_like(sm_nom_vals)
-    #     dn_count = np.zeros_like(sm_nom_vals)
-        
-    #     for rep in pdf_var_vals:
-    #         above = rep > sm_nom_vals
-    #         up_sum   += np.where(above, (rep - sm_nom_vals)**2, 0)
-    #         dn_sum   += np.where(~above, (rep - sm_nom_vals)**2, 0)
-    #         up_count += above
-    #         dn_count += ~above
-        
-    #     sigma_up = np.sqrt(np.where(up_count > 0, up_sum / up_count, 0))
-    #     sigma_dn = np.sqrt(np.where(dn_count > 0, dn_sum / dn_count, 0))
-        
-    #     pdf_up_ratio   = _safe_ratio(sm_nom_vals + sigma_up, sm_nom_vals)
-    #     pdf_down_ratio = _safe_ratio(np.maximum(sm_nom_vals - sigma_dn, 0), sm_nom_vals)
 
 # ---- Print nominal summary --------------------------------------------------------
 
