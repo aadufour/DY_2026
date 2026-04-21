@@ -158,10 +158,25 @@ def _safe_ratio(var_vals, nom_vals):
     with np.errstate(divide='ignore', invalid='ignore'):
         return np.where(nom_vals > 0, var_vals / nom_vals, 1.0)
 
-# ----------- Pre-compute per-bin systematic ratios relative to SM nominal ---------------------
-# All EFT templates share the same ratio (factorisation assumption).
+def _pdf_updown(w_nom, h_nom):
+    """Asymmetric RMS envelope over PDF replicas for a given process weight array."""
+    central_vals = make_hist(w_nom * w_pdf_central).values().flatten()
+    rep_vals     = np.array([make_hist(w_nom * w_pdf_all[k]).values().flatten()
+                             for k in w_pdf_all])
+    sigma_up   = np.zeros_like(central_vals)
+    sigma_down = np.zeros_like(central_vals)
+    for b in range(central_vals.shape[0]):
+        dev = rep_vals[:, b] - central_vals[b]
+        up_dev = dev[dev > 0]
+        dn_dev = dev[dev < 0]
+        if len(up_dev) > 0: sigma_up[b]   = np.sqrt(np.mean(up_dev**2))
+        if len(dn_dev) > 0: sigma_down[b] = np.sqrt(np.mean(dn_dev**2))
+    shape = h_nom.values().shape
+    up_ratio = _safe_ratio((central_vals + sigma_up).reshape(shape),          h_nom.values())
+    dn_ratio = _safe_ratio(np.maximum(central_vals - sigma_down, 0).reshape(shape), h_nom.values())
+    return _apply_ratio(h_nom, up_ratio), _apply_ratio(h_nom, dn_ratio)
 
-pdf_up_ratio = pdf_down_ratio = None
+# ----------- Pre-compute scale variation keys (exclude central) ------------------------------
 
 scale_keys = []
 if has_scale:
@@ -172,36 +187,6 @@ if has_scale:
         None)
     scale_keys = [k for i, k in enumerate(all_scale_keys) if i != central_idx]
     print(f"QCD scale: {len(scale_keys)} non-central variations\n")
-
-if has_pdf:
-    print("Computing PDF uncertainty (asymmetric RMS) ...")
-    # The PDF central weight (ID 45) is the correct reference for replicas.
-    # w_SM is the EFT reweight SM point — different normalisation.
-    pdf_central_vals = make_hist(w_pdf_central).values()
-    pdf_var_vals = np.array([
-        make_hist(w_pdf_all[k]).values() for k in w_pdf_all
-    ])
-    # For each bin: split replicas above/below the PDF central,
-    # compute asymmetric RMS of deviations, build ratios.
-    flat_reps    = pdf_var_vals.reshape(len(pdf_var_vals), -1)  # (100, N_bins)
-    flat_central = pdf_central_vals.flatten()                   # (N_bins,)
-    sigma_up     = np.zeros_like(flat_central)
-    sigma_down   = np.zeros_like(flat_central)
-    for b in range(flat_central.shape[0]):
-        vals = flat_reps[:, b]
-        nom  = flat_central[b]
-        dev  = vals - nom
-        up_dev  = dev[dev > 0]
-        dn_dev  = dev[dev < 0]
-        if len(up_dev)  > 0: sigma_up[b]   = np.sqrt(np.mean(up_dev**2))
-        if len(dn_dev)  > 0: sigma_down[b] = np.sqrt(np.mean(dn_dev**2))
-    # Ratios relative to PDF central — captures pure PDF shape uncertainty.
-    # Applied to w_SM templates via factorisation assumption.
-    pdf_up_ratio   = _safe_ratio(flat_central + sigma_up, flat_central).reshape(pdf_central_vals.shape)
-    pdf_down_ratio = _safe_ratio(np.maximum(flat_central - sigma_down, 0), flat_central).reshape(pdf_central_vals.shape)
-    print(f"  {len(pdf_var_vals)} replicas vs PDF central (weight ID 45)")
-    print(f"  Up ratio range  : [{pdf_up_ratio.min():.4f}, {pdf_up_ratio.max():.4f}]")
-    print(f"  Down ratio range: [{pdf_down_ratio.min():.4f}, {pdf_down_ratio.max():.4f}]\n")
 
 # ---- Build nominal process histograms -----------------------------------------------------------
 
@@ -253,8 +238,7 @@ for proc in nominal_procs:
         histograms[f"{proc}_qcd_scaleUp"]   = _apply_ratio(h, scale_up_ratio)
         histograms[f"{proc}_qcd_scaleDown"] = _apply_ratio(h, scale_down_ratio)
     if has_pdf:
-        histograms[f"{proc}_pdfUp"]   = _apply_ratio(h, pdf_up_ratio)
-        histograms[f"{proc}_pdfDown"] = _apply_ratio(h, pdf_down_ratio)
+        histograms[f"{proc}_pdfUp"], histograms[f"{proc}_pdfDown"] = _pdf_updown(w_nom, h)
 
     #implementing asymmetric pdf 
     # if has_pdf:
