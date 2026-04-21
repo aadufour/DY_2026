@@ -145,9 +145,9 @@ def make_hist(weights, label=""):
 
 def _pdf_updown(w_nom):
     """Asymmetric RMS over PDF replicas. Returns (h_up, h_down) histograms."""
-    h_central  = make_hist(w_nom * w_pdf_central)
+    h_central  = make_hist(w_nom * (w_pdf_central / w_SM))
     central    = h_central.values().flatten()
-    rep_vals   = np.array([make_hist(w_nom * w_pdf_all[k]).values().flatten()
+    rep_vals   = np.array([make_hist(w_nom * (w_pdf_all[k] / w_SM)).values().flatten()
                            for k in w_pdf_all])
     sigma_up   = np.zeros_like(central)
     sigma_down = np.zeros_like(central)
@@ -218,7 +218,7 @@ for proc in nominal_procs:
     h     = histograms[proc]
     w_nom = proc_weights[proc]
     if has_scale:
-        scale_hists = [make_hist(w_nom * w_scale_all[k]) for k in scale_keys]
+        scale_hists = [make_hist(w_nom * (w_scale_all[k] / w_SM)) for k in scale_keys]
         all_vals    = np.array([s.values() for s in scale_hists])
         h_up = scale_hists[0].copy()
         h_up.view()["value"] = all_vals.max(axis=0)
