@@ -143,25 +143,24 @@ def make_hist(weights, label=""):
         h.metadata = label
         return h
 
-def _pdf_updown(w_nom):
-    """Asymmetric RMS over PDF replicas. Returns (h_up, h_down) histograms."""
-    h_central  = make_hist(w_nom * (w_pdf_central / w_SM))
-    central    = h_central.values().flatten()
-    rep_vals   = np.array([make_hist(w_nom * (w_pdf_all[k] / w_SM)).values().flatten()
-                           for k in w_pdf_all])
-    sigma_up   = np.zeros_like(central)
-    sigma_down = np.zeros_like(central)
-    for b in range(len(central)):
-        dev    = rep_vals[:, b] - central[b]
+def _pdf_updown(w_nom, h_nom):
+    """Asymmetric RMS over PDF replicas relative to nominal. Returns (h_up, h_down) histograms."""
+    nominal  = h_nom.values().flatten()
+    rep_vals = np.array([make_hist(w_nom * (w_pdf_all[k] / w_pdf_central)).values().flatten()
+                         for k in w_pdf_all])
+    sigma_up   = np.zeros_like(nominal)
+    sigma_down = np.zeros_like(nominal)
+    for b in range(len(nominal)):
+        dev    = rep_vals[:, b] - nominal[b]
         up_dev = dev[dev > 0]
         dn_dev = dev[dev < 0]
         if len(up_dev) > 0: sigma_up[b]   = np.sqrt(np.mean(up_dev**2))
         if len(dn_dev) > 0: sigma_down[b] = np.sqrt(np.mean(dn_dev**2))
-    shape = h_central.values().shape
-    h_up = h_central.copy()
-    h_up.view()["value"] = (central + sigma_up).reshape(shape)
-    h_dn = h_central.copy()
-    h_dn.view()["value"] = np.maximum(central - sigma_down, 0).reshape(shape)
+    shape = h_nom.values().shape
+    h_up = h_nom.copy()
+    h_up.view()["value"] = (nominal + sigma_up).reshape(shape)
+    h_dn = h_nom.copy()
+    h_dn.view()["value"] = np.maximum(nominal - sigma_down, 0).reshape(shape)
     return h_up, h_dn
 
 # ----------- Pre-compute scale variation keys (exclude central) ------------------------------
@@ -218,7 +217,7 @@ for proc in nominal_procs:
     h     = histograms[proc]
     w_nom = proc_weights[proc]
     if has_scale:
-        scale_hists = [make_hist(w_nom * (w_scale_all[k] / w_SM)) for k in scale_keys]
+        scale_hists = [make_hist(w_nom * (w_scale_all[k] / w_pdf_central)) for k in scale_keys]
         all_vals    = np.array([s.values() for s in scale_hists])
         h_up = scale_hists[0].copy()
         h_up.view()["value"] = all_vals.max(axis=0)
@@ -227,7 +226,7 @@ for proc in nominal_procs:
         histograms[f"{proc}_qcd_scaleUp"]   = h_up
         histograms[f"{proc}_qcd_scaleDown"] = h_dn
     if has_pdf:
-        histograms[f"{proc}_pdfUp"], histograms[f"{proc}_pdfDown"] = _pdf_updown(w_nom)
+        histograms[f"{proc}_pdfUp"], histograms[f"{proc}_pdfDown"] = _pdf_updown(w_nom, h)
 
 
 # ---- Print nominal summary --------------------------------------------------------
