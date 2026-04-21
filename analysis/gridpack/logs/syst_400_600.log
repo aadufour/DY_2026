@@ -1,0 +1,78 @@
+000 (791838.003.000) 2026-04-20 15:34:15 Job submitted from host: <134.158.133.27:9618?addrs=134.158.133.27-9618&alias=llrt3condor.in2p3.fr&noUDP&sock=schedd_33061_acb1>
+...
+040 (791838.003.000) 2026-04-20 15:34:19 Started transferring input files
+	Transferring to host: <134.158.132.92:9618?addrs=134.158.132.92-9618&alias=llrgrwn031.in2p3.fr&noUDP&sock=slot1_1_1147689_79a7_8546>
+...
+040 (791838.003.000) 2026-04-20 15:34:19 Finished transferring input files
+...
+001 (791838.003.000) 2026-04-20 15:34:20 Job executing on host: <134.158.132.92:9618?addrs=134.158.132.92-9618&alias=llrgrwn031.in2p3.fr&noUDP&sock=startd_1138928_745a>
+	SlotName: slot1_1@llrgrwn031.in2p3.fr
+	CondorScratchDir = "/var/lib/condor/execute/dir_1434051"
+	Cpus = 1
+	Disk = 2048
+	GPUs = 0
+	Memory = 4096
+...
+006 (791838.003.000) 2026-04-20 15:34:28 Image size of job updated: 6868
+	7  -  MemoryUsage of job (MB)
+	6868  -  ResidentSetSize of job (KB)
+...
+006 (791838.003.000) 2026-04-20 15:39:28 Image size of job updated: 41948
+	41  -  MemoryUsage of job (MB)
+	41220  -  ResidentSetSize of job (KB)
+...
+006 (791838.003.000) 2026-04-20 15:44:29 Image size of job updated: 97928
+	96  -  MemoryUsage of job (MB)
+	97928  -  ResidentSetSize of job (KB)
+...
+006 (791838.003.000) 2026-04-20 15:49:30 Image size of job updated: 98288
+	96  -  MemoryUsage of job (MB)
+	98288  -  ResidentSetSize of job (KB)
+...
+006 (791838.003.000) 2026-04-20 15:54:30 Image size of job updated: 98336
+	97  -  MemoryUsage of job (MB)
+	98336  -  ResidentSetSize of job (KB)
+...
+006 (791838.003.000) 2026-04-20 16:04:31 Image size of job updated: 98848
+	97  -  MemoryUsage of job (MB)
+	98848  -  ResidentSetSize of job (KB)
+...
+006 (791838.003.000) 2026-04-20 16:09:31 Image size of job updated: 98956
+	97  -  MemoryUsage of job (MB)
+	98956  -  ResidentSetSize of job (KB)
+...
+006 (791838.003.000) 2026-04-20 16:29:32 Image size of job updated: 99020
+	97  -  MemoryUsage of job (MB)
+	99020  -  ResidentSetSize of job (KB)
+...
+006 (791838.003.000) 2026-04-20 16:39:34 Image size of job updated: 99204
+	97  -  MemoryUsage of job (MB)
+	99204  -  ResidentSetSize of job (KB)
+...
+006 (791838.003.000) 2026-04-20 16:49:35 Image size of job updated: 99364
+	98  -  MemoryUsage of job (MB)
+	99364  -  ResidentSetSize of job (KB)
+...
+006 (791838.003.000) 2026-04-20 16:54:36 Image size of job updated: 99372
+	98  -  MemoryUsage of job (MB)
+	99372  -  ResidentSetSize of job (KB)
+...
+006 (791838.003.000) 2026-04-20 16:59:36 Image size of job updated: 99612
+	98  -  MemoryUsage of job (MB)
+	99612  -  ResidentSetSize of job (KB)
+...
+006 (791838.003.000) 2026-04-20 17:09:38 Image size of job updated: 99772
+	98  -  MemoryUsage of job (MB)
+	99772  -  ResidentSetSize of job (KB)
+...
+006 (791838.003.000) 2026-04-20 17:19:38 Image size of job updated: 99984
+	98  -  MemoryUsage of job (MB)
+	99984  -  ResidentSetSize of job (KB)
+...
+006 (791838.003.000) 2026-04-20 17:34:39 Image size of job updated: 100144
+	98  -  MemoryUsage of job (MB)
+	99984  -  ResidentSetSize of job (KB)
+...
+009 (791838.003.000) 2026-04-20 17:34:40 Job was aborted.
+	The system macro SYSTEM_PERIODIC_REMOVE expression '((JobStatus == 5) && (time() - EnteredCurrentStatus > 3600 * 48)) || ((JobStatus == 2) && (T3Queue == "long") && (time() - EnteredCurrentStatus > 240 * 3600)) || ((JobStatus == 2) && (T3Queue == "short") && (time() - EnteredCurrentStatus > 120 * 60)) || ((JobStatus == 2) && (T3Queue == "reserv") && (time() - EnteredCurrentStatus > 48 * 3600))' evaluated to TRUE
+...

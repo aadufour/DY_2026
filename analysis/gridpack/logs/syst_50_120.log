@@ -1,0 +1,98 @@
+000 (791838.000.000) 2026-04-20 15:34:15 Job submitted from host: <134.158.133.27:9618?addrs=134.158.133.27-9618&alias=llrt3condor.in2p3.fr&noUDP&sock=schedd_33061_acb1>
+...
+040 (791838.000.000) 2026-04-20 15:34:19 Started transferring input files
+	Transferring to host: <134.158.132.104:9618?addrs=134.158.132.104-9618&alias=llrgrwn010.in2p3.fr&noUDP&sock=slot1_1_1052239_50be_5612>
+...
+040 (791838.000.000) 2026-04-20 15:34:19 Finished transferring input files
+...
+001 (791838.000.000) 2026-04-20 15:34:20 Job executing on host: <134.158.132.104:9618?addrs=134.158.132.104-9618&alias=llrgrwn010.in2p3.fr&noUDP&sock=startd_989_f341>
+	SlotName: slot1_1@llrgrwn010.in2p3.fr
+	CondorScratchDir = "/var/lib/condor/execute/dir_4185895"
+	Cpus = 1
+	Disk = 2048
+	GPUs = 0
+	Memory = 4096
+...
+006 (791838.000.000) 2026-04-20 15:34:28 Image size of job updated: 10900
+	11  -  MemoryUsage of job (MB)
+	10900  -  ResidentSetSize of job (KB)
+...
+006 (791838.000.000) 2026-04-20 15:39:28 Image size of job updated: 41324
+	41  -  MemoryUsage of job (MB)
+	41128  -  ResidentSetSize of job (KB)
+...
+006 (791838.000.000) 2026-04-20 15:44:28 Image size of job updated: 61088
+	60  -  MemoryUsage of job (MB)
+	61088  -  ResidentSetSize of job (KB)
+...
+006 (791838.000.000) 2026-04-20 15:49:29 Image size of job updated: 61720
+	61  -  MemoryUsage of job (MB)
+	61720  -  ResidentSetSize of job (KB)
+...
+006 (791838.000.000) 2026-04-20 15:54:29 Image size of job updated: 61752
+	61  -  MemoryUsage of job (MB)
+	61752  -  ResidentSetSize of job (KB)
+...
+006 (791838.000.000) 2026-04-20 15:59:29 Image size of job updated: 61860
+	61  -  MemoryUsage of job (MB)
+	61860  -  ResidentSetSize of job (KB)
+...
+006 (791838.000.000) 2026-04-20 16:04:30 Image size of job updated: 61904
+	61  -  MemoryUsage of job (MB)
+	61904  -  ResidentSetSize of job (KB)
+...
+006 (791838.000.000) 2026-04-20 16:09:31 Image size of job updated: 62040
+	61  -  MemoryUsage of job (MB)
+	62040  -  ResidentSetSize of job (KB)
+...
+006 (791838.000.000) 2026-04-20 16:14:31 Image size of job updated: 62212
+	61  -  MemoryUsage of job (MB)
+	62212  -  ResidentSetSize of job (KB)
+...
+006 (791838.000.000) 2026-04-20 16:24:33 Image size of job updated: 62368
+	61  -  MemoryUsage of job (MB)
+	62368  -  ResidentSetSize of job (KB)
+...
+006 (791838.000.000) 2026-04-20 16:29:33 Image size of job updated: 62560
+	62  -  MemoryUsage of job (MB)
+	62560  -  ResidentSetSize of job (KB)
+...
+006 (791838.000.000) 2026-04-20 16:34:33 Image size of job updated: 62640
+	62  -  MemoryUsage of job (MB)
+	62640  -  ResidentSetSize of job (KB)
+...
+006 (791838.000.000) 2026-04-20 16:39:34 Image size of job updated: 62668
+	62  -  MemoryUsage of job (MB)
+	62668  -  ResidentSetSize of job (KB)
+...
+006 (791838.000.000) 2026-04-20 16:44:35 Image size of job updated: 62856
+	62  -  MemoryUsage of job (MB)
+	62856  -  ResidentSetSize of job (KB)
+...
+006 (791838.000.000) 2026-04-20 16:49:35 Image size of job updated: 62864
+	62  -  MemoryUsage of job (MB)
+	62864  -  ResidentSetSize of job (KB)
+...
+006 (791838.000.000) 2026-04-20 16:54:36 Image size of job updated: 62896
+	62  -  MemoryUsage of job (MB)
+	62896  -  ResidentSetSize of job (KB)
+...
+006 (791838.000.000) 2026-04-20 16:59:37 Image size of job updated: 63212
+	62  -  MemoryUsage of job (MB)
+	63212  -  ResidentSetSize of job (KB)
+...
+006 (791838.000.000) 2026-04-20 17:04:37 Image size of job updated: 63468
+	62  -  MemoryUsage of job (MB)
+	63468  -  ResidentSetSize of job (KB)
+...
+006 (791838.000.000) 2026-04-20 17:19:38 Image size of job updated: 63492
+	63  -  MemoryUsage of job (MB)
+	63492  -  ResidentSetSize of job (KB)
+...
+006 (791838.000.000) 2026-04-20 17:24:38 Image size of job updated: 63748
+	63  -  MemoryUsage of job (MB)
+	63748  -  ResidentSetSize of job (KB)
+...
+009 (791838.000.000) 2026-04-20 17:34:40 Job was aborted.
+	The system macro SYSTEM_PERIODIC_REMOVE expression '((JobStatus == 5) && (time() - EnteredCurrentStatus > 3600 * 48)) || ((JobStatus == 2) && (T3Queue == "long") && (time() - EnteredCurrentStatus > 240 * 3600)) || ((JobStatus == 2) && (T3Queue == "short") && (time() - EnteredCurrentStatus > 120 * 60)) || ((JobStatus == 2) && (T3Queue == "reserv") && (time() - EnteredCurrentStatus > 48 * 3600))' evaluated to TRUE
+...

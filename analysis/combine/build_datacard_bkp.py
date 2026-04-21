@@ -7,8 +7,12 @@ Supports one or multiple EFT operators simultaneously.
 Systematics implemented
 -----------------------------------
   lumi       lnN    2% flat on all processes
-  qcd_scale  shape  Envelope of MUR/MUF variations (per-process, per-event)
-  pdf        shape  Asymmetric RMS over PDF replicas (per-process, per-event)
+  qcd_scale  shape  Envelope of MUR/MUF variations (factorised from SM)
+  pdf        shape  RMS over PDF replicas (NNPDF MC method, factorised from SM)
+
+Factorisation assumption for EFT templates:
+  The relative shape variation is taken from the SM template and applied
+  multiplicatively to all EFT components (quad, sm_lin_quad, mixed).
 
 Usage:
     python3 build_datacard.py --op cHDD
@@ -29,12 +33,12 @@ import uproot
 
 # --------- Config ---------------------------------------
 
-CACHE_FILE    = "/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/CACHE/lhe_cache.pkl"
+CACHE_FILE    = "/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/CACHE/lhe_cache_bkp.pkl"
 OUTPUT_FILE   = "/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/combine/histograms.root"
 DATACARD_FILE = "/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/combine/datacard.txt"
 CHANNEL       = "triple_DY"
 
-MLL_EDGES   = np.array([50, 70, 90, 110, 200, 800, 1400, 2000, 3000], dtype=float)
+MLL_EDGES   = np.array([50, 70, 90, 110, 200, 800, 1400, 2000, 2400, 3000], dtype=float)
 RAP_EDGES   = np.array([0.0, 0.5, 1.0, 2.5], dtype=float)
 CSTAR_EDGES = np.array([-1.0, -0.5, 0.0, 0.5, 1.0], dtype=float)
 
@@ -143,46 +147,77 @@ def make_hist(weights, label=""):
         h.metadata = label
         return h
 
-def _pdf_updown(w_nom):
-    """Asymmetric RMS over PDF replicas. Returns (h_up, h_down) histograms."""
-    h_central  = make_hist(w_nom * w_pdf_central)
-    central    = h_central.values().flatten()
-    rep_vals   = np.array([make_hist(w_nom * w_pdf_all[k]).values().flatten()
-                           for k in w_pdf_all])
-    sigma_up   = np.zeros_like(central)
-    sigma_down = np.zeros_like(central)
-    for b in range(len(central)):
-        dev    = rep_vals[:, b] - central[b]
-        up_dev = dev[dev > 0]
-        dn_dev = dev[dev < 0]
-        if len(up_dev) > 0: sigma_up[b]   = np.sqrt(np.mean(up_dev**2))
-        if len(dn_dev) > 0: sigma_down[b] = np.sqrt(np.mean(dn_dev**2))
-    shape = h_central.values().shape
-    h_up = h_central.copy()
-    h_up.view()["value"] = (central + sigma_up).reshape(shape)
-    h_dn = h_central.copy()
-    h_dn.view()["value"] = np.maximum(central - sigma_down, 0).reshape(shape)
-    return h_up, h_dn
+def _apply_ratio(h_nom, ratio):
+    """Return copy of h_nom with bins multiplied by ratio array."""
+    h = h_nom.copy()
+    h.view()["value"]    = h_nom.view()["value"]    * ratio
+    h.view()["variance"] = h_nom.view()["variance"] * ratio**2
+    return h
 
-# ----------- Pre-compute scale variation keys (exclude central) ------------------------------
+def _safe_ratio(var_vals, nom_vals):
+    with np.errstate(divide='ignore', invalid='ignore'):
+        return np.where(nom_vals > 0, var_vals / nom_vals, 1.0)
 
-scale_keys = []
+# ----------- Pre-compute per-bin systematic ratios relative to SM nominal ---------------------
+# All EFT templates share the same ratio (factorisation assumption).
+
+sm_nom_vals = make_hist(w_SM).values()
+
+scale_up_ratio = scale_down_ratio = None
+pdf_up_ratio   = pdf_down_ratio   = None
+
 if has_scale:
-    all_scale_keys = list(w_scale_all.keys())
+    print("Computing QCD scale envelope ...")
+    scale_var_vals = np.array([
+        make_hist(w_scale_all[k]).values() for k in w_scale_all
+    ])
+    # Exclude central point (MUR=1, MUF=1, PDF=central)
     central_idx = next(
-        (i for i, k in enumerate(all_scale_keys)
+        (i for i, k in enumerate(w_scale_all)
          if "1.0" in k and k.lower().count("1.") >= 2),
         None)
-    scale_keys = [k for i, k in enumerate(all_scale_keys) if i != central_idx]
-    print(f"QCD scale: {len(scale_keys)} non-central variations\n")
+    if central_idx is not None:
+        scale_var_vals = np.delete(scale_var_vals, central_idx, axis=0)
+    ratios           = _safe_ratio(scale_var_vals, sm_nom_vals)
+    scale_up_ratio   = ratios.max(axis=0)
+    scale_down_ratio = ratios.min(axis=0)
+    print(f"  Envelope over {len(ratios)} non-central scale variations\n")
+
+if has_pdf:
+    print("Computing PDF uncertainty (asymmetric RMS) ...")
+    # The PDF central weight (ID 45) is the correct reference for replicas.
+    # w_SM is the EFT reweight SM point — different normalisation.
+    pdf_central_vals = make_hist(w_pdf_central).values()
+    pdf_var_vals = np.array([
+        make_hist(w_pdf_all[k]).values() for k in w_pdf_all
+    ])
+    # For each bin: split replicas above/below the PDF central,
+    # compute asymmetric RMS of deviations, build ratios.
+    flat_reps    = pdf_var_vals.reshape(len(pdf_var_vals), -1)  # (100, N_bins)
+    flat_central = pdf_central_vals.flatten()                   # (N_bins,)
+    sigma_up     = np.zeros_like(flat_central)
+    sigma_down   = np.zeros_like(flat_central)
+    for b in range(flat_central.shape[0]):
+        vals = flat_reps[:, b]
+        nom  = flat_central[b]
+        dev  = vals - nom
+        up_dev  = dev[dev > 0]
+        dn_dev  = dev[dev < 0]
+        if len(up_dev)  > 0: sigma_up[b]   = np.sqrt(np.mean(up_dev**2))
+        if len(dn_dev)  > 0: sigma_down[b] = np.sqrt(np.mean(dn_dev**2))
+    # Ratios relative to PDF central — captures pure PDF shape uncertainty.
+    # Applied to w_SM templates via factorisation assumption.
+    pdf_up_ratio   = _safe_ratio(flat_central + sigma_up, flat_central).reshape(sm_nom_vals.shape)
+    pdf_down_ratio = _safe_ratio(np.maximum(flat_central - sigma_down, 0), flat_central).reshape(sm_nom_vals.shape)
+    print(f"  {len(pdf_var_vals)} replicas vs PDF central (weight ID 45)")
+    print(f"  Up ratio range  : [{pdf_up_ratio.min():.4f}, {pdf_up_ratio.max():.4f}]")
+    print(f"  Down ratio range: [{pdf_down_ratio.min():.4f}, {pdf_down_ratio.max():.4f}]\n")
 
 # ---- Build nominal process histograms -----------------------------------------------------------
 
-histograms   = {}
-proc_weights = {}
+histograms = {}
 histograms["sm"]       = make_hist(w_SM, "SM")
 histograms["data_obs"] = make_hist(w_SM, "data_obs (Asimov = SM)")
-proc_weights["sm"]     = w_SM
 
 for op in OPERATORS:
     C      = C_values[op]
@@ -195,8 +230,6 @@ for op in OPERATORS:
         print(f"WARNING: [{op}] total cross section negative at C={C}")
     histograms[f"quad_{op}"]        = make_hist(C**2 * w_quad, f"quad {op} C={C}")
     histograms[f"sm_lin_quad_{op}"] = make_hist(w_slq,         f"SM+lin+quad {op} C={C}")
-    proc_weights[f"quad_{op}"]        = C**2 * w_quad
-    proc_weights[f"sm_lin_quad_{op}"] = w_slq
 
 OP_PAIRS = list(combinations(OPERATORS, 2))
 for op1, op2 in OP_PAIRS:
@@ -206,29 +239,44 @@ for op1, op2 in OP_PAIRS:
         continue
     C1, C2  = C_values[op1], C_values[op2]
     w_inter = w_pp_all[pair] - w_p1_all[op1] - w_p1_all[op2] + w_SM
-    w_mixed = C1 * C2 * w_inter
-    histograms[f"sm_lin_quad_mixed_{op1}_{op2}"]  = make_hist(w_mixed, f"mixed {op1}x{op2}")
-    proc_weights[f"sm_lin_quad_mixed_{op1}_{op2}"] = w_mixed
+    histograms[f"sm_lin_quad_mixed_{op1}_{op2}"] = \
+        make_hist(C1 * C2 * w_inter, f"mixed {op1}x{op2}")
 
 # ---- Build Up/Down shape variants for all processes (except data_obs) ----------------------
 
 nominal_procs = [k for k in histograms if k != "data_obs"]
 
 for proc in nominal_procs:
-    h     = histograms[proc]
-    w_nom = proc_weights[proc]
+    h = histograms[proc]
     if has_scale:
-        scale_hists = [make_hist(w_nom * w_scale_all[k]) for k in scale_keys]
-        all_vals    = np.array([s.values() for s in scale_hists])
-        h_up = scale_hists[0].copy()
-        h_up.view()["value"] = all_vals.max(axis=0)
-        h_dn = scale_hists[0].copy()
-        h_dn.view()["value"] = all_vals.min(axis=0)
-        histograms[f"{proc}_qcd_scaleUp"]   = h_up
-        histograms[f"{proc}_qcd_scaleDown"] = h_dn
+        histograms[f"{proc}_qcd_scaleUp"]   = _apply_ratio(h, scale_up_ratio)
+        histograms[f"{proc}_qcd_scaleDown"] = _apply_ratio(h, scale_down_ratio)
+    #this is for easier, symmetric pdf rms
     if has_pdf:
-        histograms[f"{proc}_pdfUp"], histograms[f"{proc}_pdfDown"] = _pdf_updown(w_nom)
+        histograms[f"{proc}_pdfUp"]   = _apply_ratio(h, pdf_up_ratio)
+        histograms[f"{proc}_pdfDown"] = _apply_ratio(h, pdf_down_ratio)
 
+    #implementing asymmetric pdf 
+    # if has_pdf:
+    #     pdf_var_vals = np.array([make_hist(w_pdf_all[k]).values() for k in w_pdf_all])
+        
+    #     up_sum   = np.zeros_like(sm_nom_vals)
+    #     dn_sum   = np.zeros_like(sm_nom_vals)
+    #     up_count = np.zeros_like(sm_nom_vals)
+    #     dn_count = np.zeros_like(sm_nom_vals)
+        
+    #     for rep in pdf_var_vals:
+    #         above = rep > sm_nom_vals
+    #         up_sum   += np.where(above, (rep - sm_nom_vals)**2, 0)
+    #         dn_sum   += np.where(~above, (rep - sm_nom_vals)**2, 0)
+    #         up_count += above
+    #         dn_count += ~above
+        
+    #     sigma_up = np.sqrt(np.where(up_count > 0, up_sum / up_count, 0))
+    #     sigma_dn = np.sqrt(np.where(dn_count > 0, dn_sum / dn_count, 0))
+        
+    #     pdf_up_ratio   = _safe_ratio(sm_nom_vals + sigma_up, sm_nom_vals)
+    #     pdf_down_ratio = _safe_ratio(np.maximum(sm_nom_vals - sigma_dn, 0), sm_nom_vals)
 
 # ---- Print nominal summary --------------------------------------------------------
 
