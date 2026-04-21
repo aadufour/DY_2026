@@ -7,12 +7,8 @@ Supports one or multiple EFT operators simultaneously.
 Systematics implemented
 -----------------------------------
   lumi       lnN    2% flat on all processes
-  qcd_scale  shape  Envelope of MUR/MUF variations (factorised from SM)
-  pdf        shape  RMS over PDF replicas (NNPDF MC method, factorised from SM)
-
-Factorisation assumption for EFT templates:
-  The relative shape variation is taken from the SM template and applied
-  multiplicatively to all EFT components (quad, sm_lin_quad, mixed).
+  qcd_scale  shape  Envelope of MUR/MUF variations (per-process, per-event)
+  pdf        shape  Asymmetric RMS over PDF replicas (per-process, per-event)
 
 Usage:
     python3 build_datacard.py --op cHDD
