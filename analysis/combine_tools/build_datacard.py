@@ -243,7 +243,7 @@ print()
 
 # ---- Write ROOT file --------------------------------------
 
-os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
+
 print(f"Writing {args.output} ...")
 with uproot.recreate(args.output) as rf:
     for name, h in histograms.items():
@@ -287,9 +287,9 @@ lines = [
     f"jmax {len(processes) - 1}",
     f"kmax {n_syst}",
     sep_long,
-    (f"shapes *         {CHANNEL}  {os.path.abspath(args.output)}"
+    (f"shapes *         {CHANNEL}  {args.output}"
      f"  $CHANNEL/$PROCESS  $CHANNEL/$PROCESS_$SYSTEMATIC"),
-    (f"shapes data_obs  {CHANNEL}  {os.path.abspath(args.output)}"
+    (f"shapes data_obs  {CHANNEL}  {args.output}"
      f"  $CHANNEL/data_obs"),
     sep_long,
     f"bin          {CHANNEL}",
