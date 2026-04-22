@@ -171,3 +171,30 @@
 	43  -  MemoryUsage of job (MB)
 	43084  -  ResidentSetSize of job (KB)
 ...
+006 (793420.006.000) 2026-04-22 11:48:16 Image size of job updated: 89884
+	43  -  MemoryUsage of job (MB)
+	43584  -  ResidentSetSize of job (KB)
+...
+006 (793420.006.000) 2026-04-22 11:53:17 Image size of job updated: 89884
+	43  -  MemoryUsage of job (MB)
+	43708  -  ResidentSetSize of job (KB)
+...
+006 (793420.006.000) 2026-04-22 11:58:17 Image size of job updated: 89884
+	43  -  MemoryUsage of job (MB)
+	43884  -  ResidentSetSize of job (KB)
+...
+006 (793420.006.000) 2026-04-22 12:03:17 Image size of job updated: 89884
+	43  -  MemoryUsage of job (MB)
+	43936  -  ResidentSetSize of job (KB)
+...
+006 (793420.006.000) 2026-04-22 12:08:18 Image size of job updated: 89884
+	44  -  MemoryUsage of job (MB)
+	44092  -  ResidentSetSize of job (KB)
+...
+006 (793420.006.000) 2026-04-22 12:23:19 Image size of job updated: 89884
+	44  -  MemoryUsage of job (MB)
+	44260  -  ResidentSetSize of job (KB)
+...
+009 (793420.006.000) 2026-04-22 12:38:21 Job was aborted.
+	The system macro SYSTEM_PERIODIC_REMOVE expression '((JobStatus == 5) && (time() - EnteredCurrentStatus > 3600 * 48)) || ((JobStatus == 2) && (T3Queue == "long") && (time() - EnteredCurrentStatus > 240 * 3600)) || ((JobStatus == 2) && (T3Queue == "short") && (time() - EnteredCurrentStatus > 120 * 60)) || ((JobStatus == 2) && (T3Queue == "reserv") && (time() - EnteredCurrentStatus > 48 * 3600))' evaluated to TRUE
+...

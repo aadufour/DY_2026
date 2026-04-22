@@ -31,8 +31,8 @@ import uproot
 # --------- Config ---------------------------------------
 
 CACHE_FILE    = "/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/CACHE/lhe_cache.pkl"
-OUTPUT_FILE   = "/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/combine/histograms.root"
-DATACARD_FILE = "/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/combine/datacard.txt"
+OUTPUT_FILE   = "histograms.root"
+DATACARD_FILE = "datacard.txt"
 CHANNEL       = "triple_DY"
 
 MLL_EDGES   = np.array([50, 70, 90, 110, 200, 800, 1000, 3000], dtype=float)
