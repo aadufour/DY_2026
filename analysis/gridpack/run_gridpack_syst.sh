@@ -22,7 +22,7 @@ NCORES=$4
 
 GRID_BASE="/grid_mnt/data__data.polcms/cms/adufour"
 GRIDPACK_DIR="${GRID_BASE}/gridpack_tests/SYST/DYSMEFTMll${BIN}"
-OUTPUT_DIR="${GRID_BASE}/MG5/mg5amcnlo/SYST/DYSMEFTMll${BIN}/Events/run_01"
+OUTPUT_DIR="${GRID_BASE}/LHE/SYST/DYSMEFTMll${BIN}"
 
 echo "============================="
 echo "Bin      : ${BIN}"
