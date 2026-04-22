@@ -65,11 +65,11 @@ def main() -> None:
         sys.exit(f"Error: '{eos_dest}' already exists on EOS — refusing to overwrite.")
 
     print(f"\n[1/3] Uploading '{local_dir}' -> {eos_dest}")
-    # mkdir the parent only — xrdcp must create eos_dest itself, otherwise it
-    # copies local_dir as a subdirectory inside an already-existing dest.
-    eos_parent = str(Path(eos_dest).parent)
-    run(["eos", "mkdir", "-p", eos_parent])
-    run(["xrdcp", "-r", "--silent", str(local_dir), xrd(eos_dest)])
+    # xrdcp -r requires dest to exist, but if dest exists it nests src inside it.
+    # Solution: create dest, then copy each item in local_dir into it individually.
+    run(["eos", "mkdir", "-p", eos_dest])
+    for item in sorted(local_dir.iterdir()):
+        run(["xrdcp", "-r", "--silent", str(item), xrd(eos_dest + "/")])
 
     # ------------------------------------------------------------------ #
     # 2. Collect every directory that was just created on EOS by walking
