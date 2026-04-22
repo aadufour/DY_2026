@@ -58,9 +58,14 @@ def main() -> None:
     os.environ["EOS_MGM_URL"] = EOS_MGM_URL
 
     # ------------------------------------------------------------------ #
-    # 1. Upload the whole directory tree
+    # 1. Check destination doesn't already exist, then create it
     # ------------------------------------------------------------------ #
+    result = run(["eos", "ls", eos_dest], check=False)
+    if result.returncode == 0:
+        sys.exit(f"Error: '{eos_dest}' already exists on EOS — refusing to overwrite.")
+
     print(f"\n[1/3] Uploading '{local_dir}' -> {eos_dest}")
+    run(["eos", "mkdir", "-p", eos_dest])
     run(["xrdcp", "-r", "--silent", str(local_dir), xrd(eos_dest)])
 
     # ------------------------------------------------------------------ #
