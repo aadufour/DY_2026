@@ -65,7 +65,10 @@ def main() -> None:
         sys.exit(f"Error: '{eos_dest}' already exists on EOS — refusing to overwrite.")
 
     print(f"\n[1/3] Uploading '{local_dir}' -> {eos_dest}")
-    run(["eos", "mkdir", "-p", eos_dest])
+    # mkdir the parent only — xrdcp must create eos_dest itself, otherwise it
+    # copies local_dir as a subdirectory inside an already-existing dest.
+    eos_parent = str(Path(eos_dest).parent)
+    run(["eos", "mkdir", "-p", eos_parent])
     run(["xrdcp", "-r", "--silent", str(local_dir), xrd(eos_dest)])
 
     # ------------------------------------------------------------------ #
