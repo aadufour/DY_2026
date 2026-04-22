@@ -35,7 +35,7 @@ OUTPUT_FILE   = "/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/combin
 DATACARD_FILE = "/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/combine/datacard.txt"
 CHANNEL       = "triple_DY"
 
-MLL_EDGES   = np.array([50, 70, 90, 110, 200, 800, 1400, 2000, 3000], dtype=float)
+MLL_EDGES   = np.array([50, 70, 90, 110, 200, 800, 1000, 3000], dtype=float)
 RAP_EDGES   = np.array([0.0, 0.5, 1.0, 2.5], dtype=float)
 CSTAR_EDGES = np.array([-1.0, -0.5, 0.0, 0.5, 1.0], dtype=float)
 

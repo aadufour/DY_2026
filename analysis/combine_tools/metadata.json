@@ -113,7 +113,6 @@
     },
     "nuisances": [
         "lumi",
-        "qcd_scale",
-        "pdf"
+        "qcd_scale"
     ]
 }

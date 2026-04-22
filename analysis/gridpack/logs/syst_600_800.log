@@ -76,3 +76,54 @@
 009 (791838.004.000) 2026-04-20 17:34:41 Job was aborted.
 	The system macro SYSTEM_PERIODIC_REMOVE expression '((JobStatus == 5) && (time() - EnteredCurrentStatus > 3600 * 48)) || ((JobStatus == 2) && (T3Queue == "long") && (time() - EnteredCurrentStatus > 240 * 3600)) || ((JobStatus == 2) && (T3Queue == "short") && (time() - EnteredCurrentStatus > 120 * 60)) || ((JobStatus == 2) && (T3Queue == "reserv") && (time() - EnteredCurrentStatus > 48 * 3600))' evaluated to TRUE
 ...
+000 (793420.004.000) 2026-04-22 10:37:53 Job submitted from host: <134.158.133.27:9618?addrs=134.158.133.27-9618&alias=llrt3condor.in2p3.fr&noUDP&sock=schedd_33061_acb1>
+...
+040 (793420.004.000) 2026-04-22 10:37:57 Started transferring input files
+	Transferring to host: <134.158.132.87:9618?addrs=134.158.132.87-9618&alias=llrgrwn026.in2p3.fr&noUDP&sock=slot1_2_1163540_f04c_8667>
+...
+001 (793420.004.000) 2026-04-22 10:37:58 Job executing on host: <134.158.132.87:9618?addrs=134.158.132.87-9618&alias=llrgrwn026.in2p3.fr&noUDP&sock=startd_1148272_a94b>
+	SlotName: slot1_2@llrgrwn026.in2p3.fr
+	CondorScratchDir = "/var/lib/condor/execute/dir_1750525"
+	Cpus = 1
+	Disk = 2048
+	GPUs = 0
+	Memory = 4096
+...
+040 (793420.004.000) 2026-04-22 10:37:58 Finished transferring input files
+...
+006 (793420.004.000) 2026-04-22 10:38:07 Image size of job updated: 12140
+	7  -  MemoryUsage of job (MB)
+	6580  -  ResidentSetSize of job (KB)
+...
+006 (793420.004.000) 2026-04-22 10:43:08 Image size of job updated: 42272
+	41  -  MemoryUsage of job (MB)
+	41340  -  ResidentSetSize of job (KB)
+...
+006 (793420.004.000) 2026-04-22 10:48:08 Image size of job updated: 97532
+	96  -  MemoryUsage of job (MB)
+	97532  -  ResidentSetSize of job (KB)
+...
+006 (793420.004.000) 2026-04-22 10:53:09 Image size of job updated: 97884
+	96  -  MemoryUsage of job (MB)
+	97884  -  ResidentSetSize of job (KB)
+...
+006 (793420.004.000) 2026-04-22 10:58:10 Image size of job updated: 98096
+	96  -  MemoryUsage of job (MB)
+	98096  -  ResidentSetSize of job (KB)
+...
+006 (793420.004.000) 2026-04-22 11:08:10 Image size of job updated: 98524
+	97  -  MemoryUsage of job (MB)
+	98524  -  ResidentSetSize of job (KB)
+...
+006 (793420.004.000) 2026-04-22 11:13:11 Image size of job updated: 98608
+	97  -  MemoryUsage of job (MB)
+	98608  -  ResidentSetSize of job (KB)
+...
+006 (793420.004.000) 2026-04-22 11:18:11 Image size of job updated: 98712
+	97  -  MemoryUsage of job (MB)
+	98712  -  ResidentSetSize of job (KB)
+...
+006 (793420.004.000) 2026-04-22 11:38:13 Image size of job updated: 98784
+	97  -  MemoryUsage of job (MB)
+	98784  -  ResidentSetSize of job (KB)
+...

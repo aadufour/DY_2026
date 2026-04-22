@@ -227,3 +227,20 @@ python3 createCombineJson.py --datacard datacard.txt
 python3 createWS.py 1
 python3 runScans.py 1 initial
 python3 runScans.py 1 scan
+
+
+
+#------------
+# new workflow
+# Steps 1-2: analysis
+dy_analysis
+build_cache.py
+build_datacard.py --op cHDD
+
+# Steps 3-7: combine
+dy_combine
+createJson.py --datacard datacard.txt
+createCombineJson.py --datacard datacard.txt
+createWS.py 1
+runScans.py 1 initial
+runScans.py 1 scan
