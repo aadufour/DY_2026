@@ -21,7 +21,7 @@ SEED=$3
 NCORES=$4
 
 GRID_BASE="/grid_mnt/data__data.polcms/cms/adufour"
-GRIDPACK_DIR="${GRID_BASE}/gridpack_tests/SYST/DYSMEFTMll${BIN}"
+GRIDPACK_DIR="${GRID_BASE}/gridpacks/SYST/DYSMEFTMll${BIN}"
 OUTPUT_DIR="${GRID_BASE}/LHE/SYST/DYSMEFTMll${BIN}"
 
 echo "============================="

@@ -20,8 +20,8 @@ SEED=$3
 NCORES=$4
 
 GRID_BASE="/grid_mnt/data__data.polcms/cms/adufour"
-GRIDPACK_DIR="${GRID_BASE}/gridpack_tests/DYSMEFTMll${BIN}"
-OUTPUT_DIR="${GRID_BASE}/MG5/mg5amcnlo/DYSMEFTMll${BIN}/Events/run_01"
+GRIDPACK_DIR="${GRID_BASE}/gridpacks/DYSMEFTMll${BIN}"
+OUTPUT_DIR="${GRID_BASE}/LHE/DYSMEFTMll${BIN}"
 
 echo "============================="
 echo "Bin      : ${BIN}"
@@ -42,6 +42,9 @@ if [ ! -f "${GRIDPACK_DIR}/runcmsgrid.sh" ]; then
     exit 1
 fi
 
+# Remove stale lock file if present
+rm -f "${GRIDPACK_DIR}/process/madevent/RunWeb"
+
 # Clean and recreate output directory
 rm -rf "${OUTPUT_DIR}"
 mkdir -p "${OUTPUT_DIR}"
@@ -52,9 +55,6 @@ bash runcmsgrid.sh "${NEVENTS}" "${SEED}" "${NCORES}"
 
 # Move output to destination
 mv "${GRIDPACK_DIR}/cmsgrid_final.lhe" "${OUTPUT_DIR}/unweighted_events.lhe"
-echo "Output saved to ${OUTPUT_DIR}/unweighted_events.lhe.gz"
-
-echo ""
 
 echo "Done. Output in ${OUTPUT_DIR}"
 ls -lh "${OUTPUT_DIR}"

@@ -170,6 +170,7 @@ if os.path.exists(CHECKPOINT_FILE):
     acc_rap         = ckpt["rap"]
     acc_cstar       = ckpt["cstar"]
     acc_w_SM        = ckpt["w_SM"]
+    acc_xwgt        = ckpt.get("xwgt", np.empty(0, dtype=np.float64))
     acc_w_p1        = ckpt["w_p1"]
     acc_w_m1        = ckpt["w_m1"]
     acc_w_pp        = ckpt["w_pp"]
@@ -183,6 +184,7 @@ else:
     acc_rap           = np.empty(0, dtype=np.float64)
     acc_cstar         = np.empty(0, dtype=np.float64)
     acc_w_SM          = np.empty(0, dtype=np.float64)
+    acc_xwgt          = np.empty(0, dtype=np.float64)
     acc_w_p1          = {op:   np.empty(0, dtype=np.float64) for op   in OPERATORS}
     acc_w_m1          = {op:   np.empty(0, dtype=np.float64) for op   in OPERATORS}
     acc_w_pp          = {pair: np.empty(0, dtype=np.float64) for pair in OP_PAIRS}
@@ -214,6 +216,7 @@ for lhe_file in LHE_FILES:
     buf_rap     = []
     buf_cstar   = []
     buf_w_SM    = []
+    buf_xwgt    = []
     buf_w_p1    = {op:   [] for op   in OPERATORS}
     buf_w_m1    = {op:   [] for op   in OPERATORS}
     buf_w_pp    = {pair: [] for pair in OP_PAIRS}
@@ -265,6 +268,7 @@ for lhe_file in LHE_FILES:
             buf_rap.append(y)
             buf_cstar.append(cs)
             buf_w_SM.append(wkeys['SM'])
+            buf_xwgt.append(event.weight)
 
             for op in OPERATORS:
                 buf_w_p1[op].append(wkeys[op])
@@ -291,6 +295,7 @@ for lhe_file in LHE_FILES:
     acc_rap   = np.concatenate([acc_rap,   np.array(buf_rap,   dtype=np.float64)])
     acc_cstar = np.concatenate([acc_cstar, np.array(buf_cstar, dtype=np.float64)])
     acc_w_SM  = np.concatenate([acc_w_SM,  np.array(buf_w_SM,  dtype=np.float64)])
+    acc_xwgt  = np.concatenate([acc_xwgt,  np.array(buf_xwgt,  dtype=np.float64)])
 
     for op in OPERATORS:
         acc_w_p1[op] = np.concatenate([acc_w_p1[op], np.array(buf_w_p1[op], dtype=np.float64)])
@@ -316,6 +321,7 @@ for lhe_file in LHE_FILES:
         "rap":             acc_rap,
         "cstar":           acc_cstar,
         "w_SM":            acc_w_SM,
+        "xwgt":            acc_xwgt,
         "w_p1":            acc_w_p1,
         "w_m1":            acc_w_m1,
         "w_pp":            acc_w_pp,
@@ -339,6 +345,7 @@ cache = {
     'rap':     acc_rap,
     'cstar':   acc_cstar,
     'w_SM':    acc_w_SM,
+    'xwgt':    acc_xwgt,
     'w_p1':    acc_w_p1,
     'w_m1':    acc_w_m1,
     'w_pp':    acc_w_pp,
