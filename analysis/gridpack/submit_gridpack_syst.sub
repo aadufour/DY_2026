@@ -10,7 +10,7 @@ getenv      = true
 request_memory = 4G
 request_cpus   = 1
 
-T3Queue      = short
+T3Queue      = long
 WNTag        = el9
 +SingularityCmd = ""
 include : /opt/exp_soft/cms/t3/t3queue |
