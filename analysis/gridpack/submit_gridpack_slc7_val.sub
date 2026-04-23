@@ -1,0 +1,28 @@
+Universe    = vanilla
+Executable  = /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/gridpack/run_gridpack_slc7_val.sh
+Arguments   = $(bin) 5000 $(seed) 8
+input       = /dev/null
+output      = /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/gridpack/logs/slc7_val_$(bin).out
+error       = /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/gridpack/logs/slc7_val_$(bin).err
+log         = /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/gridpack/logs/slc7_val_$(bin).log
+getenv      = true
+
+request_memory = 8G
+request_cpus   = 8
+
+T3Queue      = long
+WNTag        = el9
++SingularityCmd = ""
+include : /opt/exp_soft/cms/t3/t3queue |
+
+max_retries = 0
+
+queue bin, seed from (
+    50_120,    1
+    120_200,   2
+    200_400,   3
+    400_600,   4
+    600_800,   5
+    800_1000,  6
+    1000_3000, 7
+)
