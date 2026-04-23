@@ -43,8 +43,10 @@ if [ ! -f "${GRIDPACK_DIR}/runcmsgrid.sh" ]; then
     exit 1
 fi
 
-# Remove stale lock file if present
+# Remove stale lock file and leftover GridRun directories from previous killed jobs
 rm -f "${GRIDPACK_DIR}/process/madevent/RunWeb"
+rm -rf "${GRIDPACK_DIR}/process/madevent/Events/GridRun_*"
+rm -rf "${GRIDPACK_DIR}/process/madevent/Events/GridRun_PostProc_*"
 
 # Clean and recreate output directory
 rm -rf "${OUTPUT_DIR}"
