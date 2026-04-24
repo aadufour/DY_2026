@@ -268,7 +268,7 @@ for lhe_file in LHE_FILES:
             buf_rap.append(y)
             buf_cstar.append(cs)
             buf_w_SM.append(wkeys['SM'])
-            buf_xwgt.append(event.weight)
+            buf_xwgt.append(event.eventinfo.weight)
 
             for op in OPERATORS:
                 buf_w_p1[op].append(wkeys[op])
