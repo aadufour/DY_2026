@@ -8,3 +8,6 @@ ssh.md
 genproductions
 MG5
 .venv
+*.log
+*.out
+*.err
