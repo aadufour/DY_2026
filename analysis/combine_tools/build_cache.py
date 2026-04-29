@@ -47,7 +47,7 @@ MAX_EVENTS = args.nevents
 MLL_BIN_EDGES = [50, 120, 200, 400, 600, 800, 1000, 3000]
 
 LHE_FILES = [
-    f"/grid_mnt/data__data.polcms/cms/adufour/LHE/SYST_slc7/DYSMEFTMll{lo}_{hi}/unweighted_events.lhe"
+    f"/grid_mnt/data__data.polcms/cms/adufour/LHE/SYST_slc7_troppe_pdf/DYSMEFTMll{lo}_{hi}/unweighted_events.lhe"
     for lo, hi in zip(MLL_BIN_EDGES[:-1], MLL_BIN_EDGES[1:])
 ]
 
@@ -64,8 +64,8 @@ OPERATORS = [
 
 OP_PAIRS = [] if SKIP_PAIRS else list(combinations(OPERATORS, 2))
 
-CACHE_FILE      = "/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/CACHE/lhe_cache_slc7.pkl"
-CHECKPOINT_FILE = "/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/CACHE/lhe_cache_slc7_checkpoint.pkl"
+CACHE_FILE      = "/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/CACHE/lhe_cache_slc7_troppe_pdf.pkl"
+CHECKPOINT_FILE = "/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/CACHE/lhe_cache_slc7_troppe_pdf_checkpoint.pkl"
 
 CENTRAL_PDF = 303600
 

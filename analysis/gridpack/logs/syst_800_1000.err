@@ -1,0 +1,4 @@
+WARNING: In non-interactive mode release checks e.g. deprecated releases, production architectures are disabled.
+WARNING: There already exists /grid_mnt/data__data.polcms/cms/adufour/gridpacks/SYST/DYSMEFTMll800_1000/CMSSW_13_2_9 area for SCRAM_ARCH el9_amd64_gcc11.
+mkdir: cannot create directory 'process/madevent/Events/GridRun_PostProc_6': File exists
+mv: cannot move '/grid_mnt/data__data.polcms/cms/adufour/gridpacks/SYST/DYSMEFTMll800_1000/cmsgrid_final.lhe' to '/grid_mnt/data__data.polcms/cms/adufour/LHE/SYST/DYSMEFTMll800_1000/unweighted_events.lhe': No such file or directory

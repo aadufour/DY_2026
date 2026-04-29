@@ -1,0 +1,3 @@
+WARNING: In non-interactive mode release checks e.g. deprecated releases, production architectures are disabled.
+WARNING: There already exists /grid_mnt/data__data.polcms/cms/adufour/gridpacks/SYST_slc7/DYSMEFTMll50_120/CMSSW_10_6_19 area for SCRAM_ARCH slc7_amd64_gcc700.
+mkdir: cannot create directory 'process/madevent/Events/GridRun_PostProc_1': File exists
