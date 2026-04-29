@@ -1,14 +1,14 @@
 Universe    = vanilla
 Executable  = /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/gridpack/run_gridpack_slc7.sh
-Arguments   = $(bin) 100000 $(seed) 1
+Arguments   = $(bin) 100000 $(seed) 4
 input       = /dev/null
 output      = /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/gridpack/logs/slc7_$(bin).out
 error       = /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/gridpack/logs/slc7_$(bin).err
 log         = /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/gridpack/logs/slc7_$(bin).log
 getenv      = true
 
-request_memory = 4G
-request_cpus   = 1
+request_memory = 16G
+request_cpus   = 4
 
 T3Queue      = long
 WNTag        = el9
