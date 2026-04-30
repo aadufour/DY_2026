@@ -14,7 +14,7 @@ FILENAME=$(basename "$GRIDPACK")
 
 echo "----->", ${FILENAME}
 
-bash chain_step_0_test.sh ${SEED} ${EVENTS} ${FILENAME}
+cmssw-el7 -- bash chain_step_0_test.sh ${SEED} ${EVENTS} ${FILENAME}
 bash chain_step_1_test.sh ${SEED} ${EVENTS} 
 bash chain_step_2_test.sh ${SEED} ${EVENTS}
 bash chain_step_3_test.sh ${SEED} ${EVENTS}
