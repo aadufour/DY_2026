@@ -38,7 +38,7 @@ config.JobType.inputFiles = [
 ]
 config.JobType.disableAutomaticOutputCollection = False
 config.JobType.allowUndistributedCMSSW = True
-config.JobType.maxMemoryMB = 5000
+config.JobType.maxMemoryMB = 2500
 config.JobType.numCores = 1
 
 config.section_('Data')
