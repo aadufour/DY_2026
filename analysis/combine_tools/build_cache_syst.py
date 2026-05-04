@@ -97,6 +97,7 @@ def parse_weight_ids(lhe_file):
         'MUF':       re.compile(r'MUF=["\']?([\d.]+)',       re.IGNORECASE),
         'PDF':       re.compile(r'PDF=["\']?(\d+)',          re.IGNORECASE),
         'DYN_SCALE': re.compile(r'DYN_SCALE=["\']?([\d.]+)', re.IGNORECASE),
+        'ALPSFACT':  re.compile(r'ALPSFACT=["\']?([\d.]+)',  re.IGNORECASE),
     }
 
     weights = {}
@@ -125,18 +126,19 @@ def parse_weight_ids(lhe_file):
         pdf = int(info['PDF'])   if info['PDF'] else None
         dyn = info['DYN_SCALE']
 
-        if dyn is not None:
-            continue   # skip dynamic-scale variants
+        if dyn is not None or info['ALPSFACT'] is not None:
+            continue   # skip dynamic-scale and alphaS-emission variants
 
         # Standalone nominal (appears once, before the PDF weightgroups)
         if mur == 1.0 and muf == 1.0 and pdf == CENTRAL_PDF and central_id is None:
             central_id = wid
             continue
 
-        # Scale envelope: central PDF, exclude anti-correlated extremes
+        # Scale envelope: central PDF, MUR or MUF != 1, exclude anti-correlated extremes
         if pdf == CENTRAL_PDF and mur is not None and muf is not None:
-            if not (mur == 0.5 and muf == 2.0) and not (mur == 2.0 and muf == 0.5):
-                scale_ids.append(wid)
+            if not (mur == 1.0 and muf == 1.0):   # MUR=MUF=1 is PDF member 0, not a scale var
+                if not (mur == 0.5 and muf == 2.0) and not (mur == 2.0 and muf == 0.5):
+                    scale_ids.append(wid)
 
         # PDF 325300 members: PDF value runs 325300, 325301, ..., 325402
         if mur == 1.0 and muf == 1.0 and pdf is not None:
