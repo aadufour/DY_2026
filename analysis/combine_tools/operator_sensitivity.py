@@ -7,10 +7,11 @@ Per-operator EFT sensitivity study from histograms.root.
 For each operator produces a 3-panel figure:
   Top    : absolute mll shapes (SM + EFT) with QCD scale and PDF syst bands
   Middle : fractional deviation (EFT/SM − 1) with syst and stat (sqrt-N) bands
-  Bottom : S/sqrt(B) per bin, where S = |sm_lin_quad_{op} − sm|
+  Bottom : S/sqrt(B) per bin, where S = |sm_lin_quad_{op} − sm|, B = sm
 
 Summary outputs:
   summary_sensitivity_heatmap.pdf  — S/sqrt(B) for all ops × bins
+  summary_ratio_heatmap.pdf        — signed EFT/SM−1 for all ops × bins
   summary_operator_ranking.pdf     — ranking bar chart, colour = tail/bulk fraction
 
 Usage:
@@ -19,6 +20,7 @@ Usage:
                                   [--channel triple_DY]
                                   [--lumi 59740]
                                   [--tail-threshold 200]
+                                  [--no-per-op]
 """
 
 import argparse
@@ -28,6 +30,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+import mplhep as hep
 import numpy as np
 import uproot
 
@@ -44,11 +47,11 @@ ALL_OPS = [
 ]
 
 # ── colour palette ─────────────────────────────────────────────────────────
-C_SM    = "black"
-C_EFT   = "crimson"
-C_QCD   = "steelblue"
-C_PDF   = "darkorange"
-C_STAT  = "forestgreen"
+C_SM   = "black"
+C_EFT  = "crimson"
+C_QCD  = "steelblue"
+C_PDF  = "darkorange"
+C_STAT = "forestgreen"
 
 
 # ══ helpers ════════════════════════════════════════════════════════════════
@@ -67,13 +70,6 @@ def get_vals(f, channel, name):
     return v
 
 
-def step_xy(edges, values):
-    """Build x/y arrays suitable for ax.step(..., where='post').
-    Returns (x, y) where x has n+1 points and y has n+1 points (last value repeated).
-    """
-    return edges, np.append(values, values[-1])
-
-
 def make_bin_labels(edges):
     lo = edges[:-1].astype(int)
     hi = edges[1:].astype(int)
@@ -83,6 +79,16 @@ def make_bin_labels(edges):
 def fractional(num, denom, fill=0.0):
     with np.errstate(invalid="ignore", divide="ignore"):
         return np.where(denom > 0, num / denom, fill)
+
+
+def fill_step(ax, edges, lo, hi, **kw):
+    """Step-function fill_between using histogram bin edges."""
+    ax.fill_between(
+        edges,
+        np.append(lo, lo[-1]),
+        np.append(hi, hi[-1]),
+        step="post", **kw,
+    )
 
 
 # ══ per-operator plot ══════════════════════════════════════════════════════
@@ -99,8 +105,6 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
         print(f"    [skip] missing sm or sm_lin_quad_{op}")
         return None
 
-    n_bins = len(sm)
-
     # ── systematics (fall back to SM nominal if absent) ───────────────
     def _syst(name): v = get_vals(f, channel, name); return v if v is not None else sm.copy()
     qcd_up = _syst("sm_qcd_scaleUp")
@@ -109,119 +113,85 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
     pdf_dn = _syst("sm_pdfDown")
 
     # ── derived quantities ────────────────────────────────────────────
-    signal   = eft - sm
-    abs_sig  = np.abs(signal)
-    stat     = np.sqrt(np.maximum(sm, 0))
+    signal  = eft - sm
+    stat    = np.sqrt(np.maximum(sm, 0))
 
     ratio    = fractional(signal, sm)
-    qcd_rel  = fractional(qcd_up - qcd_dn, 2 * sm)   # half-band / SM
+    qcd_rel  = fractional(qcd_up - qcd_dn, 2 * sm)   # half-envelope / SM
     pdf_rel  = fractional(pdf_up - pdf_dn, 2 * sm)
     stat_rel = fractional(stat, sm)
+    s_sqrtB  = fractional(np.abs(signal), stat)       # S / sqrt(B)
 
-    s_sqrtB  = fractional(abs_sig, stat)              # S / sqrt(B)
+    # split S/sqrt(B) by sign for colouring
+    s_pos = np.where(signal >= 0, s_sqrtB, 0.)
+    s_neg = np.where(signal <  0, s_sqrtB, 0.)
 
-    # ── figure ────────────────────────────────────────────────────────
+    tot_syst_rel = np.sqrt(qcd_rel**2 + pdf_rel**2)
+
+    # ── figure: 3 panels sharing the mll x-axis ───────────────────────
     fig, (ax1, ax2, ax3) = plt.subplots(
         3, 1, figsize=(9, 11),
-        gridspec_kw={"height_ratios": [3, 2, 2], "hspace": 0.04},
-        sharex=False,
+        gridspec_kw={"height_ratios": [3, 2, 2], "hspace": 0.05},
+        sharex=True,
     )
-
-    # shared log x-axis (mll)
-    x_centers = 0.5 * (edges[:-1] + edges[1:])
-
-    def _step_axes(ax, fill=True):
-        """Configure mll x-axis with bin-edge lines."""
-        ax.set_xscale("log")
-        ax.set_xlim(edges[0], edges[-1])
-        for e in edges[1:-1]:
-            ax.axvline(e, color="gray", lw=0.4, ls=":")
-        ax.set_xticks(x_centers)
-        ax.set_xticklabels([])
-        if fill:
-            ax.minorticks_off()
-
-    def _fill_step(ax, lo, hi, color, alpha, **kw):
-        ax.fill_between(edges,
-                        np.append(lo, lo[-1]),
-                        np.append(hi, hi[-1]),
-                        step="post", alpha=alpha, color=color, **kw)
-
-    def _line_step(ax, vals, **kw):
-        ax.step(edges, np.append(vals, vals[-1]), where="post", **kw)
 
     # ── Panel 1: absolute shapes ──────────────────────────────────────
-    _step_axes(ax1)
-    _fill_step(ax1, qcd_dn, qcd_up, C_QCD, 0.25, label="QCD scale env.")
-    _fill_step(ax1, pdf_dn, pdf_up, C_PDF, 0.25, label="PDF band")
-    _line_step(ax1, sm,  color=C_SM,  lw=1.8, label="SM")
-    _line_step(ax1, eft, color=C_EFT, lw=1.8, ls="--",
-               label=rf"SM+lin+quad  ($C_{{{op}}}=1$)")
+    fill_step(ax1, edges, qcd_dn, qcd_up, alpha=0.25, color=C_QCD, label="QCD scale env.")
+    fill_step(ax1, edges, pdf_dn, pdf_up, alpha=0.25, color=C_PDF, label="PDF band")
+    hep.histplot(sm,  bins=edges, ax=ax1, color=C_SM,  linewidth=1.8,
+                 histtype="step", label="SM")
+    hep.histplot(eft, bins=edges, ax=ax1, color=C_EFT, linewidth=1.8,
+                 histtype="step", linestyle="--",
+                 label=rf"SM+lin+quad  ($C_{{{op}}}=1$)")
 
-    ax1.set_yscale("log")
-    ax1.set_ylabel("Events / bin", fontsize=11)
-    ax1.set_title(
-        rf"Operator: {op}   |   $\mathcal{{L}}$ = {lumi_fb:.0f} fb$^{{-1}}$",
-        fontsize=12, pad=6,
-    )
-    ax1.legend(fontsize=9, ncol=2, loc="upper right")
-    ax1.grid(axis="y", ls=":", alpha=0.35)
-    plt.setp(ax1.get_xticklabels(), visible=False)
+    ax1.semilogy()
+    ax1.set_xscale("log")
+    ax1.set_xlim(edges[0], edges[-1])
+    ax1.set_ylabel("Events / bin")
+    ax1.legend(frameon=False, fontsize=9, ncol=2, loc="upper right")
+    hep.cms.label(rf"$C_{{{op}}} = 1$", ax=ax1, data=True, lumi=lumi_fb, loc=0)
 
     # ── Panel 2: fractional deviation ────────────────────────────────
-    _step_axes(ax2)
-    ax2.axhline(0, color="black", lw=0.9)
-    _fill_step(ax2, -stat_rel,  +stat_rel,  C_STAT, 0.15, label=r"Stat $\sqrt{N}$")
-    _fill_step(ax2, -pdf_rel,   +pdf_rel,   C_PDF,  0.25, label="PDF")
-    _fill_step(ax2, -qcd_rel,   +qcd_rel,   C_QCD,  0.25, label="QCD scale")
-    _line_step(ax2, ratio, color=C_EFT, lw=1.8, label="EFT / SM − 1")
+    ax2.axhline(0, color="black", linewidth=0.9)
+    fill_step(ax2, edges, -stat_rel, +stat_rel, alpha=0.15, color=C_STAT, label=r"Stat $\sqrt{N}$")
+    fill_step(ax2, edges, -pdf_rel,  +pdf_rel,  alpha=0.25, color=C_PDF,  label="PDF")
+    fill_step(ax2, edges, -qcd_rel,  +qcd_rel,  alpha=0.25, color=C_QCD,  label="QCD scale")
+    hep.histplot(ratio, bins=edges, ax=ax2, color=C_EFT, linewidth=1.8,
+                 histtype="step", label="EFT / SM − 1")
 
-    ax2.set_ylabel("EFT / SM − 1", fontsize=10)
-    ax2.legend(fontsize=8, ncol=4, loc="best")
-    ax2.grid(axis="y", ls=":", alpha=0.35)
-    plt.setp(ax2.get_xticklabels(), visible=False)
-
-    # add zero-crossings annotation if relevant
-    crosses = np.where(np.diff(np.sign(ratio)) != 0)[0]
-    for c in crosses:
-        mid = np.sqrt(x_centers[c] * x_centers[c + 1]) if c + 1 < n_bins else x_centers[c]
-        ax2.axvline(mid, color=C_EFT, lw=0.7, ls="--", alpha=0.5)
+    ax2.set_ylabel("EFT / SM − 1")
+    ax2.legend(frameon=False, fontsize=8, ncol=4, loc="best")
 
     # ── Panel 3: S/sqrt(B) ────────────────────────────────────────────
-    ax3.set_xscale("log")
-    ax3.set_xlim(edges[0], edges[-1])
+    ax3.axhline(1, color="gray", linestyle="--", linewidth=0.8, alpha=0.7)
+    hep.histplot(s_pos, bins=edges, ax=ax3, color=C_EFT, alpha=0.75,
+                 histtype="fill", label="S/√B  (EFT > SM)")
+    hep.histplot(s_neg, bins=edges, ax=ax3, color="navy", alpha=0.75,
+                 histtype="fill", label="S/√B  (EFT < SM)")
+    hep.histplot(tot_syst_rel, bins=edges, ax=ax3, color="gray", linewidth=1.0,
+                 histtype="step", linestyle=":", label="Total syst / SM")
+
+    ax3.set_ylabel("S / √B")
+    ax3.set_xlabel(r"$m_{\ell\ell}$ [GeV]")
+    ax3.set_xticks(edges)
+    ax3.set_xticklabels([str(int(e)) for e in edges], rotation=45, ha="right", fontsize=7)
+    ax3.legend(frameon=False, fontsize=8, loc="upper left")
+
+    # bin-edge separators on all panels
     for e in edges[1:-1]:
-        ax3.axvline(e, color="gray", lw=0.4, ls=":")
-    ax3.axhline(1, color="gray", ls="--", lw=0.8, alpha=0.7)
-
-    widths = edges[1:] - edges[:-1]
-    bar_colors = [C_EFT if s >= 0 else "navy" for s in signal]
-    ax3.bar(x_centers, s_sqrtB, width=0.6 * widths,
-            color=bar_colors, alpha=0.75, label="S / √B")
-
-    # overlay total syst band for reference
-    tot_syst_rel = np.sqrt(qcd_rel**2 + pdf_rel**2)
-    ax3.step(edges, np.append(tot_syst_rel, tot_syst_rel[-1]),
-             where="post", color="gray", lw=1.0, ls=":", label="Total syst / SM")
-
-    ax3.set_ylabel("S / √B", fontsize=10)
-    ax3.set_xlabel(r"$m_{\ell\ell}$ [GeV]", fontsize=11)
-    ax3.set_xticks(x_centers)
-    ax3.set_xticklabels(make_bin_labels(edges), rotation=30, ha="right", fontsize=7)
-    ax3.legend(fontsize=8, loc="upper left")
-    ax3.grid(axis="y", ls=":", alpha=0.35)
+        for ax in (ax1, ax2, ax3):
+            ax.axvline(e, color="gray", linewidth=0.4, linestyle=":", alpha=0.6)
 
     plt.tight_layout()
     outpath = os.path.join(outdir, f"sensitivity_{op}.pdf")
-    fig.savefig(outpath, bbox_inches="tight")
+    fig.savefig(outpath, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"    saved: {outpath}")
 
     # ── summary statistics ─────────────────────────────────────────────
+    x_centers = 0.5 * (edges[:-1] + edges[1:])
     tail_mask = x_centers >= tail_thr
-    tail_sum  = s_sqrtB[tail_mask].sum()
-    total_sum = s_sqrtB.sum()
-    tail_frac = tail_sum / (total_sum + 1e-12)
+    tail_frac = s_sqrtB[tail_mask].sum() / (s_sqrtB.sum() + 1e-12)
 
     return {
         "op":          op,
@@ -238,8 +208,8 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
 
 def make_heatmap(results, edges, outdir):
     """Heatmap: operators (rows) × mll bins (cols), cells = S/√B."""
-    ops   = [r["op"] for r in results]
-    mat   = np.array([r["s_sqrtB"] for r in results])
+    ops    = [r["op"] for r in results]
+    mat    = np.array([r["s_sqrtB"] for r in results])
     labels = make_bin_labels(edges)
 
     fig, ax = plt.subplots(figsize=(max(8, 1.1 * len(labels)), max(5, 0.35 * len(ops))))
@@ -251,7 +221,7 @@ def make_heatmap(results, edges, outdir):
     ax.set_xticklabels(labels, rotation=30, ha="right", fontsize=8)
     ax.set_yticks(range(len(ops)))
     ax.set_yticklabels(ops, fontsize=8)
-    ax.set_xlabel(r"$m_{\ell\ell}$ bin [GeV]", fontsize=11)
+    ax.set_xlabel(r"$m_{\ell\ell}$ bin [GeV]")
     ax.set_title(r"S / $\sqrt{B}$ per operator per $m_{\ell\ell}$ bin  ($C=1$)", fontsize=12)
 
     for i, row in enumerate(mat):
@@ -262,14 +232,44 @@ def make_heatmap(results, edges, outdir):
 
     plt.tight_layout()
     path = os.path.join(outdir, "summary_sensitivity_heatmap.pdf")
-    fig.savefig(path, bbox_inches="tight")
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print(f"    saved: {path}")
+
+
+def make_ratio_heatmap(results, edges, outdir):
+    """Heatmap of EFT/SM − 1 (signed) — shows where operators deviate and in which direction."""
+    ops    = [r["op"] for r in results]
+    mat    = np.array([r["ratio"] for r in results])
+    labels = make_bin_labels(edges)
+
+    vext = max(np.percentile(np.abs(mat), 98), 1e-3)
+    fig, ax = plt.subplots(figsize=(max(8, 1.1 * len(labels)), max(5, 0.35 * len(ops))))
+    im = ax.imshow(mat, aspect="auto", cmap="RdBu_r", vmin=-vext, vmax=vext)
+    plt.colorbar(im, ax=ax, label="EFT / SM − 1")
+
+    ax.set_xticks(range(len(labels)))
+    ax.set_xticklabels(labels, rotation=30, ha="right", fontsize=8)
+    ax.set_yticks(range(len(ops)))
+    ax.set_yticklabels(ops, fontsize=8)
+    ax.set_xlabel(r"$m_{\ell\ell}$ bin [GeV]")
+    ax.set_title(r"EFT / SM − 1 per operator per $m_{\ell\ell}$ bin  ($C=1$)", fontsize=12)
+
+    for i, row in enumerate(mat):
+        for j, val in enumerate(row):
+            ax.text(j, i, f"{val:.2f}", ha="center", va="center",
+                    fontsize=5.5, color="black")
+
+    plt.tight_layout()
+    path = os.path.join(outdir, "summary_ratio_heatmap.pdf")
+    fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"    saved: {path}")
 
 
 def make_ranking(results, outdir):
     """Horizontal bar chart ranking operators by max S/√B.
-    Colour encodes tail_frac: green=tail-dominated, red=bulk-dominated.
+    Colour encodes tail_frac: green = tail-dominated, red = bulk-dominated.
     """
     results_s = sorted(results, key=lambda r: r["max_s_sqrtB"], reverse=True)
     ops   = [r["op"] for r in results_s]
@@ -280,57 +280,28 @@ def make_ranking(results, outdir):
     colors = [cmap(f) for f in fracs]
 
     fig, ax = plt.subplots(figsize=(9, max(4, 0.38 * len(ops))))
-    ax.barh(range(len(ops)), vals, color=colors, alpha=0.85, edgecolor="white", lw=0.5)
+    ax.barh(range(len(ops)), vals, color=colors, alpha=0.85, edgecolor="white", linewidth=0.5)
     ax.set_yticks(range(len(ops)))
     ax.set_yticklabels(ops, fontsize=9)
-    ax.set_xlabel(r"max  S / $\sqrt{B}$  across $m_{\ell\ell}$ bins", fontsize=11)
+    ax.set_xlabel(r"max  S / $\sqrt{B}$  across $m_{\ell\ell}$ bins")
     ax.set_title(
-        "Operator ranking by EFT sensitivity  ($C=1$)\n"
+        r"Operator ranking by EFT sensitivity  ($C=1$)"
+        "\n"
         r"colour: green = tail-dominated ($m_{\ell\ell} \gg M_Z$), "
         r"red = Z-peak dominated",
         fontsize=10,
     )
-    ax.axvline(1, color="gray", ls="--", lw=0.8)
+    ax.axvline(1, color="gray", linestyle="--", linewidth=0.8)
     ax.invert_yaxis()
+    ax.grid(axis="x", linestyle=":", alpha=0.4)
 
     sm_p = mpatches.Patch(color=cmap(0.05), label=r"bulk ($m_{\ell\ell} \sim M_Z$)")
     tl_p = mpatches.Patch(color=cmap(0.95), label=r"tail ($m_{\ell\ell} \gg M_Z$)")
-    ax.legend(handles=[sm_p, tl_p], fontsize=9, loc="lower right")
-    ax.grid(axis="x", ls=":", alpha=0.4)
+    ax.legend(handles=[sm_p, tl_p], frameon=False, fontsize=9, loc="lower right")
 
     plt.tight_layout()
     path = os.path.join(outdir, "summary_operator_ranking.pdf")
-    fig.savefig(path, bbox_inches="tight")
-    plt.close(fig)
-    print(f"    saved: {path}")
-
-
-def make_ratio_heatmap(results, edges, outdir):
-    """Heatmap of EFT/SM − 1 (signed) to show where operators deviate."""
-    ops    = [r["op"] for r in results]
-    mat    = np.array([r["ratio"] for r in results])
-    labels = make_bin_labels(edges)
-
-    vext = np.percentile(np.abs(mat), 98)
-    fig, ax = plt.subplots(figsize=(max(8, 1.1 * len(labels)), max(5, 0.35 * len(ops))))
-    im = ax.imshow(mat, aspect="auto", cmap="RdBu_r", vmin=-vext, vmax=vext)
-    plt.colorbar(im, ax=ax, label="EFT / SM − 1")
-
-    ax.set_xticks(range(len(labels)))
-    ax.set_xticklabels(labels, rotation=30, ha="right", fontsize=8)
-    ax.set_yticks(range(len(ops)))
-    ax.set_yticklabels(ops, fontsize=8)
-    ax.set_xlabel(r"$m_{\ell\ell}$ bin [GeV]", fontsize=11)
-    ax.set_title(r"EFT / SM − 1 per operator per $m_{\ell\ell}$ bin  ($C=1$)", fontsize=12)
-
-    for i, row in enumerate(mat):
-        for j, val in enumerate(row):
-            ax.text(j, i, f"{val:.2f}", ha="center", va="center",
-                    fontsize=5.5, color="black")
-
-    plt.tight_layout()
-    path = os.path.join(outdir, "summary_ratio_heatmap.pdf")
-    fig.savefig(path, bbox_inches="tight")
+    fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"    saved: {path}")
 
@@ -360,6 +331,8 @@ def main():
     args = parse_args()
     os.makedirs(args.outdir, exist_ok=True)
 
+    hep.style.use("CMS")
+
     lumi_fb = args.lumi / 1000.
     ops     = args.operators or ALL_OPS
 
@@ -381,7 +354,6 @@ def main():
         for op in ops:
             print(f"  {op}")
             if args.no_per_op:
-                # lightweight path: only collect summary stats
                 sm  = get_vals(f, args.channel, "sm")
                 eft = get_vals(f, args.channel, f"sm_lin_quad_{op}")
                 if sm is None or eft is None:
@@ -391,8 +363,7 @@ def main():
                 s_sqrtB = fractional(np.abs(signal), stat)
                 ratio   = fractional(signal, sm)
                 centers = 0.5 * (edges[:-1] + edges[1:])
-                tail_mask = centers >= args.tail_threshold
-                tail_frac = s_sqrtB[tail_mask].sum() / (s_sqrtB.sum() + 1e-12)
+                tail_frac = s_sqrtB[centers >= args.tail_threshold].sum() / (s_sqrtB.sum() + 1e-12)
                 results.append({
                     "op": op, "max_s_sqrtB": float(s_sqrtB.max()),
                     "peak_bin": int(s_sqrtB.argmax()),
