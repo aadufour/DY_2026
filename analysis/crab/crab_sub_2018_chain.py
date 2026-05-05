@@ -22,6 +22,7 @@ config.JobType.inputFiles = [
     'copy_gridpack.py',
     'modifyCfg.py',
     'runners/2018/run_chain_test.sh',
+    'runners/2018/run_chain_inner.sh',
     'runners/2018/chain_step_0_test.sh',
     'runners/2018/chain_step_1_test.sh',
     'runners/2018/chain_step_2_test.sh',
@@ -55,6 +56,7 @@ config.section_('User')
 
 config.section_('Site')
 config.Site.storageSite = 'T2_FR_GRIF_LLR'
+config.Site.blacklist = ['T2_IT_Pisa', 'T2_BE_UCL', 'T2_BE_IIHE']
 
 config.JobType.scriptArgs = ['nEvents=' + str(config.Data.unitsPerJob)]
 config.JobType.scriptArgs.append('inputGridpack=' + gp_path)
