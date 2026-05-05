@@ -117,21 +117,26 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
     stat    = np.sqrt(np.maximum(sm, 0))
 
     ratio    = fractional(signal, sm)
-    qcd_rel  = fractional(qcd_up - qcd_dn, 2 * sm)   # half-envelope / SM
-    pdf_rel  = fractional(pdf_up - pdf_dn, 2 * sm)
-    stat_rel = fractional(stat, sm)
-    s_sqrtB  = fractional(np.abs(signal), stat)       # S / sqrt(B)
+    # asymmetric syst bands: measure actual up/down deviation from SM nominal
+    qcd_up_rel = fractional(qcd_up - sm, sm)
+    qcd_dn_rel = fractional(qcd_dn - sm, sm)
+    pdf_up_rel = fractional(pdf_up - sm, sm)
+    pdf_dn_rel = fractional(pdf_dn - sm, sm)
+    stat_rel   = fractional(stat, sm)
+    # total syst: quadrature of the larger deviation per source per bin
+    tot_syst_rel = np.sqrt(
+        np.maximum(np.abs(qcd_up_rel), np.abs(qcd_dn_rel))**2 +
+        np.maximum(np.abs(pdf_up_rel), np.abs(pdf_dn_rel))**2
+    )
 
-    # split S/sqrt(B) by sign for colouring
-    s_pos = np.where(signal >= 0, s_sqrtB, 0.)
-    s_neg = np.where(signal <  0, s_sqrtB, 0.)
-
-    tot_syst_rel = np.sqrt(qcd_rel**2 + pdf_rel**2)
+    pull = fractional(np.abs(signal), stat)   # |EFT - SM| / sqrt(SM)
+    pull_pos = np.where(signal >= 0, pull, 0.)
+    pull_neg = np.where(signal <  0, pull, 0.)
 
     # -- figure: 3 panels sharing the mll x-axis -----------------------
     fig, (ax1, ax2, ax3) = plt.subplots(
         3, 1, figsize=(9, 11),
-        gridspec_kw={"height_ratios": [3, 2, 2], "hspace": 0.05},
+        gridspec_kw={"height_ratios": [4, 2, 2], "hspace": 0.05},
         sharex=True,
     )
 
@@ -142,36 +147,36 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
                  histtype="step", label="SM")
     hep.histplot(eft, bins=edges, ax=ax1, color=C_EFT, linewidth=1.8,
                  histtype="step", linestyle="--",
-                 label=rf"SM+lin+quad  ($C_{{{op}}}=1$)")
+                 label=rf"SM+lin+quad  ({op}=1.0)")
 
     ax1.semilogy()
     ax1.set_xscale("log")
     ax1.set_xlim(edges[0], edges[-1])
     ax1.set_ylabel("Events / bin")
     ax1.legend(frameon=False, fontsize=9, ncol=2, loc="upper right")
-    hep.cms.label(rf"$C_{{{op}}} = 1$", ax=ax1, data=True, lumi=lumi_fb, loc=0)
+    hep.cms.label(f"{op} = 1.0", ax=ax1, data=True, lumi=lumi_fb, loc=0)
 
-    # -- Panel 2: fractional deviation --------------------------------
+    # -- Panel 2: fractional deviation (asymmetric syst bands) --------
     ax2.axhline(0, color="black", linewidth=0.9)
-    fill_step(ax2, edges, -stat_rel, +stat_rel, alpha=0.15, color=C_STAT, label=r"Stat $\sqrt{N}$")
-    fill_step(ax2, edges, -pdf_rel,  +pdf_rel,  alpha=0.25, color=C_PDF,  label="PDF")
-    fill_step(ax2, edges, -qcd_rel,  +qcd_rel,  alpha=0.25, color=C_QCD,  label="QCD scale")
+    fill_step(ax2, edges, qcd_dn_rel, qcd_up_rel, alpha=0.25, color=C_QCD, label="QCD scale")
+    fill_step(ax2, edges, pdf_dn_rel, pdf_up_rel, alpha=0.25, color=C_PDF,  label="PDF")
+    fill_step(ax2, edges, -stat_rel,  +stat_rel,  alpha=0.15, color=C_STAT, label=r"Stat $\sqrt{N}$")
     hep.histplot(ratio, bins=edges, ax=ax2, color=C_EFT, linewidth=1.8,
                  histtype="step", label="EFT / SM - 1")
 
     ax2.set_ylabel("EFT / SM - 1")
     ax2.legend(frameon=False, fontsize=8, ncol=4, loc="best")
 
-    # -- Panel 3: S/sqrt(B) --------------------------------------------
+    # -- Panel 3: |EFT - SM| / sqrt(SM) -------------------------------
     ax3.axhline(1, color="gray", linestyle="--", linewidth=0.8, alpha=0.7)
-    hep.histplot(s_pos, bins=edges, ax=ax3, color=C_EFT, alpha=0.75,
-                 histtype="fill", label="S/√B  (EFT > SM)")
-    hep.histplot(s_neg, bins=edges, ax=ax3, color="navy", alpha=0.75,
-                 histtype="fill", label="S/√B  (EFT < SM)")
+    hep.histplot(pull_pos, bins=edges, ax=ax3, color=C_EFT, alpha=0.75,
+                 histtype="fill", label="EFT > SM")
+    hep.histplot(pull_neg, bins=edges, ax=ax3, color="navy", alpha=0.75,
+                 histtype="fill", label="EFT < SM")
     hep.histplot(tot_syst_rel, bins=edges, ax=ax3, color="gray", linewidth=1.0,
                  histtype="step", linestyle=":", label="Total syst / SM")
 
-    ax3.set_ylabel("S / √B")
+    ax3.set_ylabel(r"$|\Delta\sigma|\,/\,\sqrt{\sigma_{\rm SM}}$")
     ax3.set_xlabel(r"$m_{\ell\ell}$ [GeV]")
     ax3.set_xticks(edges)
     ax3.set_xticklabels([str(int(e)) for e in edges], rotation=45, ha="right", fontsize=7)
@@ -191,25 +196,25 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
     # -- summary statistics ---------------------------------------------
     x_centers = 0.5 * (edges[:-1] + edges[1:])
     tail_mask = x_centers >= tail_thr
-    tail_frac = s_sqrtB[tail_mask].sum() / (s_sqrtB.sum() + 1e-12)
+    tail_frac = pull[tail_mask].sum() / (pull.sum() + 1e-12)
 
     return {
-        "op":          op,
-        "max_s_sqrtB": float(s_sqrtB.max()),
-        "peak_bin":    int(s_sqrtB.argmax()),
-        "peak_mll":    float(x_centers[s_sqrtB.argmax()]),
-        "tail_frac":   float(tail_frac),
-        "s_sqrtB":     s_sqrtB.tolist(),
-        "ratio":       ratio.tolist(),
+        "op":       op,
+        "max_pull": float(pull.max()),
+        "peak_bin": int(pull.argmax()),
+        "peak_mll": float(x_centers[pull.argmax()]),
+        "tail_frac": float(tail_frac),
+        "pull":     pull.tolist(),
+        "ratio":    ratio.tolist(),
     }
 
 
 # -- summary plots ----------------------------------------------------------
 
 def make_heatmap(results, edges, outdir):
-    """Heatmap: operators (rows) x mll bins (cols), cells = S/√B."""
+    """Heatmap: operators (rows) x mll bins (cols), cells = |EFT-SM|/sqrt(SM)."""
     ops    = [r["op"] for r in results]
-    mat    = np.array([r["s_sqrtB"] for r in results])
+    mat    = np.array([r["pull"] for r in results])
     labels = make_bin_labels(edges)
 
     fig, ax = plt.subplots(figsize=(max(8, 1.1 * len(labels)), max(5, 0.35 * len(ops))))
@@ -222,7 +227,7 @@ def make_heatmap(results, edges, outdir):
     ax.set_yticks(range(len(ops)))
     ax.set_yticklabels(ops, fontsize=8)
     ax.set_xlabel(r"$m_{\ell\ell}$ bin [GeV]")
-    ax.set_title(r"S / $\sqrt{B}$ per operator per $m_{\ell\ell}$ bin  ($C=1$)", fontsize=12)
+    ax.set_title(r"$|\Delta\sigma|\,/\,\sqrt{\sigma_{\rm SM}}$ per operator per $m_{\ell\ell}$ bin  ($C=1$)", fontsize=12)
 
     for i, row in enumerate(mat):
         for j, val in enumerate(row):
@@ -268,12 +273,12 @@ def make_ratio_heatmap(results, edges, outdir):
 
 
 def make_ranking(results, outdir):
-    """Horizontal bar chart ranking operators by max S/√B.
+    """Horizontal bar chart ranking operators by max |EFT-SM|/sqrt(SM).
     Colour encodes tail_frac: green = tail-dominated, red = bulk-dominated.
     """
-    results_s = sorted(results, key=lambda r: r["max_s_sqrtB"], reverse=True)
+    results_s = sorted(results, key=lambda r: r["max_pull"], reverse=True)
     ops   = [r["op"] for r in results_s]
-    vals  = [r["max_s_sqrtB"] for r in results_s]
+    vals  = [r["max_pull"] for r in results_s]
     fracs = [r["tail_frac"] for r in results_s]
 
     cmap   = plt.cm.RdYlGn
@@ -283,7 +288,8 @@ def make_ranking(results, outdir):
     ax.barh(range(len(ops)), vals, color=colors, alpha=0.85, edgecolor="white", linewidth=0.5)
     ax.set_yticks(range(len(ops)))
     ax.set_yticklabels(ops, fontsize=9)
-    ax.set_xlabel(r"max  S / $\sqrt{B}$  across $m_{\ell\ell}$ bins")
+    ax.set_xscale("log")
+    ax.set_xlabel(r"max $|\Delta\sigma|\,/\,\sqrt{\sigma_{\rm SM}}$ across $m_{\ell\ell}$ bins")
     ax.set_title(
         r"Operator ranking by EFT sensitivity  ($C=1$)"
         "\n"
@@ -360,16 +366,16 @@ def main():
                     print("    [skip]"); continue
                 signal  = eft - sm
                 stat    = np.sqrt(np.maximum(sm, 0))
-                s_sqrtB = fractional(np.abs(signal), stat)
+                pull    = fractional(np.abs(signal), stat)
                 ratio   = fractional(signal, sm)
                 centers = 0.5 * (edges[:-1] + edges[1:])
-                tail_frac = s_sqrtB[centers >= args.tail_threshold].sum() / (s_sqrtB.sum() + 1e-12)
+                tail_frac = pull[centers >= args.tail_threshold].sum() / (pull.sum() + 1e-12)
                 results.append({
-                    "op": op, "max_s_sqrtB": float(s_sqrtB.max()),
-                    "peak_bin": int(s_sqrtB.argmax()),
-                    "peak_mll": float(centers[s_sqrtB.argmax()]),
+                    "op": op, "max_pull": float(pull.max()),
+                    "peak_bin": int(pull.argmax()),
+                    "peak_mll": float(centers[pull.argmax()]),
                     "tail_frac": float(tail_frac),
-                    "s_sqrtB": s_sqrtB.tolist(),
+                    "pull": pull.tolist(),
                     "ratio": ratio.tolist(),
                 })
             else:
@@ -389,13 +395,13 @@ def main():
     make_ranking(results, args.outdir)
 
     # -- text summary -------------------------------------------------
-    print("\n{:<12}  {:>10}  {:>10}  {:>12}  {:>10}".format(
-        "Operator", "max S/√B", "peak mll", "tail_frac", "dominance"))
-    print("-" * 60)
-    for r in sorted(results, key=lambda x: x["max_s_sqrtB"], reverse=True):
+    print("\n{:<12}  {:>12}  {:>10}  {:>12}  {:>10}".format(
+        "Operator", "max |Δ|/√σSM", "peak mll", "tail_frac", "dominance"))
+    print("-" * 62)
+    for r in sorted(results, key=lambda x: x["max_pull"], reverse=True):
         dom = "tail" if r["tail_frac"] > 0.5 else "bulk"
-        print("{:<12}  {:>10.3f}  {:>9.0f}  {:>11.1%}  {:>10}".format(
-            r["op"], r["max_s_sqrtB"], r["peak_mll"], r["tail_frac"], dom))
+        print("{:<12}  {:>12.3f}  {:>9.0f}  {:>11.1%}  {:>10}".format(
+            r["op"], r["max_pull"], r["peak_mll"], r["tail_frac"], dom))
 
     print("\nDone.")
 
