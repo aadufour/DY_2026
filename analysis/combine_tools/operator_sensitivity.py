@@ -102,10 +102,11 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
     n_bins = len(sm)
 
     # ── systematics (fall back to SM nominal if absent) ───────────────
-    qcd_up = get_vals(f, channel, "sm_qcd_scaleUp")   or sm.copy()
-    qcd_dn = get_vals(f, channel, "sm_qcd_scaleDown") or sm.copy()
-    pdf_up = get_vals(f, channel, "sm_pdfUp")         or sm.copy()
-    pdf_dn = get_vals(f, channel, "sm_pdfDown")       or sm.copy()
+    def _syst(name): v = get_vals(f, channel, name); return v if v is not None else sm.copy()
+    qcd_up = _syst("sm_qcd_scaleUp")
+    qcd_dn = _syst("sm_qcd_scaleDown")
+    pdf_up = _syst("sm_pdfUp")
+    pdf_dn = _syst("sm_pdfDown")
 
     # ── derived quantities ────────────────────────────────────────────
     signal   = eft - sm
