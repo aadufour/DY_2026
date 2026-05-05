@@ -6,12 +6,12 @@ Per-operator EFT sensitivity study from histograms.root.
 
 For each operator produces a 3-panel figure:
   Top    : absolute mll shapes (SM + EFT) with QCD scale and PDF syst bands
-  Middle : fractional deviation (EFT/SM − 1) with syst and stat (sqrt-N) bands
-  Bottom : S/sqrt(B) per bin, where S = |sm_lin_quad_{op} − sm|, B = sm
+  Middle : fractional deviation (EFT/SM - 1) with syst and stat (sqrt-N) bands
+  Bottom : S/sqrt(B) per bin, where S = |sm_lin_quad_{op} - sm|, B = sm
 
 Summary outputs:
-  summary_sensitivity_heatmap.pdf  — S/sqrt(B) for all ops × bins
-  summary_ratio_heatmap.pdf        — signed EFT/SM−1 for all ops × bins
+  summary_sensitivity_heatmap.pdf  — S/sqrt(B) for all ops x bins
+  summary_ratio_heatmap.pdf        — signed EFT/SM-1 for all ops x bins
   summary_operator_ranking.pdf     — ranking bar chart, colour = tail/bulk fraction
 
 Usage:
@@ -34,7 +34,7 @@ import mplhep as hep
 import numpy as np
 import uproot
 
-# ── operator list (Warsaw basis, SMEFTsim) ─────────────────────────────────
+# -- operator list (Warsaw basis, SMEFTsim) ---------------------------------
 ALL_OPS = [
     "cHDD", "cHWB", "cbWRe", "cbBRe",
     "cHj1", "cHQ1", "cHj3", "cHQ3",
@@ -46,7 +46,7 @@ ALL_OPS = [
     "clu", "cld", "cbl",
 ]
 
-# ── colour palette ─────────────────────────────────────────────────────────
+# -- colour palette ---------------------------------------------------------
 C_SM   = "black"
 C_EFT  = "crimson"
 C_QCD  = "steelblue"
@@ -54,7 +54,7 @@ C_PDF  = "darkorange"
 C_STAT = "forestgreen"
 
 
-# ══ helpers ════════════════════════════════════════════════════════════════
+# -- helpers ----------------------------------------------------------------
 
 def read_hist(f, channel, name):
     """Return (values, edges) from a ROOT histogram, or (None, None) if missing."""
@@ -91,7 +91,7 @@ def fill_step(ax, edges, lo, hi, **kw):
     )
 
 
-# ══ per-operator plot ══════════════════════════════════════════════════════
+# -- per-operator plot ------------------------------------------------------
 
 def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
     """Three-panel sensitivity figure for one operator.
@@ -105,14 +105,14 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
         print(f"    [skip] missing sm or sm_lin_quad_{op}")
         return None
 
-    # ── systematics (fall back to SM nominal if absent) ───────────────
+    # -- systematics (fall back to SM nominal if absent) ---------------
     def _syst(name): v = get_vals(f, channel, name); return v if v is not None else sm.copy()
     qcd_up = _syst("sm_qcd_scaleUp")
     qcd_dn = _syst("sm_qcd_scaleDown")
     pdf_up = _syst("sm_pdfUp")
     pdf_dn = _syst("sm_pdfDown")
 
-    # ── derived quantities ────────────────────────────────────────────
+    # -- derived quantities --------------------------------------------
     signal  = eft - sm
     stat    = np.sqrt(np.maximum(sm, 0))
 
@@ -128,14 +128,14 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
 
     tot_syst_rel = np.sqrt(qcd_rel**2 + pdf_rel**2)
 
-    # ── figure: 3 panels sharing the mll x-axis ───────────────────────
+    # -- figure: 3 panels sharing the mll x-axis -----------------------
     fig, (ax1, ax2, ax3) = plt.subplots(
         3, 1, figsize=(9, 11),
         gridspec_kw={"height_ratios": [3, 2, 2], "hspace": 0.05},
         sharex=True,
     )
 
-    # ── Panel 1: absolute shapes ──────────────────────────────────────
+    # -- Panel 1: absolute shapes --------------------------------------
     fill_step(ax1, edges, qcd_dn, qcd_up, alpha=0.25, color=C_QCD, label="QCD scale env.")
     fill_step(ax1, edges, pdf_dn, pdf_up, alpha=0.25, color=C_PDF, label="PDF band")
     hep.histplot(sm,  bins=edges, ax=ax1, color=C_SM,  linewidth=1.8,
@@ -151,18 +151,18 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
     ax1.legend(frameon=False, fontsize=9, ncol=2, loc="upper right")
     hep.cms.label(rf"$C_{{{op}}} = 1$", ax=ax1, data=True, lumi=lumi_fb, loc=0)
 
-    # ── Panel 2: fractional deviation ────────────────────────────────
+    # -- Panel 2: fractional deviation --------------------------------
     ax2.axhline(0, color="black", linewidth=0.9)
     fill_step(ax2, edges, -stat_rel, +stat_rel, alpha=0.15, color=C_STAT, label=r"Stat $\sqrt{N}$")
     fill_step(ax2, edges, -pdf_rel,  +pdf_rel,  alpha=0.25, color=C_PDF,  label="PDF")
     fill_step(ax2, edges, -qcd_rel,  +qcd_rel,  alpha=0.25, color=C_QCD,  label="QCD scale")
     hep.histplot(ratio, bins=edges, ax=ax2, color=C_EFT, linewidth=1.8,
-                 histtype="step", label="EFT / SM − 1")
+                 histtype="step", label="EFT / SM - 1")
 
-    ax2.set_ylabel("EFT / SM − 1")
+    ax2.set_ylabel("EFT / SM - 1")
     ax2.legend(frameon=False, fontsize=8, ncol=4, loc="best")
 
-    # ── Panel 3: S/sqrt(B) ────────────────────────────────────────────
+    # -- Panel 3: S/sqrt(B) --------------------------------------------
     ax3.axhline(1, color="gray", linestyle="--", linewidth=0.8, alpha=0.7)
     hep.histplot(s_pos, bins=edges, ax=ax3, color=C_EFT, alpha=0.75,
                  histtype="fill", label="S/√B  (EFT > SM)")
@@ -188,7 +188,7 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
     plt.close(fig)
     print(f"    saved: {outpath}")
 
-    # ── summary statistics ─────────────────────────────────────────────
+    # -- summary statistics ---------------------------------------------
     x_centers = 0.5 * (edges[:-1] + edges[1:])
     tail_mask = x_centers >= tail_thr
     tail_frac = s_sqrtB[tail_mask].sum() / (s_sqrtB.sum() + 1e-12)
@@ -204,10 +204,10 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
     }
 
 
-# ══ summary plots ══════════════════════════════════════════════════════════
+# -- summary plots ----------------------------------------------------------
 
 def make_heatmap(results, edges, outdir):
-    """Heatmap: operators (rows) × mll bins (cols), cells = S/√B."""
+    """Heatmap: operators (rows) x mll bins (cols), cells = S/√B."""
     ops    = [r["op"] for r in results]
     mat    = np.array([r["s_sqrtB"] for r in results])
     labels = make_bin_labels(edges)
@@ -238,7 +238,7 @@ def make_heatmap(results, edges, outdir):
 
 
 def make_ratio_heatmap(results, edges, outdir):
-    """Heatmap of EFT/SM − 1 (signed) — shows where operators deviate and in which direction."""
+    """Heatmap of EFT/SM - 1 (signed) — shows where operators deviate and in which direction."""
     ops    = [r["op"] for r in results]
     mat    = np.array([r["ratio"] for r in results])
     labels = make_bin_labels(edges)
@@ -246,14 +246,14 @@ def make_ratio_heatmap(results, edges, outdir):
     vext = max(np.percentile(np.abs(mat), 98), 1e-3)
     fig, ax = plt.subplots(figsize=(max(8, 1.1 * len(labels)), max(5, 0.35 * len(ops))))
     im = ax.imshow(mat, aspect="auto", cmap="RdBu_r", vmin=-vext, vmax=vext)
-    plt.colorbar(im, ax=ax, label="EFT / SM − 1")
+    plt.colorbar(im, ax=ax, label="EFT / SM - 1")
 
     ax.set_xticks(range(len(labels)))
     ax.set_xticklabels(labels, rotation=30, ha="right", fontsize=8)
     ax.set_yticks(range(len(ops)))
     ax.set_yticklabels(ops, fontsize=8)
     ax.set_xlabel(r"$m_{\ell\ell}$ bin [GeV]")
-    ax.set_title(r"EFT / SM − 1 per operator per $m_{\ell\ell}$ bin  ($C=1$)", fontsize=12)
+    ax.set_title(r"EFT / SM - 1 per operator per $m_{\ell\ell}$ bin  ($C=1$)", fontsize=12)
 
     for i, row in enumerate(mat):
         for j, val in enumerate(row):
@@ -306,7 +306,7 @@ def make_ranking(results, outdir):
     print(f"    saved: {path}")
 
 
-# ══ main ═══════════════════════════════════════════════════════════════════
+# -- main -------------------------------------------------------------------
 
 def parse_args():
     ap = argparse.ArgumentParser(description=__doc__,
@@ -388,7 +388,7 @@ def main():
     make_ratio_heatmap(results, edges, args.outdir)
     make_ranking(results, args.outdir)
 
-    # ── text summary ─────────────────────────────────────────────────
+    # -- text summary -------------------------------------------------
     print("\n{:<12}  {:>10}  {:>10}  {:>12}  {:>10}".format(
         "Operator", "max S/√B", "peak mll", "tail_frac", "dominance"))
     print("-" * 60)
