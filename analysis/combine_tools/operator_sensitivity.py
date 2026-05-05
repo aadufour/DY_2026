@@ -176,7 +176,7 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
     hep.histplot(tot_syst_rel, bins=edges, ax=ax3, color="gray", linewidth=1.0,
                  histtype="step", linestyle=":", label="Total syst / SM")
 
-    ax3.set_ylabel(r"$|\Delta\sigma|\,/\,\sqrt{\sigma_{\rm SM}}$")
+    ax3.set_ylabel(r"$|N_{\rm EFT} - N_{\rm SM}|\,/\,\sqrt{N_{\rm SM}}$")
     ax3.set_xlabel(r"$m_{\ell\ell}$ [GeV]")
     ax3.set_xticks(edges)
     ax3.set_xticklabels([str(int(e)) for e in edges], rotation=45, ha="right", fontsize=7)
@@ -227,7 +227,7 @@ def make_heatmap(results, edges, outdir):
     ax.set_yticks(range(len(ops)))
     ax.set_yticklabels(ops, fontsize=8)
     ax.set_xlabel(r"$m_{\ell\ell}$ bin [GeV]")
-    ax.set_title(r"$|\Delta\sigma|\,/\,\sqrt{\sigma_{\rm SM}}$ per operator per $m_{\ell\ell}$ bin  ($C=1$)", fontsize=12)
+    ax.set_title(r"$|N_{\rm EFT} - N_{\rm SM}|\,/\,\sqrt{N_{\rm SM}}$ per operator per $m_{\ell\ell}$ bin  ($C=1$)", fontsize=12)
 
     for i, row in enumerate(mat):
         for j, val in enumerate(row):
@@ -289,7 +289,7 @@ def make_ranking(results, outdir):
     ax.set_yticks(range(len(ops)))
     ax.set_yticklabels(ops, fontsize=9)
     ax.set_xscale("log")
-    ax.set_xlabel(r"max $|\Delta\sigma|\,/\,\sqrt{\sigma_{\rm SM}}$ across $m_{\ell\ell}$ bins")
+    ax.set_xlabel(r"max $|N_{\rm EFT} - N_{\rm SM}|\,/\,\sqrt{N_{\rm SM}}$ across $m_{\ell\ell}$ bins")
     ax.set_title(
         r"Operator ranking by EFT sensitivity  ($C=1$)"
         "\n"
