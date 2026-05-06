@@ -141,8 +141,8 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
     )
 
     # -- Panel 1: absolute shapes --------------------------------------
-    fill_step(ax1, edges, qcd_dn, qcd_up, alpha=0.25, color=C_QCD, label="QCD scale env.")
-    fill_step(ax1, edges, pdf_dn, pdf_up, alpha=0.25, color=C_PDF, label="PDF band")
+    fill_step(ax1, edges, qcd_dn, qcd_up, alpha=0.25, color=C_QCD, label="QCD scale")
+    fill_step(ax1, edges, pdf_dn, pdf_up, alpha=0.25, color=C_PDF, label="PDF")
     hep.histplot(sm,  bins=edges, ax=ax1, color=C_SM,  linewidth=1.8,
                  histtype="step", label="SM")
     hep.histplot(eft, bins=edges, ax=ax1, color=C_EFT, linewidth=1.8,
@@ -173,8 +173,6 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
                  histtype="fill", label="EFT > SM")
     hep.histplot(pull_neg, bins=edges, ax=ax3, color="navy", alpha=0.75,
                  histtype="fill", label="EFT < SM")
-    hep.histplot(tot_syst_rel, bins=edges, ax=ax3, color="gray", linewidth=1.0,
-                 histtype="step", linestyle=":", label="Total syst / SM")
 
     ax3.set_ylabel(r"$|\mathrm{EFT}-\mathrm{SM}|\,/\,\sqrt{\mathrm{SM}}$")
     ax3.set_xlabel(r"$m_{\ell\ell}$ [GeV]")
@@ -220,15 +218,15 @@ def make_heatmap(results, edges, outdir):
     fig, ax = plt.subplots(figsize=(max(8, 1.1 * len(labels)), max(5, 0.35 * len(ops))))
     vmax = np.percentile(mat[mat > 0], 95) if mat.max() > 0 else 1.0
     im = ax.imshow(mat, aspect="auto", cmap="YlOrRd", vmin=0, vmax=vmax)
-    cbar = plt.colorbar(im, ax=ax, label=r"$|\mathrm{EFT}-\mathrm{SM}|\,/\,\sqrt{\mathrm{SM}}$")
+    cbar = plt.colorbar(im, ax=ax)
     cbar.ax.tick_params(labelsize=7)
-    cbar.set_label(r"$|\mathrm{EFT}-\mathrm{SM}|\,/\,\sqrt{\mathrm{SM}}$", fontsize=8)
+    cbar.set_label(r"$|\mathrm{EFT}-\mathrm{SM}|\,/\,\sqrt{\mathrm{SM}}$", fontsize=9)
 
     ax.set_xticks(range(len(labels)))
     ax.set_xticklabels(labels, rotation=30, ha="right", fontsize=8)
     ax.set_yticks(range(len(ops)))
     ax.set_yticklabels(ops, fontsize=8)
-    ax.set_xlabel(r"$m_{\ell\ell}$ bin [GeV]")
+    ax.set_xlabel(r"$m_{\ell\ell}$ bin [GeV]", fontsize=9)
 
     for i, row in enumerate(mat):
         for j, val in enumerate(row):
