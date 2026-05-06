@@ -152,7 +152,7 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
     ax1.semilogy()
     ax1.set_xscale("log")
     ax1.set_xlim(edges[0], edges[-1])
-    ax1.set_ylabel("Events / bin")
+    ax1.set_ylabel("Events / bin", fontsize=11)
     ax1.legend(frameon=False, fontsize=9, ncol=2, loc="upper right")
     hep.cms.label(f"{op} = 1.0", ax=ax1, data=True, lumi=lumi_fb, loc=0)
 
@@ -160,11 +160,11 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
     ax2.axhline(0, color="black", linewidth=0.9)
     fill_step(ax2, edges, qcd_dn_rel, qcd_up_rel, alpha=0.25, color=C_QCD, label="QCD scale")
     fill_step(ax2, edges, pdf_dn_rel, pdf_up_rel, alpha=0.25, color=C_PDF,  label="PDF")
-    fill_step(ax2, edges, -stat_rel,  +stat_rel,  alpha=0.15, color=C_STAT, label=r"Stat $\sqrt{N}$")
+    fill_step(ax2, edges, -stat_rel,  +stat_rel,  alpha=0.15, color=C_STAT, label="Stat")
     hep.histplot(ratio, bins=edges, ax=ax2, color=C_EFT, linewidth=1.8,
                  histtype="step", label="EFT / SM - 1")
 
-    ax2.set_ylabel("EFT / SM - 1")
+    ax2.set_ylabel("EFT / SM - 1", fontsize=11)
     ax2.legend(frameon=False, fontsize=8, ncol=4, loc="best")
 
     # -- Panel 3: |EFT - SM| / sqrt(SM) -------------------------------
@@ -174,10 +174,10 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
     hep.histplot(pull_neg, bins=edges, ax=ax3, color="navy", alpha=0.75,
                  histtype="fill", label="EFT < SM")
 
-    ax3.set_ylabel(r"$|\mathrm{EFT}-\mathrm{SM}|\,/\,\sqrt{\mathrm{SM}}$")
+    ax3.set_ylabel(r"$|\mathrm{EFT}-\mathrm{SM}|\,/\,\sqrt{\mathrm{SM}}$", fontsize=11)
     ax3.set_xlabel(r"$m_{\ell\ell}$ [GeV]")
     ax3.set_xticks(edges)
-    ax3.set_xticklabels([str(int(e)) for e in edges], rotation=45, ha="right", fontsize=7)
+    ax3.set_xticklabels([str(int(e)) for e in edges], rotation=45, ha="right", fontsize=8)
     ax3.legend(frameon=False, fontsize=8, loc="upper left")
 
     # bin-edge separators on all panels
@@ -329,6 +329,8 @@ def parse_args():
                     help="mll [GeV] above which a bin is considered 'tail' (default: 200)")
     ap.add_argument("--no-per-op", action="store_true",
                     help="Skip per-operator plots; only produce summary figures")
+    ap.add_argument("--only-heatmap", action="store_true",
+                    help="Among summary plots, produce only the sensitivity heatmap")
     return ap.parse_args()
 
 
@@ -390,8 +392,9 @@ def main():
 
     print(f"\nBuilding summary plots ({len(results)} operators) ...")
     make_heatmap(results, edges, args.outdir)
-    make_ratio_heatmap(results, edges, args.outdir)
-    make_ranking(results, args.outdir)
+    if not args.only_heatmap:
+        make_ratio_heatmap(results, edges, args.outdir)
+        make_ranking(results, args.outdir)
 
     # -- text summary -------------------------------------------------
     print("\n{:<12}  {:>12}  {:>10}  {:>12}  {:>10}".format(
