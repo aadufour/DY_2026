@@ -47,7 +47,7 @@ for b in MLL_BINS:
     name = f"DYSMEFTsim_LO_mll_{b}"
     samples[name] = {"samples": [name]}
 
-colors = {}
+colors = {f"DYSMEFTsim_LO_mll_{b}": cmap_petroff[i % len(cmap_petroff)] for i, b in enumerate(MLL_BINS)}
 
 # regions
 preselections = lambda events: (events.mll > 50)  # noqa E731
@@ -82,10 +82,17 @@ def cos_theta_star(l1, l2):
     )
 
 
+mll_bins = [
+    *range(50, 76, 5),    # 50–75:  5 GeV steps
+    *range(76, 106, 2),   # 76–105: 2 GeV steps (Z peak)
+    *range(106, 120, 5),  # 106–119: 5 GeV steps
+    120, 150, 200, 250, 300, 400, 600, 800, 1000, 1500, 3000,
+]
+
 variables = {
     "mll": {
         "func": lambda events: (events.Lepton[:, 0] + events.Lepton[:, 1]).mass,
-        "axis": hist.axis.Regular(60, 50, 3000, name="mll"),
+        "axis": hist.axis.Variable(mll_bins, name="mll"),
         "save_events": True,
     },
     "costhetastar_bins": {
@@ -110,6 +117,23 @@ variables = {
 for _i in range(406):
     variables[f"w_{_i}"] = {
         "func": lambda events, i=_i: events.LHEReweightingWeight[:, i],
+        "save_events": True,
+    }
+
+# QCD scale variations: 8 weights (one unphysical muR/muF corner excluded by MG5).
+# Check banner for exact ordering; envelope = max/min over all 8.
+for _i in range(8):
+    variables[f"scale_w_{_i}"] = {
+        "func": lambda events, i=_i: events.LHEScaleWeight[:, i],
+        "save_events": True,
+    }
+
+# PDF variations: 103 weights for NNPDF3.1
+# index 0 = central, 1..100 = replicas, 101..102 = alphaS up/down
+# PDF uncertainty = std deviation over replicas 1..100.
+for _i in range(103):
+    variables[f"pdf_w_{_i}"] = {
+        "func": lambda events, i=_i: events.LHEPdfWeight[:, i],
         "save_events": True,
     }
 
