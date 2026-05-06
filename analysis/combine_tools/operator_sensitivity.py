@@ -176,7 +176,7 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
     hep.histplot(tot_syst_rel, bins=edges, ax=ax3, color="gray", linewidth=1.0,
                  histtype="step", linestyle=":", label="Total syst / SM")
 
-    ax3.set_ylabel(r"$|N_{\rm EFT} - N_{\rm SM}|\,/\,\sqrt{N_{\rm SM}}$")
+    ax3.set_ylabel(r"$|\mathrm{EFT}-\mathrm{SM}|\,/\,\sqrt{\mathrm{SM}}$")
     ax3.set_xlabel(r"$m_{\ell\ell}$ [GeV]")
     ax3.set_xticks(edges)
     ax3.set_xticklabels([str(int(e)) for e in edges], rotation=45, ha="right", fontsize=7)
@@ -220,14 +220,15 @@ def make_heatmap(results, edges, outdir):
     fig, ax = plt.subplots(figsize=(max(8, 1.1 * len(labels)), max(5, 0.35 * len(ops))))
     vmax = np.percentile(mat[mat > 0], 95) if mat.max() > 0 else 1.0
     im = ax.imshow(mat, aspect="auto", cmap="YlOrRd", vmin=0, vmax=vmax)
-    plt.colorbar(im, ax=ax, label="S / √B")
+    cbar = plt.colorbar(im, ax=ax, label=r"$|\mathrm{EFT}-\mathrm{SM}|\,/\,\sqrt{\mathrm{SM}}$")
+    cbar.ax.tick_params(labelsize=7)
+    cbar.set_label(r"$|\mathrm{EFT}-\mathrm{SM}|\,/\,\sqrt{\mathrm{SM}}$", fontsize=8)
 
     ax.set_xticks(range(len(labels)))
     ax.set_xticklabels(labels, rotation=30, ha="right", fontsize=8)
     ax.set_yticks(range(len(ops)))
     ax.set_yticklabels(ops, fontsize=8)
     ax.set_xlabel(r"$m_{\ell\ell}$ bin [GeV]")
-    ax.set_title(r"$|N_{\rm EFT} - N_{\rm SM}|\,/\,\sqrt{N_{\rm SM}}$ per operator per $m_{\ell\ell}$ bin  ($C=1$)", fontsize=12)
 
     for i, row in enumerate(mat):
         for j, val in enumerate(row):
@@ -289,7 +290,7 @@ def make_ranking(results, outdir):
     ax.set_yticks(range(len(ops)))
     ax.set_yticklabels(ops, fontsize=9)
     ax.set_xscale("log")
-    ax.set_xlabel(r"max $|N_{\rm EFT} - N_{\rm SM}|\,/\,\sqrt{N_{\rm SM}}$ across $m_{\ell\ell}$ bins")
+    ax.set_xlabel(r"max $|\mathrm{EFT}-\mathrm{SM}|\,/\,\sqrt{\mathrm{SM}}$ across $m_{\ell\ell}$ bins")
     ax.set_title(
         r"Operator ranking by EFT sensitivity  ($C=1$)"
         "\n"
