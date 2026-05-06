@@ -81,9 +81,9 @@ def fractional(num, denom, fill=0.0):
         return np.where(denom > 0, num / denom, fill)
 
 
-def savefig(fig, path):
+def save_both(fig, path):
     """Save figure as both PDF and PNG."""
-    savefig(fig, path)
+    fig.savefig(path, dpi=150, bbox_inches="tight")
     fig.savefig(path.replace(".pdf", ".png"), dpi=150, bbox_inches="tight")
 
 
@@ -193,7 +193,7 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
 
     plt.tight_layout()
     outpath = os.path.join(outdir, f"sensitivity_{op}.pdf")
-    savefig(fig, outpath)
+    save_both(fig,outpath)
     plt.close(fig)
     print(f"    saved: {outpath}")
 
@@ -242,7 +242,7 @@ def make_heatmap(results, edges, outdir):
 
     plt.tight_layout()
     path = os.path.join(outdir, "summary_sensitivity_heatmap.pdf")
-    savefig(fig, path)
+    save_both(fig,path)
     plt.close(fig)
     print(f"    saved: {path}")
 
@@ -272,7 +272,7 @@ def make_ratio_heatmap(results, edges, outdir):
 
     plt.tight_layout()
     path = os.path.join(outdir, "summary_ratio_heatmap.pdf")
-    savefig(fig, path)
+    save_both(fig,path)
     plt.close(fig)
     print(f"    saved: {path}")
 
@@ -312,7 +312,7 @@ def make_ranking(results, outdir):
 
     plt.tight_layout()
     path = os.path.join(outdir, "summary_operator_ranking.pdf")
-    savefig(fig, path)
+    save_both(fig,path)
     plt.close(fig)
     print(f"    saved: {path}")
 
