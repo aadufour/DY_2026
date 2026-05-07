@@ -9,6 +9,7 @@ CFG_JSON=/grid_mnt/data__data.polcms/cms/adufour/spritz/data/Full2018v9/cfg.json
 
 spritz-batch
 
+# Fix submit.jdl for LLR T3
 JDL=condor/submit.jdl
 
 sed -i \
@@ -21,5 +22,19 @@ sed -i \
   "$JDL"
 
 echo "submit.jdl patched for LLR T3."
-echo "Review with: grep -v '^queue' ${JDL}"
+
+# Fix run.sh: replace with apptainer call + gridmount proxy
+cat > condor/run.sh << 'EOF'
+#!/bin/bash
+export X509_USER_PROXY=/grid_mnt/data__data.polcms/cms/adufour/proxy.pem
+time apptainer exec \
+    -B /etc/grid-security/certificates:/etc/grid-security/certificates \
+    -B /cvmfs \
+    -B /grid_mnt \
+    /grid_mnt/data__data.polcms/cms/adufour/spritz-env.sif \
+    python runner.py .
+EOF
+chmod +x condor/run.sh
+
+echo "run.sh patched for LLR T3 (apptainer + gridmount proxy)."
 echo "Submit with: cd condor && condor_submit submit.jdl"
