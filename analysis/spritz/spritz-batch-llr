@@ -1,0 +1,25 @@
+#!/bin/bash
+# spritz-batch-llr: wrapper around spritz-batch that fixes submit.jdl for LLR T3.
+# Usage: run from inside apptainer in the config directory, same as spritz-batch.
+
+set -e
+
+PROXY=/grid_mnt/data__data.polcms/cms/adufour/proxy.pem
+CFG_JSON=/grid_mnt/data__data.polcms/cms/adufour/spritz/data/Full2018v9/cfg.json
+
+spritz-batch
+
+JDL=condor/submit.jdl
+
+sed -i \
+  -e '/MY.SingularityImage/d' \
+  -e "s|/tmp/x509up_u[0-9]*, ||" \
+  -e '/Requirements/d' \
+  -e '/+JobFlavour/d' \
+  -e "s|/opt/spritz/data/Full2018v9/cfg.json|${CFG_JSON}|" \
+  -e '/^log/a T3Queue = short\nWNTag   = el9\ninclude : /opt/exp_soft/cms/t3/t3queue |' \
+  "$JDL"
+
+echo "submit.jdl patched for LLR T3."
+echo "Review with: grep -v '^queue' ${JDL}"
+echo "Submit with: cd condor && condor_submit submit.jdl"
