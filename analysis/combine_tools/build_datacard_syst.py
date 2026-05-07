@@ -156,8 +156,13 @@ def make_hist(weights, label=""):
         return h
 
 def _pdf_updown(w_nom, h_nom):
-    """Asymmetric RMS over PDF replicas relative to nominal. Returns (h_up, h_down)."""
-    # Member 0 is the central value of the chosen PDF set; members 1..N are the variations.
+    """Asymmetric PDF uncertainty via quadrature sum over eigenvectors.
+
+    For mc_hessian sets (NNPDF31_nnlo_as_0118_mc_hessian_pdfas), each non-central
+    member is a +1sigma eigenvector direction. The correct combination is the
+    quadrature sum sqrt(sum(dev^2)), NOT the RMS sqrt(mean(dev^2)).
+    Member 0 is the central value; members 1..N are the eigenvector variations.
+    """
     pdf_central_set = pdf_arr[:, 0]
     nominal  = h_nom.values().flatten()
     rep_vals = np.array([
@@ -170,8 +175,8 @@ def _pdf_updown(w_nom, h_nom):
         dev    = rep_vals[:, b] - nominal[b]
         up_dev = dev[dev > 0]
         dn_dev = dev[dev < 0]
-        if len(up_dev) > 0: sigma_up[b]   = np.sqrt(np.mean(up_dev**2))
-        if len(dn_dev) > 0: sigma_down[b] = np.sqrt(np.mean(dn_dev**2))
+        if len(up_dev) > 0: sigma_up[b]   = np.sqrt(np.sum(up_dev**2))
+        if len(dn_dev) > 0: sigma_down[b] = np.sqrt(np.sum(dn_dev**2))
     shape = h_nom.values().shape
     h_up = h_nom.copy()
     h_up.view()["value"] = (nominal + sigma_up).reshape(shape)
