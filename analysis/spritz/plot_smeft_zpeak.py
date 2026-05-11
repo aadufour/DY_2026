@@ -17,6 +17,7 @@ Operator index mapping (1..27 = op_i at +1):
 """
 
 import argparse
+import glob
 import os
 import numpy as np
 import matplotlib
@@ -29,8 +30,8 @@ plt.style.use(hep.style.CMS)
 
 # ── Argument parsing ──────────────────────────────────────────────────────────
 parser = argparse.ArgumentParser()
-parser.add_argument("--pkl",      default="condor/results_merged_new.pkl",
-                    help="Path to merged pkl from spritz-merge")
+parser.add_argument("--jobdir",   default="condor",
+                    help="Path to condor dir containing job_*/chunks_job.pkl")
 parser.add_argument("--region",   default="inc_mm",
                     choices=["inc_ee", "inc_mm", "inc_em"],
                     help="Region to plot")
@@ -52,12 +53,11 @@ MLL_BINS = [
 ]
 DATASETS = [f"DYSMEFTsim_LO_mll_{b}" for b in MLL_BINS]
 
-# ── Load merged pkl ───────────────────────────────────────────────────────────
-print(f"Loading {args.pkl} ...")
-results = read_chunks(args.pkl)
+# ── Load per-event arrays from individual job pkls ────────────────────────────
+# spritz-merge drops per-event arrays; must read from job_*/chunks_job.pkl
+job_pkls = sorted(glob.glob(os.path.join(args.jobdir, "job_*/chunks_job.pkl")))
+print(f"Found {len(job_pkls)} job pkls in {args.jobdir}")
 
-# Accumulate per-event arrays across all datasets
-# Merged pkl structure: results[dataset]["events"][region][variable]
 mll_all    = []
 weight_all = []
 w_sm_all   = []
@@ -69,30 +69,40 @@ op_idx_m = args.operator + 27     # 28..54
 
 n_events_total = 0
 
-for dataset in DATASETS:
-    if dataset not in results:
-        print(f"  dataset {dataset} not found, skipping")
+for pkl_path in job_pkls:
+    try:
+        chunks = read_chunks(pkl_path)
+    except Exception as e:
+        print(f"  skip {pkl_path}: {e}")
         continue
-    ev = results[dataset].get("events", {}).get(args.region, {})
-    if not ev or len(ev.get("mll", [])) == 0:
-        print(f"  no events in {dataset}/{args.region}, skipping")
-        continue
-
-    mll    = np.array(ev["mll"],              dtype=np.float64)
-    weight = np.array(ev["weight"],           dtype=np.float64)
-    w_sm   = np.array(ev["w_0"],              dtype=np.float64)
-    w_kp   = np.array(ev[f"w_{op_idx_p}"],   dtype=np.float64)
-    w_km   = np.array(ev[f"w_{op_idx_m}"],   dtype=np.float64)
-
-    # mask to Z peak region
-    mask = (mll >= args.mll_lo) & (mll <= args.mll_hi)
-    mll_all.append(mll[mask])
-    weight_all.append(weight[mask])
-    w_sm_all.append(w_sm[mask])
-    w_kp_all.append(w_kp[mask])
-    w_km_all.append(w_km[mask])
-    n_events_total += mask.sum()
-    print(f"  {dataset}: {mask.sum()} events")
+    # individual job pkl: list of dicts with result['real_results'][dataset]['events'][region]
+    if not isinstance(chunks, list):
+        chunks = [chunks]
+    for chunk in chunks:
+        if not isinstance(chunk, dict):
+            continue
+        result = chunk.get("result", {})
+        if not result:
+            continue
+        real = result.get("real_results", {})
+        for dataset in DATASETS:
+            if dataset not in real:
+                continue
+            ev = real[dataset].get("events", {}).get(args.region, {})
+            if not ev or len(ev.get("mll", [])) == 0:
+                continue
+            mll    = np.array(ev["mll"],              dtype=np.float64)
+            weight = np.array(ev["weight"],           dtype=np.float64)
+            w_sm   = np.array(ev["w_0"],              dtype=np.float64)
+            w_kp   = np.array(ev[f"w_{op_idx_p}"],   dtype=np.float64)
+            w_km   = np.array(ev[f"w_{op_idx_m}"],   dtype=np.float64)
+            mask = (mll >= args.mll_lo) & (mll <= args.mll_hi)
+            mll_all.append(mll[mask])
+            weight_all.append(weight[mask])
+            w_sm_all.append(w_sm[mask])
+            w_kp_all.append(w_kp[mask])
+            w_km_all.append(w_km[mask])
+            n_events_total += mask.sum()
 
 if n_events_total == 0:
     print(f"No events found in region {args.region} with mll in [{args.mll_lo}, {args.mll_hi}]")
@@ -152,7 +162,7 @@ ax.set_yscale("log")
 ax.legend(fontsize=9, frameon=False)
 hep.cms.label("Private", data=False, ax=ax, year="2018")
 
-outpath = os.path.join(args.outdir, f"zpeak_{args.region}_op{args.operator}.png")
+outpath = os.path.join(args.outdir, f"zpeak_{args.region}_op{args.operator:02d}.png")
 fig.savefig(outpath, bbox_inches="tight")
 plt.close()
 print(f"Saved {outpath}")
