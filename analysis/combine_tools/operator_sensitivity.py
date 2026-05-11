@@ -144,6 +144,7 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
         3, 1, figsize=(9, 11),
         gridspec_kw={"height_ratios": [4, 2, 2], "hspace": 0.05},
         sharex=True,
+        layout="constrained",
     )
 
     # -- Panel 1: absolute shapes --------------------------------------
@@ -191,7 +192,7 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
         for ax in (ax1, ax2, ax3):
             ax.axvline(e, color="gray", linewidth=0.4, linestyle=":", alpha=0.6)
 
-    plt.tight_layout()
+
     outpath = os.path.join(outdir, f"sensitivity_{op}.pdf")
     save_both(fig,outpath)
     plt.close(fig)
@@ -240,7 +241,7 @@ def make_heatmap(results, edges, outdir):
             ax.text(j, i, f"{val:.2f}", ha="center", va="center",
                     fontsize=6, color=text_col)
 
-    plt.tight_layout()
+
     path = os.path.join(outdir, "summary_sensitivity_heatmap.pdf")
     save_both(fig,path)
     plt.close(fig)
@@ -270,7 +271,7 @@ def make_ratio_heatmap(results, edges, outdir):
             ax.text(j, i, f"{val:.2f}", ha="center", va="center",
                     fontsize=5.5, color="black")
 
-    plt.tight_layout()
+
     path = os.path.join(outdir, "summary_ratio_heatmap.pdf")
     save_both(fig,path)
     plt.close(fig)
@@ -310,7 +311,7 @@ def make_ranking(results, outdir):
     tl_p = mpatches.Patch(color=cmap(0.95), label=r"tail ($m_{\ell\ell} \gg M_Z$)")
     ax.legend(handles=[sm_p, tl_p], frameon=False, fontsize=9, loc="lower right")
 
-    plt.tight_layout()
+
     path = os.path.join(outdir, "summary_operator_ranking.pdf")
     save_both(fig,path)
     plt.close(fig)
