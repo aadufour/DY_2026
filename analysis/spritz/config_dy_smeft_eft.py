@@ -40,6 +40,7 @@ runner = "/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz/runner
 
 special_analysis_cfg = {
     "do_theory_variations": False,
+    "dnn": None,
 }
 
 MLL_BINS = [
