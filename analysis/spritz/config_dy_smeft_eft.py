@@ -36,7 +36,7 @@ plot_label = "DY SMEFT LO EFT"
 year_label = "2018"
 njobs = 1000
 
-runner = f"{fw_path}/src/spritz/runners/runner_3DY_trees_singleTriggers.py"
+runner = "/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz/runner_dy_eft.py"
 
 special_analysis_cfg = {
     "do_theory_variations": False,
