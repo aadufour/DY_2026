@@ -36,7 +36,7 @@ plot_label = "DY SMEFT LO EFT"
 year_label = "2018"
 njobs = 1000
 
-runner = f"{fw_path}/src/spritz/runners/runner_eft.py"
+runner = f"{fw_path}/src/spritz/runners/runner_3DY_trees_singleTriggers.py"
 
 special_analysis_cfg = {
     "do_theory_variations": False,
@@ -56,15 +56,14 @@ MLL_BINS = [
 # One subsample per EFT component: SM + lin_k + quad_k for k = 1..27
 # These string expressions are eval()'d inside the runner.
 rwgt = "events.LHEReweightingWeight"
-all_mask = "ak.ones_like(events.run) == 1"
 
 subsamples_eft = {
-    "SM": (all_mask, f"{rwgt}[:, 0]"),
+    "SM": f"{rwgt}[:, 0]",
 }
 for _k in range(1, 28):
     _km = _k + 27
-    subsamples_eft[f"op{_k:02d}_lin"]  = (all_mask, f"0.5 * ({rwgt}[:, {_k}] - {rwgt}[:, {_km}])")
-    subsamples_eft[f"op{_k:02d}_quad"] = (all_mask, f"0.5 * ({rwgt}[:, {_k}] + {rwgt}[:, {_km}] - 2 * {rwgt}[:, 0])")
+    subsamples_eft[f"op{_k:02d}_lin"]  = f"0.5 * ({rwgt}[:, {_k}] - {rwgt}[:, {_km}])"
+    subsamples_eft[f"op{_k:02d}_quad"] = f"0.5 * ({rwgt}[:, {_k}] + {rwgt}[:, {_km}] - 2 * {rwgt}[:, 0])"
 
 # ── Datasets ──────────────────────────────────────────────────────────────────
 datasets = {}
