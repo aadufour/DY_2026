@@ -54,9 +54,10 @@ DATASETS = [f"DYSMEFTsim_LO_mll_{b}" for b in MLL_BINS]
 
 # ── Load merged pkl ───────────────────────────────────────────────────────────
 print(f"Loading {args.pkl} ...")
-chunks = read_chunks(args.pkl)
+results = read_chunks(args.pkl)
 
-# Accumulate per-event arrays across all chunks and datasets
+# Accumulate per-event arrays across all datasets
+# Merged pkl structure: results[dataset]["events"][region][variable]
 mll_all    = []
 weight_all = []
 w_sm_all   = []
@@ -68,32 +69,30 @@ op_idx_m = args.operator + 27     # 28..54
 
 n_events_total = 0
 
-for chunk in chunks:
-    result = chunk.get("result", {})
-    if not result:
+for dataset in DATASETS:
+    if dataset not in results:
+        print(f"  dataset {dataset} not found, skipping")
         continue
-    real = result.get("real_results", {})
-    for dataset in DATASETS:
-        if dataset not in real:
-            continue
-        ev = real[dataset]["events"].get(args.region, {})
-        if not ev or len(ev.get("mll", [])) == 0:
-            continue
+    ev = results[dataset].get("events", {}).get(args.region, {})
+    if not ev or len(ev.get("mll", [])) == 0:
+        print(f"  no events in {dataset}/{args.region}, skipping")
+        continue
 
-        mll    = np.array(ev["mll"],              dtype=np.float64)
-        weight = np.array(ev["weight"],           dtype=np.float64)
-        w_sm   = np.array(ev[f"w_0"],             dtype=np.float64)
-        w_kp   = np.array(ev[f"w_{op_idx_p}"],   dtype=np.float64)
-        w_km   = np.array(ev[f"w_{op_idx_m}"],   dtype=np.float64)
+    mll    = np.array(ev["mll"],              dtype=np.float64)
+    weight = np.array(ev["weight"],           dtype=np.float64)
+    w_sm   = np.array(ev["w_0"],              dtype=np.float64)
+    w_kp   = np.array(ev[f"w_{op_idx_p}"],   dtype=np.float64)
+    w_km   = np.array(ev[f"w_{op_idx_m}"],   dtype=np.float64)
 
-        # mask to Z peak region
-        mask = (mll >= args.mll_lo) & (mll <= args.mll_hi)
-        mll_all.append(mll[mask])
-        weight_all.append(weight[mask])
-        w_sm_all.append(w_sm[mask])
-        w_kp_all.append(w_kp[mask])
-        w_km_all.append(w_km[mask])
-        n_events_total += mask.sum()
+    # mask to Z peak region
+    mask = (mll >= args.mll_lo) & (mll <= args.mll_hi)
+    mll_all.append(mll[mask])
+    weight_all.append(weight[mask])
+    w_sm_all.append(w_sm[mask])
+    w_kp_all.append(w_kp[mask])
+    w_km_all.append(w_km[mask])
+    n_events_total += mask.sum()
+    print(f"  {dataset}: {mask.sum()} events")
 
 if n_events_total == 0:
     print(f"No events found in region {args.region} with mll in [{args.mll_lo}, {args.mll_hi}]")
