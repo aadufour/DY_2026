@@ -96,13 +96,27 @@ for b in MLL_BINS:
     }
 
 # -- Samples (for spritz-plot / spritz-postproc) -------------------------------
-# Combine all mll bins into one SM sample so spritz-plot shows a single histogram.
+# One entry per subsample (SM + lin + quad for each operator), summing all mll bins.
+# This writes every histogram into histos.root for clean uproot-based plotting.
 samples = {}
 colors = {}
+
+# SM
 samples["DYSMEFTsim_SM"] = {
     "samples": [f"DYSMEFTsim_LO_mll_{b}_SM" for b in MLL_BINS]
 }
 colors["DYSMEFTsim_SM"] = cmap_petroff[0]
+
+# One entry per operator lin/quad component
+for _i, _op in enumerate(OPERATORS):
+    samples[f"DYSMEFTsim_{_op}_lin"] = {
+        "samples": [f"DYSMEFTsim_LO_mll_{b}_{_op}_lin" for b in MLL_BINS]
+    }
+    samples[f"DYSMEFTsim_{_op}_quad"] = {
+        "samples": [f"DYSMEFTsim_LO_mll_{b}_{_op}_quad" for b in MLL_BINS]
+    }
+    colors[f"DYSMEFTsim_{_op}_lin"]  = cmap_petroff[_i % len(cmap_petroff)]
+    colors[f"DYSMEFTsim_{_op}_quad"] = cmap_petroff[_i % len(cmap_petroff)]
 
 # -- Regions -------------------------------------------------------------------
 preselections = lambda events: (events.mll > 50)  # noqa E731
