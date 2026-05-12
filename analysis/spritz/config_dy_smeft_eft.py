@@ -107,16 +107,18 @@ samples["DYSMEFTsim_SM"] = {
 }
 colors["DYSMEFTsim_SM"] = cmap_petroff[0]
 
-# One entry per operator lin/quad component
-for _i, _op in enumerate(OPERATORS):
-    samples[f"DYSMEFTsim_{_op}_lin"] = {
-        "samples": [f"DYSMEFTsim_LO_mll_{b}_{_op}_lin" for b in MLL_BINS]
+# One entry per operator lin/quad component.
+# NOTE: pkl keys use op01..op27 (jobs ran before rename). Next run will use real names.
+for _i, _op in enumerate(OPERATORS, start=1):
+    _tag = f"op{_i:02d}"
+    samples[f"DYSMEFTsim_{_tag}_lin"] = {
+        "samples": [f"DYSMEFTsim_LO_mll_{b}_{_tag}_lin" for b in MLL_BINS]
     }
-    samples[f"DYSMEFTsim_{_op}_quad"] = {
-        "samples": [f"DYSMEFTsim_LO_mll_{b}_{_op}_quad" for b in MLL_BINS]
+    samples[f"DYSMEFTsim_{_tag}_quad"] = {
+        "samples": [f"DYSMEFTsim_LO_mll_{b}_{_tag}_quad" for b in MLL_BINS]
     }
-    colors[f"DYSMEFTsim_{_op}_lin"]  = cmap_petroff[_i % len(cmap_petroff)]
-    colors[f"DYSMEFTsim_{_op}_quad"] = cmap_petroff[_i % len(cmap_petroff)]
+    colors[f"DYSMEFTsim_{_tag}_lin"]  = cmap_petroff[(_i - 1) % len(cmap_petroff)]
+    colors[f"DYSMEFTsim_{_tag}_quad"] = cmap_petroff[(_i - 1) % len(cmap_petroff)]
 
 # -- Regions -------------------------------------------------------------------
 preselections = lambda events: (events.mll > 50)  # noqa E731
