@@ -76,13 +76,16 @@ OPERATORS = [
     "clu",  "cld",  "cbl",
 ]  # 27 operators, matching LHE indices 1..27
 
+# NOTE: subsample keys use op01..op27 to match the existing merged pkl.
+# The OPERATORS list above maps op01→cHDD etc. for use in plotting scripts.
+# Next run: rename to real operator names once jobs are resubmitted.
 subsamples_eft = {
     "SM": (all_mask, f"{rwgt}[:, 0]"),
 }
-for _k, _name in enumerate(OPERATORS, start=1):
+for _k in range(1, 28):
     _km = _k + 27
-    subsamples_eft[f"{_name}_lin"]  = (all_mask, f"0.5 * ({rwgt}[:, {_k}] - {rwgt}[:, {_km}])")
-    subsamples_eft[f"{_name}_quad"] = (all_mask, f"0.5 * ({rwgt}[:, {_k}] + {rwgt}[:, {_km}] - 2 * {rwgt}[:, 0])")
+    subsamples_eft[f"op{_k:02d}_lin"]  = (all_mask, f"0.5 * ({rwgt}[:, {_k}] - {rwgt}[:, {_km}])")
+    subsamples_eft[f"op{_k:02d}_quad"] = (all_mask, f"0.5 * ({rwgt}[:, {_k}] + {rwgt}[:, {_km}] - 2 * {rwgt}[:, 0])")
 
 # -- Datasets ------------------------------------------------------------------
 datasets = {}
