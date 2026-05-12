@@ -55,19 +55,34 @@ MLL_BINS = [
 ]
 
 # -- EFT subsamples ------------------------------------------------------------
-# One subsample per EFT component: SM + lin_k + quad_k for k = 1..27
+# One subsample per EFT component: SM + lin_k + quad_k for each operator.
+# Operator names and indices extracted from LHE reweighting block.
 # Format: (mask_expression, weight_expression) — both eval()'d in the runner.
 # All events pass the mask; weight is the EFT component for that subsample.
 rwgt = "events.LHEReweightingWeight"
 all_mask = "ak.ones_like(events.run) == 1"
 
+# LHE weight index → operator name (indices 1..27 = c=+1, 28..54 = c=-1)
+OPERATORS = [
+    "cHDD", "cHWB", "cbWRe", "cbBRe",
+    "cHj1", "cHQ1", "cHj3",  "cHQ3",
+    "cHu",  "cHd",  "cHbq",
+    "cHl1", "cHl3", "cHe",
+    "cll1",
+    "clj1", "clj3",
+    "cQl1", "cQl3",
+    "ceu",  "ced",
+    "cbe",  "cje",  "cQe",
+    "clu",  "cld",  "cbl",
+]  # 27 operators, matching LHE indices 1..27
+
 subsamples_eft = {
     "SM": (all_mask, f"{rwgt}[:, 0]"),
 }
-for _k in range(1, 28):
+for _k, _name in enumerate(OPERATORS, start=1):
     _km = _k + 27
-    subsamples_eft[f"op{_k:02d}_lin"]  = (all_mask, f"0.5 * ({rwgt}[:, {_k}] - {rwgt}[:, {_km}])")
-    subsamples_eft[f"op{_k:02d}_quad"] = (all_mask, f"0.5 * ({rwgt}[:, {_k}] + {rwgt}[:, {_km}] - 2 * {rwgt}[:, 0])")
+    subsamples_eft[f"{_name}_lin"]  = (all_mask, f"0.5 * ({rwgt}[:, {_k}] - {rwgt}[:, {_km}])")
+    subsamples_eft[f"{_name}_quad"] = (all_mask, f"0.5 * ({rwgt}[:, {_k}] + {rwgt}[:, {_km}] - 2 * {rwgt}[:, 0])")
 
 # -- Datasets ------------------------------------------------------------------
 datasets = {}
