@@ -2,9 +2,11 @@
 """
 config_dy_smeft_eft.py  —  DY SMEFTsim LO, EFT histogram approach
 =================================================================
-Uses runner_eft.py + subsamples to store EFT weight components as
-separate histograms (no per-event arrays). After spritz-merge the pkl
-contains, for each dataset × subsample:
+Uses runner_dy_smeft.py (Giacomo's runner_3DY_trees_singleTriggers_EFT.py
+with 2-line fix to use subsample weights in histogram filling) + subsamples
+to store EFT weight components as separate histograms.
+
+After spritz-merge the pkl contains, for each dataset x subsample:
   results["DYSMEFTsim_LO_mll_50_120_SM"]["histos"]["mll"]
   results["DYSMEFTsim_LO_mll_50_120_op01_lin"]["histos"]["mll"]
   results["DYSMEFTsim_LO_mll_50_120_op01_quad"]["histos"]["mll"]
@@ -36,11 +38,10 @@ plot_label = "DY SMEFT LO EFT"
 year_label = "2018"
 njobs = 1000
 
-runner = "/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz/runner_dy_eft.py"
+runner = "/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz/runner_dy_smeft.py"
 
 special_analysis_cfg = {
     "do_theory_variations": False,
-    "dnn": None,
 }
 
 MLL_BINS = [
@@ -53,20 +54,22 @@ MLL_BINS = [
     "1000_3000",
 ]
 
-# ── EFT subsamples ────────────────────────────────────────────────────────────
+# -- EFT subsamples ------------------------------------------------------------
 # One subsample per EFT component: SM + lin_k + quad_k for k = 1..27
-# These string expressions are eval()'d inside the runner.
+# Format: (mask_expression, weight_expression) — both eval()'d in the runner.
+# All events pass the mask; weight is the EFT component for that subsample.
 rwgt = "events.LHEReweightingWeight"
+all_mask = "ak.ones_like(events.run) == 1"
 
 subsamples_eft = {
-    "SM": f"{rwgt}[:, 0]",
+    "SM": (all_mask, f"{rwgt}[:, 0]"),
 }
 for _k in range(1, 28):
     _km = _k + 27
-    subsamples_eft[f"op{_k:02d}_lin"]  = f"0.5 * ({rwgt}[:, {_k}] - {rwgt}[:, {_km}])"
-    subsamples_eft[f"op{_k:02d}_quad"] = f"0.5 * ({rwgt}[:, {_k}] + {rwgt}[:, {_km}] - 2 * {rwgt}[:, 0])"
+    subsamples_eft[f"op{_k:02d}_lin"]  = (all_mask, f"0.5 * ({rwgt}[:, {_k}] - {rwgt}[:, {_km}])")
+    subsamples_eft[f"op{_k:02d}_quad"] = (all_mask, f"0.5 * ({rwgt}[:, {_k}] + {rwgt}[:, {_km}] - 2 * {rwgt}[:, 0])")
 
-# ── Datasets ──────────────────────────────────────────────────────────────────
+# -- Datasets ------------------------------------------------------------------
 datasets = {}
 for b in MLL_BINS:
     name = f"DYSMEFTsim_LO_mll_{b}"
@@ -77,8 +80,8 @@ for b in MLL_BINS:
         "subsamples": subsamples_eft,
     }
 
-# ── Samples (for spritz-plot / spritz-postproc) ───────────────────────────────
-# Each dataset × subsample becomes a separate entry in the merged pkl.
+# -- Samples (for spritz-plot / spritz-postproc) -------------------------------
+# Each dataset x subsample becomes a separate entry in the merged pkl.
 # We define only SM here; add operators as needed for plotting.
 samples = {}
 colors = {}
@@ -87,7 +90,7 @@ for b in MLL_BINS:
     samples[key] = {"samples": [key]}
     colors[key] = cmap_petroff[0]
 
-# ── Regions ───────────────────────────────────────────────────────────────────
+# -- Regions -------------------------------------------------------------------
 preselections = lambda events: (events.mll > 50)  # noqa E731
 
 regions = {
@@ -105,7 +108,7 @@ regions = {
     },
 }
 
-# ── Binning ───────────────────────────────────────────────────────────────────
+# -- Binning -------------------------------------------------------------------
 mll_bins = [
     *range(50, 76, 5),    # 50–75:  5 GeV steps
     *range(76, 106, 2),   # 76–105: 2 GeV steps (Z peak)
@@ -126,7 +129,7 @@ def cos_theta_star(l1, l2):
     )
 
 
-# ── Variables (histograms, no per-event arrays) ───────────────────────────────
+# -- Variables (histograms, no per-event arrays) -------------------------------
 variables = {
     "mll": {
         "func": lambda events: (events.Lepton[:, 0] + events.Lepton[:, 1]).mass,
