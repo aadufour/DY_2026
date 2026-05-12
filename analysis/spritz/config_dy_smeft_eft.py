@@ -81,14 +81,13 @@ for b in MLL_BINS:
     }
 
 # -- Samples (for spritz-plot / spritz-postproc) -------------------------------
-# Each dataset x subsample becomes a separate entry in the merged pkl.
-# We define only SM here; add operators as needed for plotting.
+# Combine all mll bins into one SM sample so spritz-plot shows a single histogram.
 samples = {}
 colors = {}
-for b in MLL_BINS:
-    key = f"DYSMEFTsim_LO_mll_{b}_SM"
-    samples[key] = {"samples": [key]}
-    colors[key] = cmap_petroff[0]
+samples["DYSMEFTsim_SM"] = {
+    "samples": [f"DYSMEFTsim_LO_mll_{b}_SM" for b in MLL_BINS]
+}
+colors["DYSMEFTsim_SM"] = cmap_petroff[0]
 
 # -- Regions -------------------------------------------------------------------
 preselections = lambda events: (events.mll > 50)  # noqa E731
