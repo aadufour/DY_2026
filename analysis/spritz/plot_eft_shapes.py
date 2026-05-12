@@ -20,6 +20,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import mplhep as hep
 import numpy as np
+from spritz.framework.framework import read_chunks
 
 plt.style.use(hep.style.CMS)
 
@@ -58,8 +59,7 @@ ops_to_plot = args.operators if args.operators else OPERATORS
 
 # ── Load merged pkl ───────────────────────────────────────────────────────────
 print(f"Loading {args.pkl} ...")
-with open(args.pkl, "rb") as f:
-    results = pickle.load(f)
+results = read_chunks(args.pkl)
 print(f"  {len(results)} keys found.")
 
 # ── Helper: sum histogram across all mll bins ─────────────────────────────────
