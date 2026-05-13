@@ -159,10 +159,11 @@ for idx, op_name in ops_to_plot:
             where=vals_sm != 0,
         )
 
-        rax.step(
-            edges[:-1],
+        hep.histplot(
             ratio,
-            where="post",
+            edges,
+            ax=rax,
+            histtype="step",
             linewidth=2,
             label=f"{label}/SM",
             color=colors[label],
