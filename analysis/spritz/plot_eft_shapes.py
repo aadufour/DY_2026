@@ -81,19 +81,13 @@ ops_to_plot = [
 ]
 
 for idx, op_name in ops_to_plot:
-    tag = f"op{idx:02d}"
 
     try:
-        vals_lin,  _ = read_hist(f"DYSMEFTsim_{tag}_lin")
-        vals_quad, _ = read_hist(f"DYSMEFTsim_{tag}_quad")
+        vals_cp1, _ = read_hist(f"DYSMEFTsim_{op_name}")      # raw weight c=+1
+        vals_cm1, _ = read_hist(f"DYSMEFTsim_{op_name}_m1")   # raw weight c=-1
     except KeyError:
-        print(f"  WARNING: {tag} ({op_name}) not found in ROOT file, skipping.")
+        print(f"  WARNING: {op_name} not found in ROOT file, skipping.")
         continue
-
-    # Reconstruct EFT at c=+1 and c=-1 from lin/quad components
-    # (equivalent to Giacomo's raw op and op_m1 histograms)
-    vals_cp1 = vals_sm + vals_lin + vals_quad   # c = +1
-    vals_cm1 = vals_sm - vals_lin + vals_quad   # c = -1
 
     hist_names = {
         "SM":              vals_sm,
