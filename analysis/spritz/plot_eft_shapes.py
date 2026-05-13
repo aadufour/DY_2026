@@ -160,9 +160,9 @@ for idx, op_name in ops_to_plot:
         )
 
         rax.step(
-            centers,
+            edges[:-1],
             ratio,
-            where="mid",
+            where="post",
             linewidth=2,
             label=f"{label}/SM",
             color=colors[label],
