@@ -2,11 +2,11 @@
 
 ## Overview
 
-Spritz is a CMS NanoAOD analysis framework. We use it to process private DY SMEFTsim LO NanoAOD samples and save per-event arrays (mll, EFT weights, PDF/scale weights) for offline SMEFT analysis.
+Spritz is a CMS NanoAOD analysis framework. We use it to process private DY SMEFTsim LO NanoAOD samples and produce EFT-weighted histograms for offline SMEFT analysis.
 
 The full pipeline is:
 ```
-spritz-fileset → spritz-chunks → spritz-batch-llr → condor_submit → spritz-merge → spritz-postproc → spritz-plot
+spritz-fileset → spritz-chunks → spritz-batch-llr → condor_submit → spritz-merge → spritz-postproc → spritz-plot / plot_eft_shapes.py
 ```
 
 ---
@@ -31,13 +31,19 @@ Which expands to:
 apptainer exec \
   -B /etc/grid-security/certificates:/etc/grid-security/certificates \
   -B /cvmfs \
-  -B /grid_mnt/data__data.polcms/cms/adufour/spritz/data/Full2018v9/samples/samples.json:/opt/spritz/data/Full2018v9/samples/samples.json \
+  -B /grid_mnt \
   /grid_mnt/data__data.polcms/cms/adufour/spritz-env.sif bash --rcfile ~/.bashrc
 ```
 
 Using `exec bash --rcfile` instead of `shell` forces `~/.bashrc` to be sourced, which puts `spritz-batch-llr` in PATH.
 
-The third `-B` bind-mount is critical: it overlays our editable `samples.json` (with private sample paths) over the read-only frozen one inside the image.
+### Stacking apptainer + analysis_venv
+For plotting (needs mplhep), activate the analysis venv **inside** the apptainer:
+```bash
+spritz-shell
+dy_analysis   # activates /grid_mnt/data__data.polcms/cms/adufour/analysis_venv
+```
+This gives access to both `spritz.framework` (from apptainer) and `mplhep` (from venv).
 
 ### Exit apptainer
 ```bash
@@ -48,34 +54,145 @@ exit
 
 ---
 
-## Changes vs Giacomo's original repo
+## Config versions
 
-### 1. `samples.json` (bind-mounted over `/opt/spritz/data/Full2018v9/samples/samples.json`)
-Added 7 private DY SMEFTsim LO samples. Private samples use the `"path"` key (xrootd path to the directory) instead of a DAS query. Example entry:
-```json
-"DYSMEFTsim_LO_mll_50_120": {
-    "path": "root://eos.grif.fr:1094//eos/grif/cms/llr/store/user/aldufour/3DY_SMEFTsim_LO/DYSMEFTMll-nanoaod18_SMEFTsim_mll_50_120/DYSMEFTMll-nanoaod18_SMEFTsim_mll_50_120/260504_081708",
-    "xsec": "1.0",
-    "kfact": "1.000",
-    "ref": "A1"
+| Version | Config | Runner | Subsamples | Notes |
+|---------|--------|--------|------------|-------|
+| v4 | `config_dy_smeft_eft.py` | `runner_dy_smeft.py` | SM + op01_lin + op01_quad (×27) | Lin/quad precomputed — normalisation bug |
+| v5 | `config_dy_smeft_v5.py` | `runner_dy_smeft.py` | SM + cHDD + cHDD_m1 (×27) | Raw weights — correct normalisation ✓ |
+| syst | `config_dy_smeft_syst.py` | `runner_dy_smeft_syst.py` | SM + op01_lin + op01_quad (×27) | Theory variations enabled (future) |
+
+**Active config: v5** (`config_dy_smeft_v5.py`)
+
+---
+
+## EFT subsample approach (v5)
+
+### Why raw weights instead of lin/quad
+
+Storing lin/quad precomputed in the runner causes a normalisation bug at postproc time:
+- `sumw_lin = sum(genWeight × 0.5×(w_k+ − w_k−))` → a **difference**, can be tiny or near-zero
+- postproc normalises each histogram by its own sumw → lin histogram gets blown up
+- Result: visible bumps at mll bin boundaries in the EFT/SM ratio
+
+**v5 fix (Giacomo's approach):** store raw weights at c=+1 and c=−1:
+- `sumw_p1 = sum(genWeight × LHEReweightingWeight[:,k])` ≈ `sumw_SM` ≈ `sum(genWeight)`
+- postproc normalisation is consistent for SM and all operator histograms
+- Lin/quad decomposition is done **at plotting time**
+
+### Operator names
+
+27 operators extracted from LHE reweighting block (`<weight id='...'>` in header):
+
+| idx | name | idx | name | idx | name |
+|-----|------|-----|------|-----|------|
+| 1 | cHDD | 10 | cHd | 19 | cQl3 |
+| 2 | cHWB | 11 | cHbq | 20 | ceu |
+| 3 | cbWRe | 12 | cHl1 | 21 | ced |
+| 4 | cbBRe | 13 | cHl3 | 22 | cbe |
+| 5 | cHj1 | 14 | cHe | 23 | cje |
+| 6 | cHQ1 | 15 | cll1 | 24 | cQe |
+| 7 | cHj3 | 16 | clj1 | 25 | clu |
+| 8 | cHQ3 | 17 | clj3 | 26 | cld |
+| 9 | cHu | 18 | cQl1 | 27 | cbl |
+
+LHEReweightingWeight indexing (406 total):
+- Index 0 = SM
+- Indices 1..27 = op_k at c=+1
+- Indices 28..54 = op_k at c=−1
+- Indices 55..405 = pairs (op_i, op_j) — not used
+
+### Subsample structure (v5)
+
+55 subsamples per dataset:
+```python
+subsamples = {
+    "SM":        (mask, "LHEReweightingWeight[:, 0]"),
+    "cHDD":      (mask, "LHEReweightingWeight[:, 1]"),   # c=+1
+    "cHDD_m1":   (mask, "LHEReweightingWeight[:, 28]"),  # c=-1
+    "cHWB":      (mask, "LHEReweightingWeight[:, 2]"),
+    "cHWB_m1":   (mask, "LHEReweightingWeight[:, 29]"),
+    ...
 }
 ```
-Note: `xsec=1.0` is a placeholder. Use the LO cross section from the MadGraph banner file for the restriction card hypothesis (no reweighting).
 
-### 2. Config (`analysis/spritz/config_dy_smeft_lo.py`)
-Key differences from a standard Spritz config:
-- `save_events=True` on all variables → saves per-event arrays instead of histograms
-- Fine mll binning around Z peak (2 GeV steps from 76–105 GeV)
-- Saves all 406 `LHEReweightingWeight` entries as `w_0`…`w_405`
-  - Index 0 = SM, 1–27 = op_i(+1), 28–54 = op_i(−1), 55–405 = pairs
-- Saves 8 QCD scale weights as `scale_w_0`…`scale_w_7` (from `LHEScaleWeight`)
-- Saves 103 PDF weights as `pdf_w_0`…`pdf_w_102` (from `LHEPdfWeight`, NNPDF3.1)
-  - Index 0 = central, 1–100 = replicas, 101–102 = alphaS up/down
-- `do_theory_variations: False` (we handle theory weights ourselves)
-- Runner: `runner_3DY_trees_singleTriggers.py`
+### EFT reconstruction at plotting time
+
+```python
+vals_lin  = 0.5 * (vals_p1 - vals_m1)
+vals_quad = 0.5 * (vals_p1 + vals_m1) - vals_sm
+# EFT distribution at coupling c:
+H_eft = H_sm + c * H_lin + c**2 * H_quad
+```
+
+---
+
+## Cross sections (from LHE `<init>` block)
+
+```
+DYSMEFTsim_LO_mll_50_120    → 1188.67 pb
+DYSMEFTsim_LO_mll_120_200   → 13.187  pb
+DYSMEFTsim_LO_mll_200_400   → 4.287   pb
+DYSMEFTsim_LO_mll_400_600   → 2.076   pb
+DYSMEFTsim_LO_mll_600_800   → 1.565   pb
+DYSMEFTsim_LO_mll_800_1000  → 1.240   pb
+DYSMEFTsim_LO_mll_1000_3000 → 4.197   pb
+```
+
+Extract from LHE file:
+```bash
+for d in /grid_mnt/data__data.polcms/cms/adufour/LHE/SYST_slc7/DYSM*/; do
+    echo -n "$(basename $d): "
+    grep -A 4 "<init>" $d/unweighted_events.lhe | grep -v "[<>]" | sed -n '2p'
+done
+```
+
+---
+
+## samples.json
+
+Location: `/grid_mnt/data__data.polcms/cms/adufour/spritz/data/Full2018v9/samples/samples.json`
+
+Structure: `{"headers": {...}, "samples": {"dataset_name": {"path": ..., "xsec": ..., "kfact": ..., "ref": ...}}}`
+
+For subsamples, postproc reads `xss` from `data/fileset.json` (local to each config dir), NOT from the global samples.json. When running postproc with subsamples, all `dataset_subsample` keys must be present in `data/fileset.json`. Add them with:
+
+```python
+import json
+path = "data/fileset.json"
+with open(path) as f: s = json.load(f)
+MLL_BINS = ["50_120","120_200","200_400","400_600","600_800","800_1000","1000_3000"]
+OPERATORS = ["cHDD","cHWB","cbWRe","cbBRe","cHj1","cHQ1","cHj3","cHQ3",
+             "cHu","cHd","cHbq","cHl1","cHl3","cHe","cll1","clj1","clj3",
+             "cQl1","cQl3","ceu","ced","cbe","cje","cQe","clu","cld","cbl"]
+for b in MLL_BINS:
+    base = f"DYSMEFTsim_LO_mll_{b}"
+    parent = s[base].copy()
+    s[f"{base}_SM"] = parent.copy()
+    for op in OPERATORS:
+        s[f"{base}_{op}"] = parent.copy()
+        s[f"{base}_{op}_m1"] = parent.copy()
+with open(path, "w") as f: json.dump(s, f, indent=2)
+```
+
+---
+
+## Changes vs Giacomo's original repo
+
+### 1. `runner_dy_smeft.py`
+Based on Giacomo's `runner_3DY_trees_singleTriggers_EFT.py` with:
+- Removed `onnxruntime`/DNN imports (not needed for DY EFT)
+- Added try/except guard for `trigger_sf_latinos` import
+- Added `1000_3000` mll LHE filter (was missing in original)
+- **The 2-line fix**: histogram fill uses `events[f"weight_{dataset_name}"][mask]` instead of `events[cwgt][mask]` — makes the subsample EFT weight actually used in filling
+
+### 2. `runner_dy_smeft_syst.py`
+Same as above but removes the `dataset == "Zjj"` gate on theory variations:
+```python
+doTheoryVariations = special_analysis_cfg.get("do_theory_variations", False)
+```
 
 ### 3. `condor/run.sh`
-The default spritz-batch generates a broken `run.sh` that doesn't call apptainer. Our working version:
 ```bash
 #!/bin/bash
 export X509_USER_PROXY=/grid_mnt/data__data.polcms/cms/adufour/proxy.pem
@@ -86,23 +203,14 @@ time apptainer exec \
     /grid_mnt/data__data.polcms/cms/adufour/spritz-env.sif \
     python runner.py .
 ```
-Note: proxy must be on the gridmount (not `/tmp`) because the condor schedd runs on a different machine than the login node.
 
 ### 4. `condor/submit.jdl`
-The default spritz-batch generates a jdl for CERN/Pisa clusters. For LLR T3:
-- Remove `MY.SingularityImage` (not supported at LLR)
-- Remove `Requirements = (machine == "pccms...")`
-- Remove `+JobFlavour = "workday"`
-- Remove `/tmp/x509up_u...` from `transfer_input_files`
-- Fix `cfg.json` path: `/opt/spritz/...` → `/grid_mnt/data__data.polcms/cms/adufour/spritz/...`
-- Add after the `log` line:
-  ```
-  T3Queue = short
-  WNTag   = el9
-  include : /opt/exp_soft/cms/t3/t3queue |
-  ```
+Fixes for LLR T3:
+- Remove `MY.SingularityImage`, `Requirements`, `+JobFlavour`, `/tmp/x509up` from inputs
+- Fix `cfg.json` path from `/opt/spritz/` to gridmount path
+- Add T3Queue/WNTag/include lines
 
-All of this is automated by `spritz-batch-llr` (see below).
+All automated by `spritz-batch-llr`.
 
 ---
 
@@ -110,150 +218,106 @@ All of this is automated by `spritz-batch-llr` (see below).
 
 ### 0. Copy config to gridmount
 ```bash
-cp /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz/config_dy_smeft_lo.py \
-   /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_vX/config.py
+cp /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz/config_dy_smeft_v5.py \
+   /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_v5/config.py
 ```
 
 ### 1. Register fileset (inside apptainer, from config dir)
 ```bash
-cd /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_vX
+cd /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_v5
 spritz-fileset
 ```
-Scans the xrootd paths in `samples.json` and builds the fileset.
 
-### 2. Build chunks (inside apptainer, from config dir)
+### 2. Build chunks
 ```bash
 spritz-chunks
 ```
-Splits the fileset into job chunks.
 
-### 3. Build condor jobs — use our wrapper (inside apptainer, from config dir)
+### 3. Build condor jobs
 ```bash
 spritz-batch-llr
 ```
-This runs `spritz-batch` and automatically fixes both `submit.jdl` and `run.sh` for LLR T3.
 
-Note: `spritz-chunks` must be run before `spritz-batch-llr` (it needs `data/chunks.pkl`).
-
-### 4. Submit to condor (OUTSIDE apptainer)
+### 4. Submit (OUTSIDE apptainer)
 ```bash
-exit   # exit apptainer first!
-cd /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_vX/condor
-condor_submit submit.jdl
+exit
+cd condor && condor_submit submit.jdl
 ```
 
-### 5. Monitor jobs
+### 5. Monitor
 ```bash
 condor_q | grep adufour
+find job_* -name chunks_job.pkl -size +14k | wc -l   # successful jobs
 ```
 
-### 6. Merge results (inside apptainer, from config dir)
+### 6. Merge (inside apptainer)
 ```bash
-cd /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_vX
 spritz-merge
 ```
-Output: `condor/results_merged_new.pkl`
+Output: `condor/results_merged_new.pkl` (spritz compressed format)
 
-### 7. Post-process (inside apptainer, from config dir)
+### 7. Post-process (inside apptainer)
 ```bash
 spritz-postproc
 ```
 Output: `histos.root`
 
-### 8. Plot (inside apptainer, from config dir)
+**Note**: before running postproc with subsamples, patch `data/fileset.json` (see samples.json section above).
+
+### 8. Plot EFT shapes (analysis_venv, from config dir)
 ```bash
-mkdir -p plots
-spritz-plot
+dy_analysis
+python3 /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz/plot_eft_shapes.py \
+    --root histos.root --region inc_mm --outdir check
 ```
+
+Produces one PNG+PDF per operator in `check/`: SM (black), c=+1 (orange), c=−1 (blue), ratio panel.
 
 ---
 
-## Output data structure
+## histos.root structure
 
-The merged pkl uses spritz's compressed format. Read it with `read_chunks`, not plain `pickle.load`:
+```
+region/variable/nominal/histo_SAMPLENAME
+```
 
+Example (v5):
+```
+inc_mm/mll/nominal/histo_DYSMEFTsim_SM
+inc_mm/mll/nominal/histo_DYSMEFTsim_cHDD
+inc_mm/mll/nominal/histo_DYSMEFTsim_cHDD_m1
+...
+```
+
+Read with uproot (in analysis_venv, no apptainer needed):
 ```python
-from spritz.framework.framework import read_chunks
-r = read_chunks('condor/results_merged_new.pkl')
-# r is a list of job results
-# r[i]['result']['real_results'][dataset][region][variable] → awkward array
-```
-
-Structure:
-```
-r[i]['result']['real_results']
-  └── 'DYSMEFTsim_LO_mll_50_120'
-        ├── 'sumw'      # float32, sum of gen weights
-        ├── 'nevents'   # int
-        ├── 'events'
-        │     ├── 'inc_ee'   # dielectron region
-        │     │     ├── 'mll'        # awkward array, per-event reco mll [GeV]
-        │     │     ├── 'weight'     # per-event nominal weight
-        │     │     ├── 'w_0'        # SM LHEReweightingWeight
-        │     │     ├── 'w_1'…'w_405' # EFT weights
-        │     │     ├── 'scale_w_0'…'scale_w_7'
-        │     │     └── 'pdf_w_0'…'pdf_w_102'
-        │     ├── 'inc_mm'   # dimuon region
-        │     └── 'inc_em'   # mixed region
-        └── 'histos'    # pre-binned histograms for mll, costhetastar_bins, yZ_bins
-```
-
----
-
-## EFT reweighting formula
-
-For operator k at Wilson coefficient value c:
-```python
-w_kp = ev['w_{k}']        # weight with op k at c=+1  (index 1..27)
-w_km = ev['w_{k+27}']     # weight with op k at c=-1  (index 28..54)
-w_sm = ev['w_0']
-
-w_lin  = 0.5 * (w_kp - w_km)           # linear term
-w_quad = 0.5 * (w_kp + w_km) - w_sm    # quadratic term
-w_eft  = w_sm + c * w_lin + c**2 * w_quad  # full weight at coupling c
+import uproot
+f = uproot.open("histos.root")
+h = f["inc_mm/mll/nominal/histo_DYSMEFTsim_SM"]
+vals, edges = h.values(), h.axes[0].edges()
 ```
 
 ---
 
 ## Useful one-liners
 
-### Inspect a job pkl (outside apptainer, using apptainer exec)
+### Check job success rate
 ```bash
-apptainer exec -B /grid_mnt /grid_mnt/data__data.polcms/cms/adufour/spritz-env.sif python -c "
-from spritz.framework.framework import read_chunks
-import numpy as np
-r = read_chunks('job_5/chunks_job.pkl')
-ev = r[0]['result']['real_results']['DYSMEFTsim_LO_mll_50_120']['events']['inc_mm']
-print('nevents:', len(ev['mll']))
-print('mll[:5]:', np.array(ev['mll'][:5]))
-print('w_0[:5]:', np.array(ev['w_0'][:5]))
-"
+find job_* -name chunks_job.pkl -size +14k | wc -l   # good jobs (>14k)
+find job_* -name chunks_job.pkl -size -14k | wc -l   # failed jobs
 ```
 
-### Check LHEPdfWeight and LHEScaleWeight counts in a NanoAOD file
+### Validate samples.json
 ```bash
-apptainer exec -B /grid_mnt /grid_mnt/data__data.polcms/cms/adufour/spritz-env.sif python -c "
-import uproot
-f = uproot.open('root://eos.grif.fr:1094//eos/grif/cms/llr/store/user/aldufour/3DY_SMEFTsim_LO/DYSMEFTMll-nanoaod18_SMEFTsim_mll_50_120/DYSMEFTMll-nanoaod18_SMEFTsim_mll_50_120/260504_081708/0000/SMP-RunIISummer20UL18NanoAODv9-00051_1.root')
-t = f['Events']
-print('LHEPdfWeight length:', len(t['LHEPdfWeight'].array()[0]))
-print('LHEScaleWeight length:', len(t['LHEScaleWeight'].array()[0]))
-"
+python3 -c "import json; json.load(open('samples.json')); print('JSON OK')"
 ```
 
-### Check how many jobs failed
+### Extract xsec from LHE init block
 ```bash
-apptainer exec -B /grid_mnt /grid_mnt/data__data.polcms/cms/adufour/spritz-env.sif python -c "
-import pickle, glob
-jobs = sorted(glob.glob('job_*/chunks_job.pkl'))
-bad = []
-for j in jobs:
-    try:
-        with open(j,'rb') as f: r = pickle.load(f)
-        if r is None: bad.append(('none', j))
-    except Exception as e: bad.append(('error', j, str(e)))
-print(f'{len(bad)} failed / {len(jobs)} total')
-for b in bad[:5]: print(b)
-"
+grep -A 4 "<init>" unweighted_events.lhe | grep -v "[<>]" | sed -n '2p'
 ```
-Note: job pkls use spritz compression, so plain `pickle.load` will fail even for good jobs. Use `read_chunks` instead to validate results.
+
+### Get operator names from LHE reweighting block
+```bash
+grep "<weight " unweighted_events.lhe | head -60
+```
