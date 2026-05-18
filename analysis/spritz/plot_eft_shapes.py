@@ -119,12 +119,14 @@ for idx, op_name in ops_to_plot:
     )
 
     # --------------------------------------------------
-    # Upper pad: shapes
+    # Upper pad: shapes (divided by bin width for smooth display)
     # --------------------------------------------------
+
+    widths = np.diff(edges)
 
     for label, values in hist_names.items():
         hep.histplot(
-            values,
+            values / widths,
             edges,
             label=label,
             ax=ax,
@@ -134,7 +136,7 @@ for idx, op_name in ops_to_plot:
         )
 
     ax.legend()
-    ax.set_ylabel("Events")
+    ax.set_ylabel("Events / bin width")
     ax.set_yscale("log")
     hep.cms.label(ax=ax, data=False)
 
