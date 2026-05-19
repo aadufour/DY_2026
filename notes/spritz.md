@@ -58,15 +58,87 @@ exit
 
 | Version | Config | Runner | Subsamples | Notes |
 |---------|--------|--------|------------|-------|
-| v4 | `config_dy_smeft_eft.py` | `runner_dy_smeft.py` | SM + op01_lin + op01_quad (×27) | Lin/quad precomputed — normalisation bug |
+| v4 | `old/config_dy_smeft_eft.py` | `runner_dy_smeft.py` | SM + op01_lin + op01_quad (×27) | Lin/quad precomputed — normalisation bug |
 | v5 | `config_dy_smeft_v5.py` | `runner_dy_smeft.py` | SM + cHDD + cHDD_m1 (×27) | Raw weights — correct normalisation ✓ |
-| syst | `config_dy_smeft_syst.py` | `runner_dy_smeft_syst.py` | SM + op01_lin + op01_quad (×27) | Theory variations enabled (future) |
+| syst | `config_dy_smeft_syst.py` | `runner_dy_smeft_syst.py` | SM + op01_lin + op01_quad (×27) | Prototype syst config — superseded by v7 |
+| **v7** | **`config_dy_smeftsim_v7.py`** | **`runner_dy_smeft_v7.py`** | sm + w1_{op} + wm1_{op} (×27) | **Morphing names + PDF/QCD scale systematics ← active** |
 
-**Active config: v5** (`config_dy_smeft_v5.py`)
+**Active config: v7** (`config_dy_smeftsim_v7.py`)
 
 ---
 
-## EFT subsample approach (v5)
+## EFT subsample approach (v7 — active)
+
+### Morphing-convention names
+
+v7 renames subsamples and postproc samples to match `AnomalousCouplingMorphing.py` directly:
+
+| v5 name | v7 name | Meaning |
+|---------|---------|---------|
+| `DYSMEFTsim_SM` | `sm` | SM template w(0) |
+| `DYSMEFTsim_cHDD` | `w1_cHDD` | c=+1 template w(+1) |
+| `DYSMEFTsim_cHDD_m1` | `wm1_cHDD` | c=-1 template w(-1) |
+
+This means `histos.root` from `spritz-postproc` is already combine-ready. `build_shapes_morphing.py` only needs to add `histo_Data` (Asimov = SM) and write the datacard.
+
+### Theory systematics (v7)
+
+`do_theory_variations: True` in `special_analysis_cfg` enables:
+- QCD scale variations: 6-point envelope via `LHEScaleWeight` (type `lheScaleWeight` in nuisances)
+- PDF variations: replicas via `LHEPdfWeight` (type `lhePdfWeight` in nuisances)
+
+`runner_dy_smeft_v7.py` changes vs v6:
+1. `doTheoryVariations = special_analysis_cfg.get("do_theory_variations", False)` — no longer locked to `dataset == "Zjj"`
+2. Nom-only filter is conditional: `if not doTheoryVariations:` — when theory vars are on, all variation slices are filled in the `syst` axis of each histogram
+
+To inspect the exact variation names registered by `theory_unc`:
+```bash
+python3 -c "
+from spritz.modules.theory_unc import theory_unc
+import inspect
+print(inspect.getsource(theory_unc))
+"
+```
+
+### Subsample structure (v7)
+
+55 subsamples per dataset:
+```python
+subsamples = {
+    "sm":         (mask, "LHEReweightingWeight[:, 0]"),
+    "w1_cHDD":    (mask, "LHEReweightingWeight[:, 1]"),   # c=+1
+    "wm1_cHDD":   (mask, "LHEReweightingWeight[:, 28]"),  # c=-1
+    "w1_cHWB":    (mask, "LHEReweightingWeight[:, 2]"),
+    "wm1_cHWB":   (mask, "LHEReweightingWeight[:, 29]"),
+    ...
+}
+```
+
+### fileset.json patch for v7
+
+Before running `spritz-postproc`, patch `data/fileset.json` to add all `dataset_subsample` keys:
+
+```python
+import json
+path = "data/fileset.json"
+with open(path) as f: s = json.load(f)
+MLL_BINS = ["50_120","120_200","200_400","400_600","600_800","800_1000","1000_3000"]
+OPERATORS = ["cHDD","cHWB","cbWRe","cbBRe","cHj1","cHQ1","cHj3","cHQ3",
+             "cHu","cHd","cHbq","cHl1","cHl3","cHe","cll1","clj1","clj3",
+             "cQl1","cQl3","ceu","ced","cbe","cje","cQe","clu","cld","cbl"]
+for b in MLL_BINS:
+    base = f"DYSMEFTsim_LO_mll_{b}"
+    parent = s[base].copy()
+    s[f"{base}_sm"] = parent.copy()
+    for op in OPERATORS:
+        s[f"{base}_w1_{op}"]  = parent.copy()
+        s[f"{base}_wm1_{op}"] = parent.copy()
+with open(path, "w") as f: json.dump(s, f, indent=2)
+```
+
+---
+
+## EFT subsample approach (v5 — kept for reference)
 
 ### Why raw weights instead of lin/quad
 
@@ -186,11 +258,20 @@ Based on Giacomo's `runner_3DY_trees_singleTriggers_EFT.py` with:
 - Added `1000_3000` mll LHE filter (was missing in original)
 - **The 2-line fix**: histogram fill uses `events[f"weight_{dataset_name}"][mask]` instead of `events[cwgt][mask]` — makes the subsample EFT weight actually used in filling
 
-### 2. `runner_dy_smeft_syst.py`
-Same as above but removes the `dataset == "Zjj"` gate on theory variations:
-```python
-doTheoryVariations = special_analysis_cfg.get("do_theory_variations", False)
-```
+### 2. `runner_dy_smeft_v7.py` ← active
+Same as v6 with two additional changes:
+- Removes the `dataset == "Zjj"` gate on theory variations:
+  ```python
+  doTheoryVariations = special_analysis_cfg.get("do_theory_variations", False)
+  ```
+- Makes the nom-only filter conditional so theory variation histograms are actually filled:
+  ```python
+  if not doTheoryVariations:
+      variations.variations_dict = {k: v for k, v in variations.variations_dict.items() if k == "nom"}
+  ```
+
+### `runner_dy_smeft_syst.py` (superseded by v7)
+Intermediate prototype — had `dataset == "Zjj"` removed but still stripped all non-nom variations unconditionally.
 
 ### 3. `condor/run.sh`
 ```bash
@@ -214,17 +295,19 @@ All automated by `spritz-batch-llr`.
 
 ---
 
-## Full Pipeline
+## Full Pipeline (v7)
 
 ### 0. Copy config to gridmount
 ```bash
-cp /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz/config_dy_smeft_v5.py \
-   /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_v5/config.py
+# create config dir
+mkdir -p /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_v7
+cp /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz/config_dy_smeftsim_v7.py \
+   /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_v7/config.py
 ```
 
 ### 1. Register fileset (inside apptainer, from config dir)
 ```bash
-cd /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_v5
+cd /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_v7
 spritz-fileset
 ```
 
@@ -256,15 +339,17 @@ spritz-merge
 ```
 Output: `condor/results_merged_new.pkl` (spritz compressed format)
 
-### 7. Post-process (inside apptainer)
+### 7. Patch fileset.json for subsamples (before postproc)
+
+See the v7 fileset.json patch snippet in the subsample section above (uses `sm`, `w1_{op}`, `wm1_{op}` keys).
+
+### 8. Post-process (inside apptainer)
 ```bash
 spritz-postproc
 ```
-Output: `histos.root`
+Output: `histos.root` with morphing-convention histogram names
 
-**Note**: before running postproc with subsamples, patch `data/fileset.json` (see samples.json section above).
-
-### 8. Plot EFT shapes (analysis_venv, from config dir)
+### 9. Plot EFT shapes (analysis_venv, from config dir)
 ```bash
 dy_analysis
 python3 /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz/plot_eft_shapes.py \
@@ -272,6 +357,32 @@ python3 /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz/plot_eft
 ```
 
 Produces one PNG+PDF per operator in `check/`: SM (black), c=+1 (orange), c=−1 (blue), ratio panel.
+
+### 10. Build combine shapes + datacard
+```bash
+dy_analysis
+python3 /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz/build_shapes_morphing.py \
+    --input histos.root \
+    --outdir /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_v7/datacards_morphing \
+    --region inc_mm --variable mll
+```
+
+Output: `datacards_morphing/inc_mm/mll/shapes.root` + `datacard.txt`
+
+### 11. Run combine (morphing workflow)
+```bash
+dy_combine_morphing
+cd /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_v7/datacards_morphing/inc_mm/mll
+createJson.py --datacard datacard.txt --binname w1_
+createCombineJson.py --datacard datacard.txt
+createWS.py 1
+runScans.py 1 initial
+runScans.py 1 scan
+runPlots.py 1
+# or for stat vs syst comparison:
+runScans.py 1 initial --stat && runScans.py 1 scan --stat
+runPlots_compare.py 1 --label "Stat + Syst" --compare-stat
+```
 
 ---
 
@@ -281,21 +392,32 @@ Produces one PNG+PDF per operator in `check/`: SM (black), c=+1 (orange), c=−1
 region/variable/nominal/histo_SAMPLENAME
 ```
 
-Example (v5):
+Example (v7 — morphing convention):
+```
+inc_mm/mll/nominal/histo_sm
+inc_mm/mll/nominal/histo_w1_cHDD
+inc_mm/mll/nominal/histo_wm1_cHDD
+...
+```
+
+Example (v5 — old naming, kept for reference):
 ```
 inc_mm/mll/nominal/histo_DYSMEFTsim_SM
 inc_mm/mll/nominal/histo_DYSMEFTsim_cHDD
 inc_mm/mll/nominal/histo_DYSMEFTsim_cHDD_m1
-...
 ```
 
 Read with uproot (in analysis_venv, no apptainer needed):
 ```python
 import uproot
 f = uproot.open("histos.root")
-h = f["inc_mm/mll/nominal/histo_DYSMEFTsim_SM"]
+h = f["inc_mm/mll/nominal/histo_sm"]
 vals, edges = h.values(), h.axes[0].edges()
 ```
+
+When theory variations are enabled (v7), histograms have a `syst` axis with entries for each
+variation (`nom`, `QCDscale_*`, `PDF_*`, etc.). `spritz-postproc` collapses this to the
+`nominal` directory for the nominal slice and separate directories for up/down variations.
 
 ---
 

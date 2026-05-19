@@ -3,11 +3,15 @@
 plot_eft_shapes.py — EFT shape comparison vs SM
 Adapted from Giacomo's check_shapes.py.
 
-Reads histos.root from spritz-postproc.
-For each operator, plots SM (black), EFT at c=+1 (orange), EFT at c=-1 (blue)
-reconstructed from the lin/quad components stored in histos.root.
+Reads histos.root from spritz-postproc (v7: morphing-convention names).
+For each operator, plots SM (black), EFT at c=+1 (orange), EFT at c=-1 (blue).
 
-Usage (from dy_smeftsim_v4/, in analysis_venv):
+Histogram names expected (v7 config):
+  histo_sm        = SM
+  histo_w1_{op}   = c=+1
+  histo_wm1_{op}  = c=-1
+
+Usage (from dy_smeftsim_v7/, in analysis_venv):
     python3 /path/to/plot_eft_shapes.py
     python3 /path/to/plot_eft_shapes.py --region inc_ee
     python3 /path/to/plot_eft_shapes.py --operators cHDD cHWB
@@ -68,7 +72,7 @@ def read_hist(sample):
 # Load SM once
 # --------------------------------------------------
 
-vals_sm, edges = read_hist("DYSMEFTsim_SM")
+vals_sm, edges = read_hist("sm")
 centers = 0.5 * (edges[:-1] + edges[1:])
 
 # --------------------------------------------------
@@ -83,8 +87,8 @@ ops_to_plot = [
 for idx, op_name in ops_to_plot:
 
     try:
-        vals_cp1, _ = read_hist(f"DYSMEFTsim_{op_name}")      # raw weight c=+1
-        vals_cm1, _ = read_hist(f"DYSMEFTsim_{op_name}_m1")   # raw weight c=-1
+        vals_cp1, _ = read_hist(f"w1_{op_name}")    # raw weight c=+1
+        vals_cm1, _ = read_hist(f"wm1_{op_name}")   # raw weight c=-1
     except KeyError:
         print(f"  WARNING: {op_name} not found in ROOT file, skipping.")
         continue

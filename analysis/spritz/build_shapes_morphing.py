@@ -2,18 +2,21 @@
 """
 build_shapes_morphing.py
 ========================
-Converts v6 histos.root (DYSMEFTsim naming) to a shapes.root + datacard.txt
+Converts histos.root (spritz-postproc output) to a shapes.root + datacard.txt
 compatible with AnomalousCouplingMorphing.py (template_morphing branch).
 
-Process naming convention expected by the physics model:
+Expected histogram names in histos.root (v7 config, morphing convention):
   histo_sm        = SM template  w(0)
-  histo_w1_{op}   = c=+1 template  w(+1)  (SM + Lin + Quad)
-  histo_wm1_{op}  = c=-1 template  w(-1)  (SM - Lin + Quad)
-  histo_Data      = Asimov data_obs (= SM)
+  histo_w1_{op}   = c=+1 template  w(+1)
+  histo_wm1_{op}  = c=-1 template  w(-1)
+
+Output:
+  shapes.root   — same histograms, plus histo_Data = SM (Asimov data_obs)
+  datacard.txt  — combine datacard with process/rate lines
 
 Usage (from analysis_venv):
     python3 build_shapes_morphing.py
-    python3 build_shapes_morphing.py --region inc_ee --variable mll
+    python3 build_shapes_morphing.py --region inc_mm --variable mll
     python3 build_shapes_morphing.py --operators cHDD cHWB
 """
 
@@ -24,7 +27,7 @@ import uproot
 import numpy as np
 
 # --------------------------------------------------
-# Operators (27, matching v6 config)
+# Operators (27, matching v7 config)
 # --------------------------------------------------
 OPERATORS = [
     "cHDD", "cHWB", "cbWRe", "cbBRe",
@@ -43,8 +46,8 @@ OPERATORS = [
 # Args
 # --------------------------------------------------
 parser = argparse.ArgumentParser()
-parser.add_argument("--input",    default="/grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_v6/histos.root")
-parser.add_argument("--outdir",   default="/grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_v6/datacards_morphing")
+parser.add_argument("--input",    default="/grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_v7/histos.root")
+parser.add_argument("--outdir",   default="/grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_v7/datacards_morphing")
 parser.add_argument("--region",   default="inc_mm", choices=["inc_ee", "inc_mm", "inc_em"])
 parser.add_argument("--variable", default="mll")
 parser.add_argument("--operators", nargs="+", default=None,
@@ -62,23 +65,23 @@ os.makedirs(outdir, exist_ok=True)
 f         = uproot.open(args.input)
 base_path = f"{args.region}/{args.variable}/nominal"
 
-def get_vals(sample):
-    return f[f"{base_path}/histo_{sample}"].values()
+def get_vals(name):
+    return f[f"{base_path}/histo_{name}"].values()
 
-sm_vals = get_vals("DYSMEFTsim_SM")
-edges   = f[f"{base_path}/histo_DYSMEFTsim_SM"].axes[0].edges()
+sm_vals = get_vals("sm")
+edges   = f[f"{base_path}/histo_sm"].axes[0].edges()
 
 # --------------------------------------------------
 # Build process list and histogram map
 # --------------------------------------------------
 # sm = index 0 (signal); EFT templates = negative indices
-processes  = ["sm"]
-histo_map  = {"sm": sm_vals}
+processes = ["sm"]
+histo_map = {"sm": sm_vals}
 
 for op in ops:
     try:
-        p1 = get_vals(f"DYSMEFTsim_{op}")
-        m1 = get_vals(f"DYSMEFTsim_{op}_m1")
+        p1 = get_vals(f"w1_{op}")
+        m1 = get_vals(f"wm1_{op}")
     except Exception:
         print(f"  WARNING: {op} not found in histos.root, skipping.")
         continue
