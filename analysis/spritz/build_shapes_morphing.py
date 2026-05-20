@@ -101,8 +101,10 @@ for op in ops:
     histo_map[f"wm1_{op}"] = m1
 
 n_proc       = len(processes)
-# sm=0, then -1, -2, ... for EFT components
-proc_indices = [0] + list(range(-1, -(n_proc), -1))
+# AnomalousCouplingMorphing convention:
+#   sm=1 (background/reference), w1_op1=0, wm1_op1=-1, w1_op2=-2, ...
+# combine requires ≥1 positive index (background); sm fills that role.
+proc_indices = [1] + list(range(0, -(n_proc - 1), -1))
 
 # --------------------------------------------------
 # Collect theory Up/Down histograms for each process
