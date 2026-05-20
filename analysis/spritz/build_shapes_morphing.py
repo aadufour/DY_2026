@@ -42,6 +42,9 @@ OPERATORS = [
     "clu",  "cld",  "cbl",
 ]
 
+# Theory systematics written by post_process_eft.py
+THEORY_SYSTS = ["QCDscale", "PDF"]  # → histo_{proc}_QCDscaleUp/Down, histo_{proc}_PDFUp/Down
+
 # --------------------------------------------------
 # Args
 # --------------------------------------------------
@@ -52,6 +55,8 @@ parser.add_argument("--region",   default="inc_mm", choices=["inc_ee", "inc_mm",
 parser.add_argument("--variable", default="mll")
 parser.add_argument("--operators", nargs="+", default=None,
                     help="Subset of operators. Default: all 27.")
+parser.add_argument("--no-theory", action="store_true",
+                    help="Skip theory systematics (QCDscale, PDF) even if present in histos.root.")
 args = parser.parse_args()
 
 ops      = args.operators if args.operators else OPERATORS
@@ -65,8 +70,13 @@ os.makedirs(outdir, exist_ok=True)
 f         = uproot.open(args.input)
 base_path = f"{args.region}/{args.variable}/nominal"
 
-def get_vals(name):
-    return f[f"{base_path}/histo_{name}"].values()
+def get_vals(name, silent=False):
+    key = f"{base_path}/histo_{name}"
+    if key not in f:
+        if not silent:
+            print(f"  WARNING: {key} not found in ROOT file.")
+        return None
+    return f[key].values()
 
 sm_vals = get_vals("sm")
 edges   = f[f"{base_path}/histo_sm"].axes[0].edges()
@@ -76,13 +86,13 @@ edges   = f[f"{base_path}/histo_sm"].axes[0].edges()
 # --------------------------------------------------
 # sm = index 0 (signal); EFT templates = negative indices
 processes = ["sm"]
-histo_map = {"sm": sm_vals}
+histo_map = {"sm": sm_vals}          # nominal only
+syst_map  = {}                        # {(proc, syst, "Up"/"Down"): vals}
 
 for op in ops:
-    try:
-        p1 = get_vals(f"w1_{op}")
-        m1 = get_vals(f"wm1_{op}")
-    except Exception:
+    p1 = get_vals(f"w1_{op}", silent=True)
+    m1 = get_vals(f"wm1_{op}", silent=True)
+    if p1 is None or m1 is None:
         print(f"  WARNING: {op} not found in histos.root, skipping.")
         continue
     processes.append(f"w1_{op}")
@@ -95,13 +105,42 @@ n_proc       = len(processes)
 proc_indices = [0] + list(range(-1, -(n_proc), -1))
 
 # --------------------------------------------------
+# Collect theory Up/Down histograms for each process
+# --------------------------------------------------
+active_systs = []   # systs present in histos.root for at least one process
+if not args.no_theory:
+    for syst in THEORY_SYSTS:
+        found_any = False
+        for proc in processes:
+            up   = get_vals(f"{proc}_{syst}Up",   silent=True)
+            down = get_vals(f"{proc}_{syst}Down", silent=True)
+            if up is not None and down is not None:
+                syst_map[(proc, syst, "Up")]   = up
+                syst_map[(proc, syst, "Down")] = down
+                found_any = True
+            else:
+                # Fall back to nominal (variation = 0) — combine treats it as unconstrained
+                if found_any:
+                    print(f"  WARNING: {syst} Up/Down missing for {proc}, using nominal as fallback.")
+                syst_map[(proc, syst, "Up")]   = histo_map[proc].copy()
+                syst_map[(proc, syst, "Down")] = histo_map[proc].copy()
+        if found_any:
+            active_systs.append(syst)
+            print(f"  Theory syst '{syst}' found for at least one process.")
+
+# --------------------------------------------------
 # Write shapes.root
 # --------------------------------------------------
 shapes_path = os.path.join(outdir, "shapes.root")
 with uproot.recreate(shapes_path) as out:
+    # Nominal
     for name, vals in histo_map.items():
         out[f"histo_{name}"] = (vals, edges)
-    out["histo_Data"] = (sm_vals, edges)  # Asimov: data_obs = SM
+    # Asimov data_obs = SM nominal
+    out["histo_Data"] = (sm_vals, edges)
+    # Theory Up/Down
+    for (proc, syst, ud), vals in syst_map.items():
+        out[f"histo_{proc}_{syst}{ud}"] = (vals, edges)
 
 print(f"Written : {shapes_path}")
 
@@ -127,8 +166,17 @@ lines = [
     "process" + sep + sep.join([str(i) for i in proc_indices]),
     "rate"    + sep + sep.join(rates),
     "-" * 100,
-    f"{bin_name} autoMCStats 10 0 1",
 ]
+
+# Theory shape nuisances: one column per process, value = 1.0 if syst present else "-"
+for syst in active_systs:
+    cols = []
+    for proc in processes:
+        up   = get_vals(f"{proc}_{syst}Up",   silent=True)
+        cols.append("1.0" if up is not None else "-")
+    lines.append(f"{syst}{sep}shape{sep}" + sep.join(cols))
+
+lines.append(f"{bin_name} autoMCStats 10 0 1")
 
 datacard_path = os.path.join(outdir, "datacard.txt")
 with open(datacard_path, "w") as dc:
@@ -136,6 +184,8 @@ with open(datacard_path, "w") as dc:
 
 print(f"Written : {datacard_path}")
 print(f"Processes ({n_proc}): sm + {len(ops)} ops × 2 = {1 + len(ops)*2}")
+if active_systs:
+    print(f"Theory systs written: {active_systs}")
 print()
 print("Next steps (after dy_combine_morphing):")
 print(f"  cd {outdir}")
