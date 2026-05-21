@@ -33,14 +33,6 @@ if __name__ == "__main__":
     )
 
     parser.add_option(
-        "--binname",
-        type="string",
-        dest="binname",
-        default="w1_",
-        help="Process name prefix used to identify EFT templates (e.g. 'w1_' for morphing, 'quad_' for old lin/quad)",
-    )
-
-    parser.add_option(
         "--filter",
         type="string",
         dest="filter",
@@ -59,10 +51,11 @@ if __name__ == "__main__":
     for channel, proc, _ in DC.keyline:
         if channel not in json__:
             json__[channel] = []
+        
+        #if not proc.startswith("quad_"): continue 
+        if "quad_" not in proc or "sm_lin_quad" in proc: continue
 
-        if not proc.startswith(options.binname): continue
-
-        op = proc.split(options.binname)[1]
+        op = proc.split("quad_")[1]
         if interesting_ops != "All" and op not in interesting_ops: continue
         if op not in json__[channel]: json__[channel].append(op)
 
