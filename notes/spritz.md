@@ -61,9 +61,11 @@ exit
 | v4 | `old/config_dy_smeft_eft.py` | `runner_dy_smeft.py` | SM + op01_lin + op01_quad (×27) | Lin/quad precomputed — normalisation bug |
 | v5 | `config_dy_smeft_v5.py` | `runner_dy_smeft.py` | SM + cHDD + cHDD_m1 (×27) | Raw weights — correct normalisation ✓ |
 | syst | `config_dy_smeft_syst.py` | `runner_dy_smeft_syst.py` | SM + op01_lin + op01_quad (×27) | Prototype syst config — superseded by v7 |
-| **v7** | **`config_dy_smeftsim_v7.py`** | **`runner_dy_smeft_v7.py`** | sm + w1_{op} + wm1_{op} (×27) | **Morphing names + PDF/QCD scale systematics ← active** |
+| v7 | `config_dy_smeftsim_v7.py` | `runner_dy_smeft_v7.py` | sm + w1_{op} + wm1_{op} (×27) | Morphing names + PDF/QCD scale systematics. **Requires manual pkl 3-axis fix before postproc.** |
+| **v8** | **`config_dy_smeftsim_v8.py`** | **`runner_dy_smeft_v8.py`** | sm + w1_{op} + wm1_{op} (×27) | **Same as v7 but histograms are 3-axis natively → no pkl preprocessing needed ← use for new runs** |
 
-**Active config: v7** (`config_dy_smeftsim_v7.py`)
+**Active runner: v8** (`runner_dy_smeft_v8.py`) — use for any new condor submission.
+v7 results (already processed) remain valid.
 
 ---
 

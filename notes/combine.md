@@ -1,246 +1,252 @@
-## COMBINE
-20/03/2026
-cfr presentazione Giacomo
+# Combine — DY SMEFT Analysis Notes
 
-Likelihood = Prod(canali, spazio fasi) * Prod(bin) {Likelihood(mu, theta | data) * prior(theta)}
+---
 
-spazi fasi devono esser blocchi statisticamente indipendenti (e.g. mll<50, mll>50 o anno 2016,2017,... o canali che non si parlano tipo jet=0 e jet=1,...)
+## Conceptual Overview
 
+*(from Giacomo's lectures, March 2026)*
 
+**Likelihood** = ∏(channels, phase spaces) × ∏(bins) { L(μ, θ | data) × prior(θ) }
 
-theta nuisance params: teoriche (QCD scale [ossia scale di rinormalizzaione e fattorizzazione], valore alpha strong, PDF,...) o sperimentali(trigger, muoni, ricostruzione, jet, JES e jet energy resolution -> incertezze sulla met, pileup reweighting, jet pilup ID)
-Inizialmente io introdurrò teoriche (non ho ancora MC)
+Phase-space regions must be statistically independent blocks (e.g. mll < 50 vs mll > 50, years 2016/2017/2018, orthogonal jet multiplicities, …).
 
-datacard hardcoded: devo definire un certo numero di variabili per combine (quanti nuisance params, quanti "bin" ossia phase space,...)
+**Nuisance parameters θ:**
+- *Theory*: QCD scale (renorm. + fact. scales), αs, PDFs, …
+- *Experimental*: trigger, muon/electron reco, JES, JER, MET, pile-up reweighting, jet pile-up ID, …
 
-(....)
+**Rate parameters** (flat prior, no Gaussian constraint): used for data-driven background normalisation.
 
-In fondo rate parameter: nuisance ma con flat prior (lognormal e.g. ce l'ha gauss): stiam data driven della xs di un fondo
+**autoMCStats**: MC statistical uncertainty (Barlow-Beeston lite). Added to the datacard as `<bin> autoMCStats 10 0 1`.
 
-In fondo autoMCstat: incertezza statsitica del MC (==barlow biston).
+---
 
+## EFT Specifics
 
-obiettivo: fare data card per DY EFT.
-Il problema dei fit EFT è che le interferenze possono essere negativi (LIN). Combine crasha se trovo valori neg (PDF non possono essere neg)
-trick riscrivendo in termini di roba ppos def (pag.11 slides, bottom right) -> scrivo datacard cosi
+The EFT cross section expands as:
 
+```
+σ(c) = σ_SM  +  c · σ_lin  +  c² · σ_quad
+```
 
-devo linkargli i root file con le distribuzioni (inizio con mll, poi 3d unrolled)
+The linear term `σ_lin` can be **negative** (interference), which breaks combine (PDFs must be non-negative).
 
+**Solution (morphing convention):** store raw templates at c = 0 (SM), c = +1, c = −1, and reconstruct lin/quad analytically. The `AnomalousCouplingMorphing` physics model handles this internally.
 
-codice che crea datacard data osservabile e operatore.
-datacard diverse per operatore
-devo costruire i ROOT file con le distribuzioni (i.e. con gli istogrammi delle mie variabili tirate fuori da madgraph)
+---
 
+## Environment Setup (LLR T3)
 
+```bash
+# Analysis (spritz, plotting, build scripts)
+dy_analysis        # activates analysis_venv inside apptainer
 
+# Combine — old lin/quad model (kept for reference)
+dy_combine
 
+# Combine — morphing model  ← ACTIVE for v7
+dy_combine_morphing
+```
 
+`dy_combine_morphing` sources `analysis/combine_tools/env_llr_morphing.sh`, which:
+1. Runs `cmsenv` in `CMSSW_spritz/CMSSW_14_1_0_pre4` (has `AnalyticAnomalousCoupling` with `AnomalousCouplingMorphing`)
+2. Prepends `tools/combine_helpers`, `tools/combination`, `tools/plotters` to PATH so the morphing-aware scripts are picked up
 
+---
 
+## Script Inventory (`analysis/combine_tools/`)
 
-(cd /Users/albertodufour/combine) in realtà non serve??
-text2workspace.py /Users/albertodufour/code/DY2026/datacard_test/datacard.txt -P HiggsAnalysis.CombinedLimit.AnomalousCouplingEFTNegative:analiticAnomalousCouplingEFTNegative -o model_ced.root --PO addToCompleteOperators=ced --PO eftOperators=ced --X-pack-asympows --optimize-simpdf-constraints=cms --X-optimizeMHDependency=fixed --X-allow-no-signal --X-allow-no-background
+| Script | Purpose | Notes |
+|--------|---------|-------|
+| `createJson.py` | Interactive: create `metadata.json` with operator scan ranges | Copy from previous version; edit ranges manually |
+| `createCombineJson.py` | Parse datacard → `jsonComb.json` (bin → operator list) | Updated with `--binname` option (default `w1_`) |
+| `createWS.py` | Wrapper for `text2workspace.py` → one `model_{op}.root` per operator | Updated to use `AnomalousCouplingMorphing_comb` |
+| `runScans.py` | Runs `combine -M MultiDimFit` (initial fit + grid scan) | Reads ranges from `metadata.json` |
+| `runPlots.py` | Makes likelihood scan plots | From morphing tools |
+| `env_llr.sh` | Old combine env setup | |
+| `env_llr_morphing.sh` | Morphing combine env setup ← use this | |
 
-text2workspace.py trasforms my datacard.txt (text) into a roofit workspace (not human readable:likelihoods,...)
-inputs the datacard as argv[1]
--P is the physics model to be used
--o is output with the physics model
+---
 
+## Full Morphing Workflow (v7 — active)
 
-1. datacard
-2. workspace : p (argv[1] è il humero di operatori, se 2 fa tutte le combo di 2 op.)
-3. fit:
-    - initial fit
-    - likelihood scan
+### Prerequisites
+- `histos.root` produced by spritz v7 (see `notes/spritz.md`)
+- `dy_combine_morphing` environment active
 
-    runScans.py <n_operatori> <action (= initial or scan)>
-    initial fa il best fit (minimizza chi2 una volta e trova minimo globale di tutti i paramteri definiti nella datacard: PoI (params of interest) come k_ced e nuisances tipo lumi)
-    per il likelihood scan fisso a il parameter of interest
+### Step 1 — Build shapes.root + datacard.txt
 
+```bash
+dy_analysis
+cd /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_v7
 
+python3 /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz/build_shapes_morphing.py \
+    --input  histos.root \
+    --outdir datacards_morphing \
+    --region inc_mm --variable mll
+```
 
-!!TODO: DEBUG
-runScans.py 1 scan --doSplitPoints=10
-DEBUGGED: qualcosa a che fare con multiprocessing su macos, Claude fixed it
--> runScan_fixed.py
+Output:
+- `datacards_morphing/inc_mm/mll/shapes.root` — `histo_sm`, `histo_w1_{op}`, `histo_wm1_{op}`, `histo_Data`, plus `histo_{proc}_QCDscaleUp/Down`, `histo_{proc}_PDFUp/Down`
+- `datacards_morphing/inc_mm/mll/datacard.txt` — process indices: sm=1 (background/reference), w1_op1=0, wm1_op1=−1, …
 
+### Step 2 — Prepare metadata.json
 
-poi da capire runPlots.py
+Copy from a previous version and adapt:
 
-TODO:
-    likelihood scan per ogni operatore (singolarmente)
-        -> faccio una datacard con
-        process sm quad_ced am_lin_quad_ced quad_cHDD lin_quad_cHDD ....
-        poi seleziono con createWS.py --PO eftoperator....
+```bash
+cp .../dy_smeftsim_v6/datacards_morphing/inc_mm/mll/metadata.json \
+   datacards_morphing/inc_mm/mll/metadata.json
 
+# Fix analysis tag and nuisances
+python3 -c "
+import json
+path = 'datacards_morphing/inc_mm/mll/metadata.json'
+with open(path) as f: m = json.load(f)
+m['analysis'] = 'dy_smeft_lo'
+m['nuisances'] = ['QCDscale', 'PDF']
+with open(path, 'w') as f: json.dump(m, f, indent=4)
+"
+```
+
+`metadata.json` structure:
+```json
+{
+    "analysis": "dy_smeft_lo",
+    "card": "datacard.txt",
+    "operators": {
+        "cHDD": [-0.03, 0.03],
+        "cHWB": [-0.01, 0.01],
+        ...
+    },
+    "nuisances": ["QCDscale", "PDF"]
+}
+```
 
-    capire a quali siamo più sensibili (cfr. tesi Bulla p.67)
+The operator ranges define the x-axis of the likelihood scan.
 
-di fatto questo è un sensitivity scan, riproduco quell'articolo che mi ha mandato Giacomo...
+### Step 3 — Switch to morphing combine env
 
+```bash
+dy_combine_morphing
+cd /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_v7/datacards_morphing/inc_mm/mll
+```
 
+### Step 4 — Create jsonComb.json
 
+Parses the datacard for processes starting with `w1_` and maps them to the bin:
 
+```bash
+createCombineJson.py --datacard datacard.txt --binname w1_ --output jsonComb.json
+```
 
+Output: `{"inc_mm_mll": ["cHDD", "cHWB", ..., "cbl"]}` (27 operators)
 
+### Step 5 — Build per-operator workspaces
 
+```bash
+createWS.py 1
+```
 
+Runs `text2workspace.py` with `AnomalousCouplingMorphing_comb` for each of the 27 operators.
+Produces `model_cHDD.root`, `model_cHWB.root`, … in the current directory.
 
+To run for 2D operator combinations: `createWS.py 2`.
 
+### Step 6 — Initial fit
 
+```bash
+runScans.py 1 initial
+```
 
-(aggiunti a .zshrc: sono eseguibili, dentro hanno una ref a che pyhton usa [sarà un problema])
+Finds the global minimum (best fit) for each operator workspace.
 
-1. createJSon.py --datacard <path/to/datacard.txt>
-    -> metadata.json
-2. createCombineJSon.py --datacard <path/to/datacards.txt>
-3. createWS.py [1,2,3] (num operatori): wrapper for text2workspace.py
+### Step 7 — Likelihood scan
 
+```bash
+runScans.py 1 scan
+```
 
+Runs `combineTool.py` grid scan (50 points per operator by default).
 
-#23/03/2026
-debuggato tutto. Recap:
+Stat-only version:
+```bash
+runScans.py 1 initial --stat
+runScans.py 1 scan    --stat
+```
 
-1. build_datacard.py
-    -> fa histograms.root e costruisce datacard.txt
-2. createJSon.py --datacard <path/to/datacard.txt>
-    -> metadata.json !attenzione: da qui dentro si possono cambiare i limiti per il likelihood scan
-3. createCombineJSon.py --datacard <path/to/datacards.txt>
-    -> jsonComb.json
-4. createWS.py <n_op>
-5. runScans_fixed.py <n_op> initial
-6. runScans_fixed.py <n_op> scan --doSplitPoints=10
-7. runPlots.py <n_op>
+### Step 8 — Plots
 
+Full-syst as main curve, stat-only overlaid (dashed red):
+```bash
+runPlots_compare.py 1 --label "Stat + Syst" --compare-stat
+```
 
+Or the inverse:
+```bash
+runPlots_compare.py 1 --stat --label "Stat only" --compare-syst
+```
 
-da aggiungere pesi misti
-shape a datacard con sm_lin_quad_mixed_op1_op2
+Plain plots (no comparison):
+```bash
+runPlots.py 1
+```
 
+To redo a single operator after fixing its scan range in `metadata.json`:
+```bash
+runScans.py 1 initial --doOnly cll1
+runScans.py 1 scan    --doOnly cll1
+runScans.py 1 initial --doOnly cll1 --stat
+runScans.py 1 scan    --doOnly cll1 --stat
+runPlots_compare.py 1 --label "Stat + Syst" --compare-stat
+```
 
-provo a generare gli eventi sulle macchine llr: vorrei systematics (sbatti lhapdf)
+---
 
+## Process Index Convention (AnomalousCouplingMorphing)
 
+| Process | Index | Role in combine |
+|---------|-------|----------------|
+| `sm` | 1 | Background (reference/SM template) |
+| `w1_op1` | 0 | Signal (c=+1 template) |
+| `wm1_op1` | −1 | Signal (c=−1 template) |
+| `w1_op2` | −2 | Signal |
+| `wm1_op2` | −3 | Signal |
+| … | … | … |
 
+Combine requires ≥ 1 positive process index (background). `sm=1` fills that role.
 
+---
 
-## apptainer
-spritz: framework di analisi
-src/runners: codice principale
-modules -> leptoni,...
+## Old LHE-based Workflow (kept for reference)
 
-flessibile: si configura co configs file
+Used before spritz v7. Built datacards directly from LHE files via `build_cache.py` + `build_datacard.py`.
 
-sample definiti in data
-ogni anno c'è una production chain diversa
-samples.json: dati e MCs (nostro anno 2018)
-non avrò "fake" bkg (data driven), solo bkg MC
-
-!! cfr cmsweb das per vedere i datacenter con i file...
-
-
-5 stadi per girarlo
-
-1. config.py
-2. ricavo file e replicas: spritz-fileset
-3. fare i "chunks" (si raggruppano i file in base al numero di eventi): spritz-chunks
-4. fare i jobs: spritz-batch -dr (dr è dry run, non sottomette a condor)
-! per girare in locale devo girare runner.py per ogni batch, lungo -> ./run_local.sh (da modificare i path!!)
-    Apptainer> for i in 0 1 2 3 4 5 6 7; do ./run_local.sh $i; done
-5. collezionare output: spritz-merge
-6. postprocessing: spritz-postproc
-7/8: plots e datacard: spritz-plots e spritz-datacard
-
-
-grid proxy cerificate
-
-## apptainer
-apptainer shell -B /etc/grid-security/certificates:/etc/grid-security/certificates -B /cvmfs <PATH/A/spritz-env.sif>
-apptainer shell -B /etc/grid-security/certificates:/etc/grid-security/certificates -B /cvmfs spritz-env.sif
-
-
-/home/llr/cms/adufour/spritz/configs/vbfz-2018/config.py
-
-voms-proxy-init --rfc --voms cms -valid 192:00
-
-
-echo $X509_USER_PROXY
-
-
-Apptainer> ls condor
-job_0  job_1  job_2  job_3  job_4  job_5  job_6  job_7	runner.py  run.sh  submit.jdl
-Apptainer> for i in 0 1 2 3 4 5 6 7; do ./run_local.sh $i; done
-
-
-
-
-
-# generating events to work on systematics on llr (14/04/2026)
-
-DY SMEFT LHE → Cache → Datacard workflow
-─────────────────────────────────────────
-Repo: /grid_mnt/data__data.polcms/cms/adufour/DY_2026
-MG5:  /grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo
-venv: /grid_mnt/data__data.polcms/cms/adufour/dy_venv
-cache output: MG5/.../CACHE/lhe_cache.pkl
-
-Activate env:
-  source /grid_mnt/data__data.polcms/cms/adufour/dy_venv/bin/activate
-  export SETUPTOOLS_USE_DISTUTILS=stdlib
-  export PATH=/grid_mnt/data__data.polcms/cms/adufour/dy_venv/bin:$PATH
-
-Event generation (7 bins from DYSMEFTMll50_120 to DYSMEFTMll1000_3000):
-  - reweight_card.dat must be in Cards/ before generate_events -f
-  - reweight card: analysis/gridpack/gridpack_misc/cards/reweight_card.dat
-  - 406 reweight points: 1 SM + 27×(+1) + 27×(-1) + 351 pairs
-  - PDF: lhapdf / 303600 (NNPDF31_nnlo_as_0118)
-  - numpy==1.26.4 required for f2py (numpy 2.x breaks it)
-
-Analysis:
-  1. python3 analysis/combine/build_cache.py     → lhe_cache.pkl
-  2. python3 analysis/combine/build_datacard.py --op cHDD --lumi 59740
-     → histograms.root + datacard.txt
-  3. createWS.py / runScans_fixed.py / runPlots.py (see notes/combine.md)
-
-
-
-
-# new setup
-using combine through CMSSW
+```bash
+# Steps 1-2: build histograms + datacard from LHE cache
+dy_analysis
 cd /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/combine
-source env_llr.sh
-
-
-
-cd /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/combine
-
-# steps 1-2: analysis python
-source env_llr.sh analysis
 python3 build_cache.py
 python3 build_datacard.py --op cHDD
 
-# steps 3-7: combine
-source env_llr.sh
-python3 createJson.py --datacard datacard.txt
-python3 createCombineJson.py --datacard datacard.txt
-python3 createWS.py 1
-python3 runScans.py 1 initial
-python3 runScans.py 1 scan
-
-
-
-#------------
-# new workflow
-# Steps 1-2: analysis
-dy_analysis
-build_cache.py
-build_datacard.py --op cHDD
-
-# Steps 3-7: combine
+# Steps 3-7: combine (old EFTNegative model)
 dy_combine
 createJson.py --datacard datacard.txt
-createCombineJson.py --datacard datacard.txt
-createWS.py 1
+createCombineJson.py --datacard datacard.txt   # old version: looks for quad_ processes
+createWS.py 1                                  # old version: uses AnomalousCouplingEFTNegative_comb
 runScans.py 1 initial
 runScans.py 1 scan
+runPlots.py 1
+```
+
+---
+
+## Key Differences: Old vs Morphing Workflow
+
+| | Old (lin/quad) | Morphing (v7) |
+|-|---------------|--------------|
+| Process names | `sm_lin_quad_cHDD`, `quad_cHDD`, `lin_cHDD` | `sm`, `w1_cHDD`, `wm1_cHDD` |
+| Physics model | `AnomalousCouplingEFTNegative_comb` | `AnomalousCouplingMorphing_comb` |
+| `createCombineJson.py` | `--binname quad_` (default) | `--binname w1_` |
+| Workspace | One per operator, separate lin/quad templates | One per operator, morphing from 3 templates |
+| Theory systs | Not included | QCDscale + PDF shape nuisances |
+| Datacard source | `build_datacard.py` (LHE-based) | `build_shapes_morphing.py` (spritz histos.root) |
