@@ -172,7 +172,20 @@ for idx, op_name in ops_to_plot:
     rax.axhline(1.0, color="black", linestyle="--")
     rax.set_ylabel("Ratio")
     rax.set_xlabel(r"$m_{\ell\ell}$ [GeV]")
-    rax.set_ylim(0.5, 1.5)
+
+    # Auto-scale ratio y-axis: find range across both curves, add 10% padding
+    all_ratios = []
+    for values in [vals_cp1, vals_cm1]:
+        ratio = np.divide(
+            values, vals_sm,
+            out=np.ones_like(values, dtype=float),
+            where=vals_sm != 0,
+        )
+        all_ratios.extend(ratio[vals_sm != 0])
+    if all_ratios:
+        rmin, rmax = min(all_ratios), max(all_ratios)
+        pad = max(0.05 * (rmax - rmin), 0.05)   # at least 0.05 padding
+        rax.set_ylim(rmin - pad, rmax + pad)
 
     # --------------------------------------------------
     # Save
