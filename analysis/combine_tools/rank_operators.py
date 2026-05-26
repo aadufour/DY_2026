@@ -5,17 +5,25 @@ rank_operators.py
 Extract 68% and 95% CL intervals from combine likelihood scan ROOT files
 and produce a ranked summary plot + table.
 
-Reads: higgsCombine.{op}.individual.MultiDimFit.mH125.root  (one per operator)
-       higgsCombine.{op}_stat.individual.MultiDimFit.mH125.root  (stat-only, optional)
+Two supported file formats (auto-detected):
 
-In combine's output TTree "limit":
-  deltaNLL = ΔNLL = NLL - NLL_min   (NOT multiplied by 2)
-  → 68% CL : 2*deltaNLL < 1    → deltaNLL < 0.5
-  → 95% CL : 2*deltaNLL < 3.84 → deltaNLL < 1.92
+  TTree format (combine output):
+    higgsCombine.{op}.individual.MultiDimFit.mH125.root  (default pattern)
+    TTree "limit" with branches deltaNLL, k_{op}
+    deltaNLL = ΔNLL  →  68% CL: deltaNLL < 0.5,  95% CL: deltaNLL < 1.92
 
-Usage (from the datacards_morphing/inc_mm/mll/ dir, in dy_combine_morphing env):
-    python3 /path/to/rank_operators.py
-    python3 /path/to/rank_operators.py --outdir ranking/ --stat
+  TGraph format (mkEFTScan.py output):
+    scan_{op}.root  (use --pattern "scan_{op}.root")
+    TGraph keys "Stat + Syst" / "Stat only"
+    x = k_{op},  y = Δ(-2lnL)  →  68% CL: y < 1,  95% CL: y < 3.84
+
+Usage:
+    # combine output (default)
+    python3 rank_operators.py --indir . --outdir ranking --stat
+
+    # mkEFTScan.py output (old validation set)
+    python3 rank_operators.py --indir . --outdir ranking --pattern "scan_{op}.root" \
+        --tgraph-key-syst "Stat + Syst" --tgraph-key-stat "Stat only"
 """
 
 import argparse
@@ -46,8 +54,8 @@ CL68  = 0.5    # deltaNLL threshold for 68% CL  (Δ(-2lnL) = 1)
 CL95  = 1.92   # deltaNLL threshold for 95% CL  (Δ(-2lnL) = 3.84)
 
 
-def extract_interval(fname, poi):
-    """Return (lo68, hi68, lo95, hi95) or None if file missing / no valid points."""
+def extract_interval_ttree(fname, poi):
+    """Read combine TTree output. deltaNLL = ΔNLL (not ×2)."""
     if not os.path.isfile(fname):
         return None
     try:
@@ -59,12 +67,10 @@ def extract_interval(fname, poi):
         print(f"  WARNING: could not read {fname}: {e}")
         return None
 
-    # drop the best-fit point (deltaNLL == 0) and any failed points
-    mask = dnll > 0
+    mask = dnll > 0   # drop best-fit point (deltaNLL==0) and failed points
     if mask.sum() == 0:
         return None
-    dnll = dnll[mask]
-    vals = vals[mask]
+    dnll, vals = dnll[mask], vals[mask]
 
     def cl_interval(threshold):
         inside = vals[dnll < threshold]
@@ -77,25 +83,84 @@ def extract_interval(fname, poi):
     return lo68, hi68, lo95, hi95
 
 
+def extract_interval_tgraph(fname, key):
+    """Read mkEFTScan.py TGraph output. y = Δ(-2lnL) directly."""
+    if not os.path.isfile(fname):
+        return None
+    try:
+        with uproot.open(fname) as f:
+            # try exact key, then strip version suffix
+            if key in f:
+                g = f[key]
+            elif f"{key};1" in f:
+                g = f[f"{key};1"]
+            else:
+                available = list(f.keys())
+                print(f"  WARNING: key '{key}' not found in {fname}. Available: {available}")
+                return None
+            vals = g.member("fX")
+            dnll2 = g.member("fY")   # this is Δ(-2lnL) already
+    except Exception as e:
+        print(f"  WARNING: could not read {fname}: {e}")
+        return None
+
+    if len(vals) == 0:
+        return None
+
+    def cl_interval(threshold):
+        inside = vals[dnll2 < threshold]
+        if len(inside) == 0:
+            return None, None
+        return float(inside.min()), float(inside.max())
+
+    lo68, hi68 = cl_interval(1.0)    # Δ(-2lnL) < 1
+    lo95, hi95 = cl_interval(3.84)   # Δ(-2lnL) < 3.84
+    return lo68, hi68, lo95, hi95
+
+
+def extract_interval(fname, poi, tgraph_key=None):
+    """Auto-detect format and extract interval."""
+    if tgraph_key is not None:
+        return extract_interval_tgraph(fname, tgraph_key)
+    return extract_interval_ttree(fname, poi)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--indir",    default=".",
-                        help="Directory containing higgsCombine.*.root files (default: .)")
+                        help="Directory containing scan ROOT files (default: .)")
     parser.add_argument("--outdir",   default="ranking",
                         help="Output directory for plots and table")
     parser.add_argument("--metadata", default="metadata.json",
                         help="metadata.json with operator scan ranges")
     parser.add_argument("--stat",     action="store_true",
-                        help="Also overlay stat-only intervals (_stat files)")
+                        help="Also overlay stat-only intervals")
     parser.add_argument("--operators", nargs="+", default=None,
                         help="Subset of operators (default: all 27)")
+    parser.add_argument("--pattern",  default="higgsCombine.{op}.individual.MultiDimFit.mH125.root",
+                        help="Filename pattern with {op} placeholder (default: combine TTree pattern). "
+                             "Use 'scan_{op}.root' for mkEFTScan.py TGraph output.")
+    parser.add_argument("--pattern-stat", default=None,
+                        help="Stat-only filename pattern. Default: auto-derived from --pattern "
+                             "by inserting '_stat' before '.root'.")
+    parser.add_argument("--tgraph-key-syst", default=None,
+                        help="TGraph key for full-syst scan (e.g. 'Stat + Syst'). "
+                             "If set, files are read as TGraph instead of TTree.")
+    parser.add_argument("--tgraph-key-stat", default=None,
+                        help="TGraph key for stat-only scan (e.g. 'Stat only').")
     args = parser.parse_args()
 
     os.makedirs(args.outdir, exist_ok=True)
     ops = args.operators or OPERATORS
 
-    # Load metadata for scan ranges (optional, used for context)
+    # Derive stat pattern if not given
+    pattern_stat = args.pattern_stat or args.pattern.replace(".root", "_stat.root")
+    # TGraph mode if key given
+    tgraph_syst = args.tgraph_key_syst
+    tgraph_stat = args.tgraph_key_stat
+
+    # Load metadata for scan ranges (optional)
     meta_ops = {}
     if os.path.isfile(args.metadata):
         with open(args.metadata) as f:
@@ -106,11 +171,11 @@ def main():
     results_stat = []
 
     for op in ops:
-        poi  = f"k_{op}"
-        fname      = os.path.join(args.indir, f"higgsCombine.{op}.individual.MultiDimFit.mH125.root")
-        fname_stat = os.path.join(args.indir, f"higgsCombine.{op}_stat.individual.MultiDimFit.mH125.root")
+        poi        = f"k_{op}"
+        fname      = os.path.join(args.indir, args.pattern.format(op=op))
+        fname_stat = os.path.join(args.indir, pattern_stat.format(op=op))
 
-        iv = extract_interval(fname, poi)
+        iv = extract_interval(fname, poi, tgraph_key=tgraph_syst)
         if iv is None:
             print(f"  SKIP {op}: no valid scan points in {fname}")
             continue
@@ -120,7 +185,7 @@ def main():
                          "lo95": lo95, "hi95": hi95, "width95": width95})
 
         if args.stat:
-            iv_s = extract_interval(fname_stat, poi)
+            iv_s = extract_interval(fname_stat, poi, tgraph_key=tgraph_stat)
             if iv_s is not None:
                 lo68s, hi68s, lo95s, hi95s = iv_s
                 w95s = (hi95s - lo95s) if (lo95s is not None and hi95s is not None) else None
