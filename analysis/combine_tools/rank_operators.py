@@ -173,9 +173,7 @@ def main():
     ax.axvline(0, color="black", linewidth=1.0)
     ax.set_yticks(y)
     ax.set_yticklabels(ops_ranked, fontsize=9)
-    ax.set_xlabel("Wilson coefficient value")
-    ax.set_title("Operator ranking by 95% CL interval width\n(narrower = more sensitive)",
-                 fontsize=11)
+    ax.set_xlabel(r"$k$")
     ax.legend(frameon=False, fontsize=9, loc="lower right")
     ax.invert_yaxis()  # most sensitive at top
     ax.grid(axis="x", linestyle=":", alpha=0.4)
