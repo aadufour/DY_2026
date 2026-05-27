@@ -149,6 +149,8 @@ def main():
                              "If set, files are read as TGraph instead of TTree.")
     parser.add_argument("--tgraph-key-stat", default=None,
                         help="TGraph key for stat-only scan (e.g. 'Stat only').")
+    parser.add_argument("--wide", action="store_true",
+                        help="Wide layout: operators on x-axis, bars vertical (good for presentations).")
     args = parser.parse_args()
 
     os.makedirs(args.outdir, exist_ok=True)
@@ -213,36 +215,74 @@ def main():
     # Bar chart: 95% and 68% CL intervals, ranked
     # ------------------------------------------------------------------
     hep.style.use("CMS")
-    fig, ax = plt.subplots(figsize=(7, max(5, 0.38 * len(results_sorted))))
 
-    ops_ranked  = [r["op"] for r in results_sorted]
-    y           = np.arange(len(ops_ranked))
+    ops_ranked = [r["op"] for r in results_sorted]
+    n = len(ops_ranked)
 
-    for i, r in enumerate(results_sorted):
-        # 95% CL bar (light)
-        ax.barh(i, r["hi95"] - r["lo95"], left=r["lo95"],
-                height=0.5, color="steelblue", alpha=0.4, label="95% CL" if i == 0 else "")
-        # 68% CL bar (dark)
-        if r["lo68"] is not None:
-            ax.barh(i, r["hi68"] - r["lo68"], left=r["lo68"],
-                    height=0.5, color="steelblue", alpha=0.9, label="68% CL" if i == 0 else "")
+    if args.wide:
+        # ----- Wide layout: operators on x-axis, vertical bars ----------
+        fig, ax = plt.subplots(figsize=(max(10, 0.55 * n), 6))
+        x = np.arange(n)
+        bar_w = 0.6
 
-        # stat-only overlay
-        if args.stat and r["op"] in stat_by_op:
-            s = stat_by_op[r["op"]]
-            if s["lo95"] is not None:
-                ax.barh(i, s["hi95"] - s["lo95"], left=s["lo95"],
-                        height=0.15, color="crimson", alpha=0.8,
-                        label="95% CL (stat)" if i == 0 else "")
+        for i, r in enumerate(results_sorted):
+            # 95% CL bar (light) — drawn as a floating bar via bottom=lo95
+            if r["lo95"] is not None and r["hi95"] is not None:
+                ax.bar(i, r["hi95"] - r["lo95"], bottom=r["lo95"],
+                       width=bar_w, color="steelblue", alpha=0.4,
+                       label="95% CL" if i == 0 else "")
+            # 68% CL bar (dark)
+            if r["lo68"] is not None and r["hi68"] is not None:
+                ax.bar(i, r["hi68"] - r["lo68"], bottom=r["lo68"],
+                       width=bar_w, color="steelblue", alpha=0.9,
+                       label="68% CL" if i == 0 else "")
+            # stat-only overlay
+            if args.stat and r["op"] in stat_by_op:
+                s = stat_by_op[r["op"]]
+                if s["lo95"] is not None and s["hi95"] is not None:
+                    ax.bar(i, s["hi95"] - s["lo95"], bottom=s["lo95"],
+                           width=bar_w * 0.3, color="crimson", alpha=0.8,
+                           label="95% CL (stat)" if i == 0 else "")
 
-    ax.axvline(0, color="black", linewidth=1.0)
-    ax.set_yticks(y)
-    ax.set_yticklabels(ops_ranked, fontsize=9)
-    ax.set_xlabel(r"$k$")
-    ax.legend(frameon=False, fontsize=9, loc="lower right")
-    ax.invert_yaxis()  # most sensitive at top
-    ax.grid(axis="x", linestyle=":", alpha=0.4)
-    hep.cms.label(ax=ax, data=False, label="Simulation")
+        ax.axhline(0, color="black", linewidth=1.0)
+        ax.set_xticks(x)
+        ax.set_xticklabels(ops_ranked, fontsize=8, rotation=45, ha="right")
+        ax.set_ylabel(r"$k$")
+        ax.legend(frameon=False, fontsize=9, loc="upper right")
+        ax.grid(axis="y", linestyle=":", alpha=0.4)
+        hep.cms.label(ax=ax, data=False, label="Simulation")
+
+    else:
+        # ----- Tall layout: operators on y-axis, horizontal bars (default) -
+        fig, ax = plt.subplots(figsize=(7, max(5, 0.38 * n)))
+        y = np.arange(n)
+
+        for i, r in enumerate(results_sorted):
+            # 95% CL bar (light)
+            ax.barh(i, r["hi95"] - r["lo95"], left=r["lo95"],
+                    height=0.5, color="steelblue", alpha=0.4,
+                    label="95% CL" if i == 0 else "")
+            # 68% CL bar (dark)
+            if r["lo68"] is not None:
+                ax.barh(i, r["hi68"] - r["lo68"], left=r["lo68"],
+                        height=0.5, color="steelblue", alpha=0.9,
+                        label="68% CL" if i == 0 else "")
+            # stat-only overlay
+            if args.stat and r["op"] in stat_by_op:
+                s = stat_by_op[r["op"]]
+                if s["lo95"] is not None:
+                    ax.barh(i, s["hi95"] - s["lo95"], left=s["lo95"],
+                            height=0.15, color="crimson", alpha=0.8,
+                            label="95% CL (stat)" if i == 0 else "")
+
+        ax.axvline(0, color="black", linewidth=1.0)
+        ax.set_yticks(y)
+        ax.set_yticklabels(ops_ranked, fontsize=9)
+        ax.set_xlabel(r"$k$")
+        ax.legend(frameon=False, fontsize=9, loc="lower right")
+        ax.invert_yaxis()  # most sensitive at top
+        ax.grid(axis="x", linestyle=":", alpha=0.4)
+        hep.cms.label(ax=ax, data=False, label="Simulation")
 
     plt.tight_layout()
     outpath = os.path.join(args.outdir, "operator_ranking.pdf")

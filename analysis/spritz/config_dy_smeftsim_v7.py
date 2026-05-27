@@ -180,13 +180,25 @@ nuisances["stat"] = {
     "includeSignal": "0",
     "samples": {},
 }
+# QCDScale: 8 variations (first 4 + last 4 of LHEScaleWeight, see theory_unc.py)
+# → envelope (max/min deviation from nominal)
+_qcd_vars = [f"QCDScale_{i}" for i in range(8)]
+
+# PDFWeight: 103 entries (NNPDF31_nnlo_as_0118: 0=central, 1..100=replicas, 101..102=alphas vars)
+# → square (RMS across all replicas)
+_pdf_vars = [f"PDFWeight_{i}" for i in range(103)]
+
 nuisances["QCDscale"] = {
-    "type": "lheScaleWeight",
-    "samples": {s: ["1.0", "1.0"] for s in samples},
+    "name": "QCDscale",
+    "type": "shape",
+    "kind": "lheScaleWeight_envelope",
+    "samples": {s: _qcd_vars for s in samples},
 }
 nuisances["PDF"] = {
-    "type": "lhePdfWeight",
-    "samples": {s: ["1.0", "1.0"] for s in samples},
+    "name": "PDF",
+    "type": "shape",
+    "kind": "lhePdfWeight_square",
+    "samples": {s: _pdf_vars for s in samples},
 }
 
 check_weights = {}
