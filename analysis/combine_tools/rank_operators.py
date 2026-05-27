@@ -151,6 +151,11 @@ def main():
                         help="TGraph key for stat-only scan (e.g. 'Stat only').")
     parser.add_argument("--wide", action="store_true",
                         help="Wide layout: operators on x-axis, bars vertical (good for presentations).")
+    parser.add_argument("--log", action="store_true",
+                        help="Log scale on the constraint axis. Bars show the 95%% (and 68%%) CL "
+                             "half-width — i.e. the reach on |k| — since a log scale cannot span zero.")
+    parser.add_argument("--exclude", nargs="+", default=None, metavar="OP",
+                        help="Operators to remove from the plot (e.g. --exclude cHDD cHWB).")
     args = parser.parse_args()
 
     os.makedirs(args.outdir, exist_ok=True)
@@ -200,6 +205,12 @@ def main():
 
     # Sort by 95% CL interval width (ascending = most sensitive first)
     results_sorted = sorted(results, key=lambda r: r["width95"] if r["width95"] else 1e9)
+
+    # Apply --exclude filter
+    if args.exclude:
+        excluded = set(args.exclude)
+        results_sorted = [r for r in results_sorted if r["op"] not in excluded]
+
     stat_by_op = {r["op"]: r for r in results_stat}
 
     # ------------------------------------------------------------------
@@ -225,29 +236,47 @@ def main():
         x = np.arange(n)
         bar_w = 0.6
 
-        for i, r in enumerate(results_sorted):
-            # 95% CL bar (light) — drawn as a floating bar via bottom=lo95
-            if r["lo95"] is not None and r["hi95"] is not None:
-                ax.bar(i, r["hi95"] - r["lo95"], bottom=r["lo95"],
-                       width=bar_w, color="steelblue", alpha=0.4,
-                       label="95% CL" if i == 0 else "")
-            # 68% CL bar (dark)
-            if r["lo68"] is not None and r["hi68"] is not None:
-                ax.bar(i, r["hi68"] - r["lo68"], bottom=r["lo68"],
-                       width=bar_w, color="steelblue", alpha=0.9,
-                       label="68% CL" if i == 0 else "")
-            # stat-only overlay
-            if args.stat and r["op"] in stat_by_op:
-                s = stat_by_op[r["op"]]
-                if s["lo95"] is not None and s["hi95"] is not None:
-                    ax.bar(i, s["hi95"] - s["lo95"], bottom=s["lo95"],
-                           width=bar_w * 0.3, color="crimson", alpha=0.8,
-                           label="95% CL (stat)" if i == 0 else "")
+        if args.log:
+            # Log mode: bar height = half-width of interval (reach on |k|)
+            for i, r in enumerate(results_sorted):
+                hw95 = r["width95"] / 2 if r["width95"] else None
+                hw68 = (r["hi68"] - r["lo68"]) / 2 if (r["lo68"] is not None and r["hi68"] is not None) else None
+                if hw95:
+                    ax.bar(i, hw95, width=bar_w, color="steelblue", alpha=0.4,
+                           label="95% CL half-width" if i == 0 else "")
+                if hw68:
+                    ax.bar(i, hw68, width=bar_w, color="steelblue", alpha=0.9,
+                           label="68% CL half-width" if i == 0 else "")
+                if args.stat and r["op"] in stat_by_op:
+                    s = stat_by_op[r["op"]]
+                    hw95s = s["width95"] / 2 if s["width95"] else None
+                    if hw95s:
+                        ax.bar(i, hw95s, width=bar_w * 0.3, color="crimson", alpha=0.8,
+                               label="95% CL half-width (stat)" if i == 0 else "")
+            ax.set_yscale("log")
+            ax.set_ylabel(r"95% CL half-width $|k|$")
+        else:
+            # Linear mode: floating bar from lo to hi
+            for i, r in enumerate(results_sorted):
+                if r["lo95"] is not None and r["hi95"] is not None:
+                    ax.bar(i, r["hi95"] - r["lo95"], bottom=r["lo95"],
+                           width=bar_w, color="steelblue", alpha=0.4,
+                           label="95% CL" if i == 0 else "")
+                if r["lo68"] is not None and r["hi68"] is not None:
+                    ax.bar(i, r["hi68"] - r["lo68"], bottom=r["lo68"],
+                           width=bar_w, color="steelblue", alpha=0.9,
+                           label="68% CL" if i == 0 else "")
+                if args.stat and r["op"] in stat_by_op:
+                    s = stat_by_op[r["op"]]
+                    if s["lo95"] is not None and s["hi95"] is not None:
+                        ax.bar(i, s["hi95"] - s["lo95"], bottom=s["lo95"],
+                               width=bar_w * 0.3, color="crimson", alpha=0.8,
+                               label="95% CL (stat)" if i == 0 else "")
+            ax.axhline(0, color="black", linewidth=1.0)
+            ax.set_ylabel(r"$k$")
 
-        ax.axhline(0, color="black", linewidth=1.0)
         ax.set_xticks(x)
         ax.set_xticklabels(ops_ranked, fontsize=8, rotation=45, ha="right")
-        ax.set_ylabel(r"$k$")
         ax.legend(frameon=False, fontsize=9, loc="upper right")
         ax.grid(axis="y", linestyle=":", alpha=0.4)
         hep.cms.label(ax=ax, data=False, label="Simulation")
@@ -257,28 +286,46 @@ def main():
         fig, ax = plt.subplots(figsize=(7, max(5, 0.38 * n)))
         y = np.arange(n)
 
-        for i, r in enumerate(results_sorted):
-            # 95% CL bar (light)
-            ax.barh(i, r["hi95"] - r["lo95"], left=r["lo95"],
-                    height=0.5, color="steelblue", alpha=0.4,
-                    label="95% CL" if i == 0 else "")
-            # 68% CL bar (dark)
-            if r["lo68"] is not None:
-                ax.barh(i, r["hi68"] - r["lo68"], left=r["lo68"],
-                        height=0.5, color="steelblue", alpha=0.9,
-                        label="68% CL" if i == 0 else "")
-            # stat-only overlay
-            if args.stat and r["op"] in stat_by_op:
-                s = stat_by_op[r["op"]]
-                if s["lo95"] is not None:
-                    ax.barh(i, s["hi95"] - s["lo95"], left=s["lo95"],
-                            height=0.15, color="crimson", alpha=0.8,
-                            label="95% CL (stat)" if i == 0 else "")
+        if args.log:
+            # Log mode: bar width = half-width of interval (reach on |k|)
+            for i, r in enumerate(results_sorted):
+                hw95 = r["width95"] / 2 if r["width95"] else None
+                hw68 = (r["hi68"] - r["lo68"]) / 2 if (r["lo68"] is not None and r["hi68"] is not None) else None
+                if hw95:
+                    ax.barh(i, hw95, height=0.5, color="steelblue", alpha=0.4,
+                            label="95% CL half-width" if i == 0 else "")
+                if hw68:
+                    ax.barh(i, hw68, height=0.5, color="steelblue", alpha=0.9,
+                            label="68% CL half-width" if i == 0 else "")
+                if args.stat and r["op"] in stat_by_op:
+                    s = stat_by_op[r["op"]]
+                    hw95s = s["width95"] / 2 if s["width95"] else None
+                    if hw95s:
+                        ax.barh(i, hw95s, height=0.15, color="crimson", alpha=0.8,
+                                label="95% CL half-width (stat)" if i == 0 else "")
+            ax.set_xscale("log")
+            ax.set_xlabel(r"95% CL half-width $|k|$")
+        else:
+            # Linear mode: floating bar from lo to hi
+            for i, r in enumerate(results_sorted):
+                ax.barh(i, r["hi95"] - r["lo95"], left=r["lo95"],
+                        height=0.5, color="steelblue", alpha=0.4,
+                        label="95% CL" if i == 0 else "")
+                if r["lo68"] is not None:
+                    ax.barh(i, r["hi68"] - r["lo68"], left=r["lo68"],
+                            height=0.5, color="steelblue", alpha=0.9,
+                            label="68% CL" if i == 0 else "")
+                if args.stat and r["op"] in stat_by_op:
+                    s = stat_by_op[r["op"]]
+                    if s["lo95"] is not None:
+                        ax.barh(i, s["hi95"] - s["lo95"], left=s["lo95"],
+                                height=0.15, color="crimson", alpha=0.8,
+                                label="95% CL (stat)" if i == 0 else "")
+            ax.axvline(0, color="black", linewidth=1.0)
+            ax.set_xlabel(r"$k$")
 
-        ax.axvline(0, color="black", linewidth=1.0)
         ax.set_yticks(y)
         ax.set_yticklabels(ops_ranked, fontsize=9)
-        ax.set_xlabel(r"$k$")
         ax.legend(frameon=False, fontsize=9, loc="lower right")
         ax.invert_yaxis()  # most sensitive at top
         ax.grid(axis="x", linestyle=":", alpha=0.4)
