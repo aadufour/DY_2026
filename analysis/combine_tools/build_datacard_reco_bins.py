@@ -90,6 +90,27 @@ w_scale_all   = cache.get("w_scale",       {})
 w_pdf_central = cache.get("w_pdf_central", None)
 pdf_arr       = cache.get(PDF_KEY,         None)   # [n_events, N_members]
 
+# --- Normalization fix -----------------------------------------------
+# LHE cache weights are NOT divided by N_gen, so each weight ≈ xsec (pb)
+# and sum(weights) ≈ N_gen * xsec instead of xsec.
+# Dividing by N_gen makes sum(weights) * LUMI = xsec * LUMI = N_expected.
+N_gen = len(w_SM)
+print(f"  N_gen (total generated events) : {N_gen:,}")
+print(f"  sum(w_SM) before fix           : {w_SM.sum():.4e} pb")
+w_SM    = w_SM    / N_gen
+w_p1_all  = {op: w / N_gen for op, w in w_p1_all.items()}
+w_m1_all  = {op: w / N_gen for op, w in w_m1_all.items()}
+w_pp_all  = {k:   w / N_gen for k,   w in w_pp_all.items()}
+if w_pdf_central is not None:
+    w_pdf_central = w_pdf_central / N_gen
+if pdf_arr is not None:
+    pdf_arr = pdf_arr / N_gen
+w_scale_all = {k: w / N_gen for k, w in w_scale_all.items()}
+print(f"  sum(w_SM) after fix            : {w_SM.sum():.4e} pb")
+print(f"  N_expected at {LUMI:.0f} pb^-1       : {w_SM.sum() * LUMI:.4e}")
+print()
+# --------------------------------------------------------------------
+
 has_scale = bool(w_scale_all)
 has_pdf   = pdf_arr is not None and w_pdf_central is not None
 
