@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
 build_cache_new.py
-==================
+
 Simplified version of build_cache_syst.py for LO generation with b quark in proton.
 
-Changes vs build_cache_syst.py:
+
   - Scale variations: MUF-only envelope (MUR fixed to 1).
     At LO there are no virtual/real corrections so MUR does not appear
     in the matrix element — varying it has no effect.

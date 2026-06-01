@@ -84,8 +84,8 @@ w_pdf_central = cache.get("w_pdf_central", None)
 pdf_arr       = cache.get(PDF_KEY,         None)
 
 # ---- Normalization fix -------------------------------------------------------
-# LHE weights are not divided by N_gen → sum(w) ≈ N_gen × xsec instead of xsec.
-# Dividing by N_gen gives sum(w)/N_gen × LUMI = xsec × LUMI = N_expected.
+# LHE weights are not divided by N_gen : sum(w) = N_gen x xsec instead of xsec.
+# Dividing by N_gen gives sum(w)/N_gen x LUMI = xsec x LUMI = N_expected.
 
 N_gen = len(w_SM)
 print(f"  N_gen                          : {N_gen:,}")
