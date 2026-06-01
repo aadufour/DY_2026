@@ -2,17 +2,16 @@
 """
 build_cache_syst.py
 
-Like build_cache.py but for SYST_slc7 LHE files, which carry two PDF
-systematic sets and QCD scale weights in addition to the SMEFT reweighting.
+SYST_slc7 LHE files carry two PDF systematic sets and QCD scale weights in addition to the SMEFT reweighting.
 
-Extra cache keys vs. build_cache.py:
+Systematics:
   pdf_325300      ndarray [n_events, 103]  NNPDF31_nnlo_as_0118_mc_hessian_pdfas
   pdf_325500      ndarray [n_events, 101]  NNPDF31_nnlo_as_0118_nf_4_mc_hessian
   scale_weights   ndarray [n_events, 6]   standard 6-point MUR/MUF envelope
                                            (anti-correlated extremes excluded)
 
 Weight IDs are resolved by parsing the LHE header, exactly as in build_cache.py.
-Central PDF is 325300 (was 303600 in the previous sample).
+Central PDF is 325300.
 
 Usage:
     python3 build_cache_syst.py
