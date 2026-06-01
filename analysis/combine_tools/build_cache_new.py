@@ -36,10 +36,31 @@ parser.add_argument('--nodoubles', action='store_true',
                     help='Skip operator-pair (quadratic cross) weights')
 parser.add_argument('--nevents', type=int, default=None,
                     help='Maximum events to read per LHE file (default: all)')
+parser.add_argument('--eta-max', type=float, default=None,
+                    help='Maximum |eta| for both leptons (default: no cut). '
+                         'CMS muon acceptance: 2.4')
+parser.add_argument('--pt-lead', type=float, default=None,
+                    help='Minimum pT of leading lepton in GeV (default: no cut). '
+                         'Typical CMS value: 25 GeV')
+parser.add_argument('--pt-sub', type=float, default=None,
+                    help='Minimum pT of subleading lepton in GeV (default: no cut). '
+                         'Typical CMS value: 10 GeV')
 args = parser.parse_args()
 
 SKIP_PAIRS = args.nodoubles
 MAX_EVENTS = args.nevents
+ETA_MAX    = args.eta_max
+PT_LEAD    = args.pt_lead
+PT_SUB     = args.pt_sub
+
+do_fiducial = any(x is not None for x in [ETA_MAX, PT_LEAD, PT_SUB])
+if do_fiducial:
+    print("Fiducial cuts:")
+    if ETA_MAX  is not None: print(f"  |eta| < {ETA_MAX}")
+    if PT_LEAD  is not None: print(f"  pT(lead) > {PT_LEAD} GeV")
+    if PT_SUB   is not None: print(f"  pT(sub)  > {PT_SUB} GeV")
+else:
+    print("No fiducial cuts applied (parton-level inclusive)")
 
 # ---- Config ------------------------------------------------------------------
 
@@ -152,6 +173,19 @@ def rap(p1, p2):
     E, pz = p[3], p[2]
     return np.abs(0.5 * np.log((E + pz) / (E - pz)))
 
+def eta(p):
+    """Pseudorapidity of a single particle 4-vector [px, py, pz, E]."""
+    px, py, pz, e = p
+    pmag = np.sqrt(px**2 + py**2 + pz**2)
+    if pmag == abs(pz):   # collinear with beam — infinite eta
+        return np.inf
+    return 0.5 * np.log((pmag + pz) / (pmag - pz))
+
+def pt(p):
+    """Transverse momentum of a single particle 4-vector [px, py, pz, E]."""
+    px, py, pz, e = p
+    return np.sqrt(px**2 + py**2)
+
 def cstar(p1, p2):
     p1 = np.array(p1); p2 = np.array(p2)
     p  = p1 + p2
@@ -259,6 +293,23 @@ for lhe_file in LHE_FILES:
             if not (MLL_LO <= m <= MLL_HI):
                 continue
 
+            # ---- Fiducial cuts (optional) ------------------------------------
+            if do_fiducial:
+                pt_lm  = pt(v_lm);   pt_lp  = pt(v_lp)
+                eta_lm = eta(v_lm);  eta_lp = eta(v_lp)
+                pt_lead_val = max(pt_lm, pt_lp)
+                pt_sub_val  = min(pt_lm, pt_lp)
+                if ETA_MAX is not None:
+                    if abs(eta_lm) > ETA_MAX or abs(eta_lp) > ETA_MAX:
+                        continue
+                if PT_LEAD is not None:
+                    if pt_lead_val < PT_LEAD:
+                        continue
+                if PT_SUB is not None:
+                    if pt_sub_val < PT_SUB:
+                        continue
+            # ------------------------------------------------------------------
+
             wkeys = event.weights
 
             if not pp_keys and not SKIP_PAIRS:
@@ -353,6 +404,14 @@ cache = {
     'w_scale':       acc_w_scale,
     'w_pdf_central': acc_w_pdf_central,
     'pdf_325300':    acc_pdf_325300,   # [n_events, 103]
+    # Selection applied when building this cache
+    'cuts': {
+        'eta_max':  ETA_MAX,
+        'pt_lead':  PT_LEAD,
+        'pt_sub':   PT_SUB,
+        'mll_lo':   MLL_LO,
+        'mll_hi':   MLL_HI,
+    },
 }
 
 with open(CACHE_FILE, 'wb') as f:
