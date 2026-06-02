@@ -5,7 +5,18 @@
 set -e
 
 PROXY=/grid_mnt/data__data.polcms/cms/adufour/proxy.pem
-CFG_JSON=/grid_mnt/data__data.polcms/cms/adufour/spritz/data/Full2018v9/cfg.json
+
+# Derive cfg.json path from SPRITZ_PATH (set in ~/.bashrc)
+FW_PATH=${SPRITZ_PATH:-/grid_mnt/data__data.polcms/cms/adufour/spritz_fabian}
+CFG_JSON=${FW_PATH}/data/Full2018v9/cfg.json
+
+# Get the runner name from config.py in the current directory
+RUNNER_NAME=$(python3 -c "
+import sys, re
+txt = open('config.py').read()
+m = re.search(r'runner\s*=\s*[\"\'f].*?([^\\/\"\']+\.py)[\"\'\\)]', txt)
+print(m.group(1) if m else 'runner.py')
+" 2>/dev/null || echo "runner.py")
 
 spritz-batch
 
@@ -24,7 +35,7 @@ sed -i \
 echo "submit.jdl patched for LLR T3."
 
 # Fix run.sh: replace with apptainer call + gridmount proxy
-cat > condor/run.sh << 'EOF'
+cat > condor/run.sh << RUNEOF
 #!/bin/bash
 export X509_USER_PROXY=/grid_mnt/data__data.polcms/cms/adufour/proxy.pem
 time apptainer exec \
@@ -32,8 +43,8 @@ time apptainer exec \
     -B /cvmfs \
     -B /grid_mnt \
     /grid_mnt/data__data.polcms/cms/adufour/spritz-env.sif \
-    python runner.py .
-EOF
+    python ${RUNNER_NAME} .
+RUNEOF
 chmod +x condor/run.sh
 
 echo "run.sh patched for LLR T3 (apptainer + gridmount proxy)."
