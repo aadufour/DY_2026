@@ -5,14 +5,14 @@ config_dy_smeftsim_v7.py  —  DY SMEFTsim LO, morphing-convention names + theor
 Changes from v6 (config_dy_smeft_v5.py):
 
 1. Sample/subsample names use morphing convention directly:
-     SM       → "sm"
-     c=+1 op  → "w1_{op}"
-     c=-1 op  → "wm1_{op}"
+     SM       -> "sm"
+     c=+1 op  -> "w1_{op}"
+     c=-1 op  -> "wm1_{op}"
    This means histos.root from spritz-postproc already has the correct histogram
    names expected by AnomalousCouplingMorphing.py. build_shapes_morphing.py no
    longer needs to translate names — it just copies and adds histo_Data.
 
-2. do_theory_variations = True  →  runner fills PDF and QCD scale variation slices
+2. do_theory_variations = True  ->  runner fills PDF and QCD scale variation slices
    in the "syst" axis of each histogram.
 
 3. nuisances["QCDscale"] and nuisances["PDF"] declared with lheScaleWeight /
@@ -85,7 +85,7 @@ for _k, _name in enumerate(OPERATORS, start=1):
     subsamples_eft[f"wm1_{_name}"] = (all_mask, f"{rwgt}[:, {_km}]")   # c=-1
 
 # -- Datasets ------------------------------------------------------------------
-datasets = {}
+datasets = {}-
 for b in MLL_BINS:
     name = f"DYSMEFTsim_LO_mll_{b}"
     datasets[name] = {
@@ -96,7 +96,7 @@ for b in MLL_BINS:
     }
 
 # -- Samples (for spritz-plot / spritz-postproc) -------------------------------
-# Morphing-convention names → histos.root has histo_sm, histo_w1_cHDD, etc.
+# Morphing-convention names -> histos.root has histo_sm, histo_w1_cHDD, etc.
 samples = {}
 colors = {}
 
@@ -181,11 +181,11 @@ nuisances["stat"] = {
     "samples": {},
 }
 # QCDScale: 8 variations (first 4 + last 4 of LHEScaleWeight, see theory_unc.py)
-# → envelope (max/min deviation from nominal)
+# -> envelope (max/min deviation from nominal)
 _qcd_vars = [f"QCDScale_{i}" for i in range(8)]
 
 # PDFWeight: 103 entries (NNPDF31_nnlo_as_0118: 0=central, 1..100=replicas, 101..102=alphas vars)
-# → square (RMS across all replicas)
+# -> square (RMS across all replicas)
 _pdf_vars = [f"PDFWeight_{i}" for i in range(103)]
 
 nuisances["QCDscale"] = {

@@ -1,0 +1,5 @@
+{
+  "X509_USER_PROXY": "/grid_mnt/data__data.polcms/cms/adufour/proxy.pem",
+  "SINGULARITY_IMAGE": "/grid_mnt/data__data.polcms/cms/adufour/spritz-env.sif",
+  "BATCH_SYSTEM": "condor"
+}
