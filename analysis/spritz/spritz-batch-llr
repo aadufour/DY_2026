@@ -23,20 +23,18 @@ spritz-batch
 # Fix submit.jdl for LLR T3
 JDL=condor/submit.jdl
 
+CONFIG_DIR=$(pwd)
+
 sed -i \
   -e '/MY.SingularityImage/d' \
   -e '/use_x509userproxy/d' \
   -e '/Requirements/d' \
   -e '/+JobFlavour/d' \
-  -e "s|/tmp/x509up_u[0-9]*, ||" \
-  -e 's|data\.tar\.gz, ||g' \
-  -e 's|spritz\.tar\.gz, ||g' \
-  -e 's|start\.sh, ||g' \
-  -e 's|start\.sh||g' \
-  -e "s|/opt/spritz/data/Full2018v9/cfg.json|${CFG_JSON}|" \
-  -e 's|transfer_input_files = .*/\(job_[^/]*/chunks_job\.pkl\)|transfer_input_files = \1|' \
   -e '/^log/a T3Queue = short\nWNTag   = el9\ninclude : /opt/exp_soft/cms/t3/t3queue |' \
   "$JDL"
+
+# Rewrite transfer_input_files line from scratch
+sed -i "s|^transfer_input_files = .*|transfer_input_files = \$(Folder)/chunks_job.pkl, ${CONFIG_DIR}/condor/${RUNNER_NAME}, ${CFG_JSON}, ${CONFIG_DIR}/config.py|" "$JDL"
 
 echo "submit.jdl patched for LLR T3."
 
@@ -44,12 +42,12 @@ echo "submit.jdl patched for LLR T3."
 cat > condor/run.sh << RUNEOF
 #!/bin/bash
 export X509_USER_PROXY=/grid_mnt/data__data.polcms/cms/adufour/proxy.pem
-export SPRITZ_PATH=${FW_PATH}
-export PYTHONPATH=${FW_PATH}/src:\$PYTHONPATH
 time apptainer exec \
     -B /etc/grid-security/certificates:/etc/grid-security/certificates \
     -B /cvmfs \
     -B /grid_mnt \
+    --env SPRITZ_PATH=${FW_PATH} \
+    --env PYTHONPATH=${FW_PATH}/src \
     /grid_mnt/data__data.polcms/cms/adufour/spritz-env.sif \
     python ${RUNNER_NAME} .
 RUNEOF
