@@ -47,7 +47,7 @@ time apptainer exec \
     -B /cvmfs \
     -B /grid_mnt \
     --env SPRITZ_PATH=${FW_PATH} \
-    --env PYTHONPATH=${FW_PATH}/src \
+    --env PYTHONPATH=${FW_PATH}/src:${FW_PATH} \
     /grid_mnt/data__data.polcms/cms/adufour/spritz-env.sif \
     python ${RUNNER_NAME} .
 RUNEOF
