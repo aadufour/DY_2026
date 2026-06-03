@@ -2,12 +2,55 @@
 
 ## Overview
 
-Spritz is a CMS NanoAOD analysis framework. We use it to process private DY SMEFTsim LO NanoAOD samples and produce EFT-weighted histograms for offline SMEFT analysis.
+Spritz is a CMS NanoAOD analysis framework. We use it to process NanoAOD samples and produce histograms for offline SMEFT analysis. There are two parallel tracks:
 
-The full pipeline is:
+- **EFT signal track** (Giacomo's spritz, `analysis/spritz/`): processes private DY SMEFTsim LO NanoAOD, produces EFT-weighted histograms for morphing combine workflow.
+- **Background track** (Fabian's spritz, `spritz_fabian/`): processes standard CMS MC backgrounds (DY MiNNLO, tt, WW, WZ, ZZ, single top, GG→ll) + data with fake lepton estimation. Target: reproduce Fabian's pag.5 plot (29 May) at LO, no systematics, lumi only.
+
+The full pipeline (both tracks):
 ```
-spritz-fileset → spritz-chunks → spritz-batch-llr → condor_submit → spritz-merge → spritz-postproc → spritz-plot / plot_eft_shapes.py
+spritz-fileset → spritz-chunks → spritz-batch-llr → condor_submit → spritz-merge → spritz-postproc → spritz-plot
 ```
+
+---
+
+## Physics strategy (from Giacomo, June 2026)
+
+### EFT + backgrounds
+
+The goal is to build a complete EFT analysis on top of Fabian's background framework:
+- If Wilson coefficients → 0, recover Fabian's SM plot
+- EFT signal = our DY SMEFTsim LO samples, rescaled by a k-factor
+
+### K-factor rescaling (bin-by-bin)
+
+Our LO MadGraph SM prediction is less precise than MiNNLO (Fabian's DY). To match precision:
+
+```
+k = MiNNLO / SM_MG        (bin-by-bin ratio)
+quad       → quad       × k
+sm_lin_quad → sm_lin_quad × k
+```
+
+**Important**: cannot rescale SM alone inside the EFT parametrisation — the decomposition would no longer close. Must rescale all EFT components consistently.
+
+### Fake leptons (reducible background)
+
+- **Irreducible backgrounds** (same final state, e.g. ZZ→4l with 2 lost): cut away with kinematic selections.
+- **Reducible backgrounds** (e.g. W+jet where a jet fakes a lepton, or Z→ll with one lost lepton faking a W): estimated **data-driven**, not from MC (MC QCD/PDF uncertainties are too large).
+- Method: **same-sign / opposite-sign (SS/OS) ratio**. In the SS region, prompt dileptons are impossible (Z→l⁺l⁺ doesn't exist), so any SS events are fakes. After subtracting prompt MC from SS, the remainder gives the fake rate.
+- Muon fake criterion: isolation — require no hadronic activity in ΔR < 0.4 cone. Non-isolated muons are likely non-prompt (e.g. from b-decays).
+- Use loose isolation WP, measure SS/OS ratio in data after prompt MC subtraction.
+- **Does not work for all topologies** — e.g. fails for ttbar (see Fabian pag.9, 29 May).
+
+### First step: reproduce Fabian's plot
+
+Run Fabian's config (`test_v1`) on standard CMS backgrounds:
+- No systematics (only lumi uncertainty)
+- LO, no NLO corrections
+- Target: pag.5 of Fabian's 29 May slides
+
+Then add our SMEFTsim NanoAOD on top.
 
 ---
 
@@ -51,6 +94,59 @@ exit
 ```
 
 **Important**: `condor_submit` is NOT available inside the apptainer. Always exit before submitting jobs.
+
+---
+
+## Fabian's spritz setup (`spritz_fabian`)
+
+Cloned from `https://github.com/fstaeg/spritz.git` into `/grid_mnt/data__data.polcms/cms/adufour/spritz_fabian`.
+
+### Required fixes vs Fabian's upstream
+
+| File | Fix |
+|------|-----|
+| `src/spritz/utils/rucio_utils.py` line 94 | `site.get("rse")` instead of `site["rse"]` (KeyError fix) |
+| `src/spritz/scripts/batch.py` line ~160 | Add `year = an_dict["year"]` before command block (NameError fix) |
+| `src/spritz/modules/lepton_sf.py` line 47 | `"isTightMuon_" + cfg["leptonsWP"]["muWP"]` instead of hardcoded `"isTightMuon_RelIso"` |
+| `data/Full2018v9/samples/samples.json` | Has 6 colors in `cmap_petroff` — hardcode colors beyond index 5 in config |
+| `batch_config.json` (root of repo) | Must point to LLR setup: condor, LLR proxy, LLR sif |
+
+### `~/.bashrc` additions for Fabian's spritz
+
+```bash
+export SPRITZ_PATH=/grid_mnt/data__data.polcms/cms/adufour/spritz_fabian
+export PYTHONPATH=/grid_mnt/data__data.polcms/cms/adufour/spritz_fabian/src:/grid_mnt/data__data.polcms/cms/adufour/spritz_fabian:$PYTHONPATH
+```
+
+### `batch_config.json` (at `spritz_fabian/batch_config.json`)
+
+```json
+{
+  "X509_USER_PROXY": "/grid_mnt/data__data.polcms/cms/adufour/proxy.pem",
+  "SINGULARITY_IMAGE": "/grid_mnt/data__data.polcms/cms/adufour/spritz-env.sif",
+  "BATCH_SYSTEM": "condor"
+}
+```
+
+### Fresh start procedure (always do this)
+
+When restarting a config from scratch, keep only:
+```
+config.py
+batch_config.json   ← not needed if spritz_fabian/batch_config.json is correct
+```
+Delete everything else (`condor/`, `slurm/`, `data/`, `__pycache__/`, `cfg.json`). Then:
+
+```bash
+spritz-shell
+cd /grid_mnt/.../configs/test_v1
+spritz-fileset
+spritz-chunks
+spritz-batch-llr     # generates condor/ with correct run.sh and submit.jdl
+exit
+cd condor
+condor_submit submit.jdl
+```
 
 ---
 

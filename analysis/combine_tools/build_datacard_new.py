@@ -36,10 +36,8 @@ PDF_KEY       = "pdf_325300"
 
 # RECO binning (matches spritz config_dy_smeftsim_v7/v8)
 MLL_EDGES = np.array([
-    *range(50, 76, 5),     # 50, 55, 60, 65, 70, 75
-    *range(76, 106, 2),    # 76, 78, ..., 104
-    *range(106, 120, 5),   # 106, 111, 116
-    120, 150, 200, 250, 300, 400, 600, 800, 1000, 1500, 3000,
+    *range(50, 121, 5),    # 50, 55, ..., 120 — uniform 5 GeV steps (14 bins)
+    150, 200, 250, 300, 400, 600, 800, 1000, 1500, 3000,
 ], dtype=float)
 RAP_EDGES   = np.array([0.0, 0.5, 1.0, 2.5], dtype=float)
 CSTAR_EDGES = np.array([-1.0, -0.5, 0.0, 0.5, 1.0], dtype=float)
