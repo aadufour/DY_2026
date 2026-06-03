@@ -35,66 +35,19 @@ bins = {
 }
 
 datasets = {
-    "DYmm_M-10to50": {
-        "files": "DYJetsToMuMu_M-10to50",
-        "task_weight": 8,
-        "max_weight": 1e9 # filter MC events with extremely large weights
-    },
-    "DYmm_M-50to100": {
-        "files": "DYJetsToMuMu",
-        "task_weight": 8,
-        "max_weight": 1e9
-    },
-    "DYmm_M-100to200": {
-        "files": "DYJetsToMuMu_M-100to200",
-        "task_weight": 8,
-        "max_weight": 1e9
-    },
-    "DYmm_M-200to400": {
-        "files": "DYJetsToMuMu_M-200to400",
-        "task_weight": 8,
-        "max_weight": 1e9
-    },
-    "DYmm_M-400to500": {
-        "files": "DYJetsToMuMu_M-400to500",
-        "task_weight": 8,
-        "max_weight": 1e9
-    },
-    "DYmm_M-500to700": {
-        "files": "DYJetsToMuMu_M-500to700",
-        "task_weight": 8,
-        "max_weight": 1e9
-    },
-    "DYmm_M-700to800": {
-        "files": "DYJetsToMuMu_M-700to800",
-        "task_weight": 8,
-        "max_weight": 1e9
-    },
-    "DYmm_M-800to1000": {
-        "files": "DYJetsToMuMu_M-800to1000",
-        "task_weight": 8,
-        "max_weight": 1e9
-    },
-    "DYmm_M-1000to1500": {
-        "files": "DYJetsToMuMu_M-1000to1500",
-        "task_weight": 8,
-        "max_weight": 1e9
-    },
-    "DYmm_M-1500to2000": {
-        "files": "DYJetsToMuMu_M-1500to2000",
-        "task_weight": 8,
-        "max_weight": 1e9
-    },
-    "DYmm_M-2000toInf": {
-        "files": "DYJetsToMuMu_M-2000toInf",
-        "task_weight": 8,
-        "max_weight": 1e9
-    },
-    "DYtt": {
-        "files": "DYJetsToTauTau",
-        "task_weight": 8,
-        "max_weight": 1e9
-    },
+    # DYmm and DYtt commented out — xrootd auth failures, rerun with fresh proxy
+    # "DYmm_M-10to50": { "files": "DYJetsToMuMu_M-10to50", "task_weight": 8, "max_weight": 1e9 },
+    # "DYmm_M-50to100": { "files": "DYJetsToMuMu", "task_weight": 8, "max_weight": 1e9 },
+    # "DYmm_M-100to200": { "files": "DYJetsToMuMu_M-100to200", "task_weight": 8, "max_weight": 1e9 },
+    # "DYmm_M-200to400": { "files": "DYJetsToMuMu_M-200to400", "task_weight": 8, "max_weight": 1e9 },
+    # "DYmm_M-400to500": { "files": "DYJetsToMuMu_M-400to500", "task_weight": 8, "max_weight": 1e9 },
+    # "DYmm_M-500to700": { "files": "DYJetsToMuMu_M-500to700", "task_weight": 8, "max_weight": 1e9 },
+    # "DYmm_M-700to800": { "files": "DYJetsToMuMu_M-700to800", "task_weight": 8, "max_weight": 1e9 },
+    # "DYmm_M-800to1000": { "files": "DYJetsToMuMu_M-800to1000", "task_weight": 8, "max_weight": 1e9 },
+    # "DYmm_M-1000to1500": { "files": "DYJetsToMuMu_M-1000to1500", "task_weight": 8, "max_weight": 1e9 },
+    # "DYmm_M-1500to2000": { "files": "DYJetsToMuMu_M-1500to2000", "task_weight": 8, "max_weight": 1e9 },
+    # "DYmm_M-2000toInf": { "files": "DYJetsToMuMu_M-2000toInf", "task_weight": 8, "max_weight": 1e9 },
+    # "DYtt": { "files": "DYJetsToTauTau", "task_weight": 8, "max_weight": 1e9 },
     "ST_s-channel": {
         "files": "ST_s-channel",
         "task_weight": 8,
@@ -137,66 +90,22 @@ datasets = {
         "files": "ZZ_TuneCP5_13TeV-pythia8",
         "task_weight": 8,
     },
-    "GGToMuMu_M-10to30_El-El": {
-        "files": "GGToMuMu_M-10to30_El-El",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-10to30_Inel-El_El-Inel": {
-        "files": "GGToMuMu_M-10to30_Inel-El_El-Inel",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-10to30_Inel-Inel": {
-        "files": "GGToMuMu_M-10to30_Inel-Inel",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-30to50_El-El": {
-        "files": "GGToMuMu_M-30to50_El-El",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-30to50_Inel-El_El-Inel": {
-        "files": "GGToMuMu_M-30to50_Inel-El_El-Inel",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-30to50_Inel-Inel": {
-        "files": "GGToMuMu_M-30to50_Inel-Inel",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-50to200_El-El": {
-        "files": "GGToMuMu_M-50to200_El-El",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-50to200_Inel-El_El-Inel": {
-        "files": "GGToMuMu_M-50to200_Inel-El_El-Inel",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-50to200_Inel-Inel": {
-        "files": "GGToMuMu_M-50to200_Inel-Inel",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-200to1500_El-El": {
-        "files": "GGToMuMu_M-200to1500_El-El",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-200to1500_Inel-El_El-Inel": {
-        "files": "GGToMuMu_M-200to1500_Inel-El_El-Inel",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-200to1500_Inel-Inel": {
-        "files": "GGToMuMu_M-200to1500_Inel-Inel",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-1500toInf_El-El": {
-        "files": "GGToMuMu_M-1500toInf_El-El",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-1500toInf_Inel-El_El-Inel": {
-        "files": "GGToMuMu_M-1500toInf_Inel-El_El-Inel",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-1500toInf_Inel-Inel": {
-        "files": "GGToMuMu_M-1500toInf_Inel-Inel",
-        "task_weight": 8,
-    },
+    # GGToMuMu commented out — xrootd auth failures, rerun with fresh proxy
+    # "GGToMuMu_M-10to30_El-El": { "files": "GGToMuMu_M-10to30_El-El", "task_weight": 8 },
+    # "GGToMuMu_M-10to30_Inel-El_El-Inel": { "files": "GGToMuMu_M-10to30_Inel-El_El-Inel", "task_weight": 8 },
+    # "GGToMuMu_M-10to30_Inel-Inel": { "files": "GGToMuMu_M-10to30_Inel-Inel", "task_weight": 8 },
+    # "GGToMuMu_M-30to50_El-El": { "files": "GGToMuMu_M-30to50_El-El", "task_weight": 8 },
+    # "GGToMuMu_M-30to50_Inel-El_El-Inel": { "files": "GGToMuMu_M-30to50_Inel-El_El-Inel", "task_weight": 8 },
+    # "GGToMuMu_M-30to50_Inel-Inel": { "files": "GGToMuMu_M-30to50_Inel-Inel", "task_weight": 8 },
+    # "GGToMuMu_M-50to200_El-El": { "files": "GGToMuMu_M-50to200_El-El", "task_weight": 8 },
+    # "GGToMuMu_M-50to200_Inel-El_El-Inel": { "files": "GGToMuMu_M-50to200_Inel-El_El-Inel", "task_weight": 8 },
+    # "GGToMuMu_M-50to200_Inel-Inel": { "files": "GGToMuMu_M-50to200_Inel-Inel", "task_weight": 8 },
+    # "GGToMuMu_M-200to1500_El-El": { "files": "GGToMuMu_M-200to1500_El-El", "task_weight": 8 },
+    # "GGToMuMu_M-200to1500_Inel-El_El-Inel": { "files": "GGToMuMu_M-200to1500_Inel-El_El-Inel", "task_weight": 8 },
+    # "GGToMuMu_M-200to1500_Inel-Inel": { "files": "GGToMuMu_M-200to1500_Inel-Inel", "task_weight": 8 },
+    # "GGToMuMu_M-1500toInf_El-El": { "files": "GGToMuMu_M-1500toInf_El-El", "task_weight": 8 },
+    # "GGToMuMu_M-1500toInf_Inel-El_El-Inel": { "files": "GGToMuMu_M-1500toInf_Inel-El_El-Inel", "task_weight": 8 },
+    # "GGToMuMu_M-1500toInf_Inel-Inel": { "files": "GGToMuMu_M-1500toInf_Inel-Inel", "task_weight": 8 },
     # "WJetsToLNu_0J": {
     #     "files": "WJetsToLNu_0J",
     #     "task_weight": 8,
@@ -260,25 +169,7 @@ samples = {
     #         "WJetsToLNu_2J",
     #    ]
     # },
-    "GGToLL": { 
-        "samples": [
-            "GGToMuMu_M-10to30_El-El",
-            "GGToMuMu_M-10to30_Inel-El_El-Inel",
-            "GGToMuMu_M-10to30_Inel-Inel",
-            "GGToMuMu_M-30to50_El-El",
-            "GGToMuMu_M-30to50_Inel-El_El-Inel",
-            "GGToMuMu_M-30to50_Inel-Inel",
-            "GGToMuMu_M-50to200_El-El",
-            "GGToMuMu_M-50to200_Inel-El_El-Inel",
-            "GGToMuMu_M-50to200_Inel-Inel",
-            "GGToMuMu_M-200to1500_El-El",
-            "GGToMuMu_M-200to1500_Inel-El_El-Inel",
-            "GGToMuMu_M-200to1500_Inel-Inel",
-            "GGToMuMu_M-1500toInf_El-El",
-            "GGToMuMu_M-1500toInf_Inel-El_El-Inel",
-            "GGToMuMu_M-1500toInf_Inel-Inel",
-        ] 
-    },
+    # "GGToLL": { ... },  # commented out — xrootd auth failures
     "Single Top": {
         "samples": [
             "ST_s-channel",
@@ -313,33 +204,14 @@ samples = {
             "ZZ"
         ]
     },
-    "DYtt": {
-        "samples": [
-            "DYtt"
-        ]
-    },
-    "DYll": {
-        "samples": [
-            "DYmm_M-10to50",
-            "DYmm_M-50to100",
-            "DYmm_M-100to200",
-            "DYmm_M-200to400",
-            "DYmm_M-400to500",
-            "DYmm_M-500to700",
-            "DYmm_M-700to800",
-            "DYmm_M-800to1000",
-            "DYmm_M-1000to1500",
-            "DYmm_M-1500to2000",
-            "DYmm_M-2000toInf",
-        ],
-        "is_signal": True
-    },
+    # "DYtt": { ... },   # commented out — xrootd auth failures
+    # "DYll": { ... },   # commented out — xrootd auth failures
 }
 
 colors = {}
 #colors["W+Jets"] = cmap_petroff[0]
 colors["Fakes"] = cmap_petroff[0]
-colors["GGToLL"] = cmap_petroff[1]
+# colors["GGToLL"] = cmap_petroff[1]  # commented out
 colors["Single Top"] = cmap_petroff[2]
 colors["TT"] = cmap_petroff[3]
 colors["WW"] = cmap_petroff[4]
@@ -350,8 +222,8 @@ colors["WZ"] = cmap_petroff[5]
 
 #ugly fix for this cmap
 colors["ZZ"]   = "#e42536"
-colors["DYtt"] = "#964a8b"
-colors["DYll"] = "#f89c20"
+# colors["DYtt"] = "#964a8b"  # commented out
+# colors["DYll"] = "#f89c20"  # commented out
 
 # regions
 
