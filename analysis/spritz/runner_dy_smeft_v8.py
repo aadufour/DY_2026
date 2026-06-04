@@ -63,7 +63,10 @@ from spritz.modules.prompt_gen import prompt_gen_match_leptons
 from spritz.modules.puid_sf import puid_sf
 from spritz.modules.puweight import puweight_sf
 from spritz.modules.rochester import correctRochester, getRochester
-from spritz.modules.run_assign import assign_run
+try:
+    from spritz.modules.run_assign import assign_run
+except ImportError:
+    from spritz.modules.run_assign import assign_run_period as assign_run
 from spritz.modules.theory_unc import theory_unc
 from spritz.modules.trigger_sf import (
     trigger_sf,
