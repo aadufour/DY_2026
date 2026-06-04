@@ -118,7 +118,8 @@ def process(events, **kwargs):
     special_weight = eval(kwargs.get("weight", "1.0"))
 
     print("SumW and NEvents before cuts")
-    print(len(events), events["nLHEReweightingWeight"])
+    n_rwgt = events["nLHEReweightingWeight"] if "nLHEReweightingWeight" in ak.fields(events) else "N/A"
+    print(len(events), n_rwgt)
 
     variations = variation_module.Variation()
     variations.register_variation([], "nom")
