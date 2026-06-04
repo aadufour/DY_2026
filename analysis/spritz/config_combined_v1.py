@@ -37,7 +37,7 @@ plot_label = "DY EFT"
 year_label = "2018"
 njobs = 3000
 
-runner = "/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz/runner_dy_smeft_v8.py"
+runner = "/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz/runner_combined.py"
 
 special_analysis_cfg = {
     "do_theory_variations": False,
