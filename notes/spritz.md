@@ -43,14 +43,27 @@ sm_lin_quad → sm_lin_quad × k
 - Use loose isolation WP, measure SS/OS ratio in data after prompt MC subtraction.
 - **Does not work for all topologies** — e.g. fails for ttbar (see Fabian pag.9, 29 May).
 
-### First step: reproduce Fabian's plot
+### Step 1: reproduce Fabian's background plot ✓ DONE
 
-Run Fabian's config (`test_v1`) on standard CMS backgrounds:
-- No systematics (only lumi uncertainty)
+Run Fabian's config on standard CMS backgrounds (DY MiNNLO, TT, WW, WZ, ZZ, single top, GGToLL, data):
+- No systematics (only lumi uncertainty for now)
 - LO, no NLO corrections
-- Target: pag.5 of Fabian's 29 May slides
+- Config: `analysis/spritz/config_fabian_test.py` → deployed as `spritz_fabian/configs/test_v2/config.py`
+- Reproduced Fabian's pag.5 (29 May) background stack plot ✓
 
-Then add our SMEFTsim NanoAOD on top.
+### Step 2: add EFT signal on top (IN PROGRESS)
+
+Build EFT signal on top of Fabian's background framework using our DY SMEFTsim LO NanoAOD.
+
+**Approach:**
+- The EFT signal (our DY SMEFTsim LO samples) needs to be run through Fabian's runner (`runner_3DY.py`) with the same selections as the backgrounds
+- Apply k-factor bin-by-bin: `k = MiNNLO / SM_MG` to rescale all EFT components
+- When Wilson coefficients → 0, recover Fabian's SM DY plot
+
+**Implementation plan:**
+1. Add our SMEFTsim NanoAOD samples to the fileset
+2. Create a new config that includes both Fabian's backgrounds AND our EFT subsamples
+3. Apply k-factor rescaling at postproc/plotting stage
 
 ---
 
@@ -110,6 +123,7 @@ Cloned from `https://github.com/fstaeg/spritz.git` into `/grid_mnt/data__data.po
 | `src/spritz/modules/lepton_sf.py` line 47 | `"isTightMuon_" + cfg["leptonsWP"]["muWP"]` instead of hardcoded `"isTightMuon_RelIso"` |
 | `data/Full2018v9/samples/samples.json` | Has 6 colors in `cmap_petroff` — hardcode colors beyond index 5 in config |
 | `batch_config.json` (root of repo) | Must point to LLR setup: condor, LLR proxy, LLR sif |
+| `src/spritz/scripts/post_process.py` line ~331 | f-string fix: `read_chunks(get_batch_cfg()["BATCH_SYSTEM"] + "/results_merged_new.pkl")` |
 
 ### `~/.bashrc` additions for Fabian's spritz
 
@@ -133,19 +147,41 @@ export PYTHONPATH=/grid_mnt/data__data.polcms/cms/adufour/spritz_fabian/src:/gri
 When restarting a config from scratch, keep only:
 ```
 config.py
-batch_config.json   ← not needed if spritz_fabian/batch_config.json is correct
 ```
 Delete everything else (`condor/`, `slurm/`, `data/`, `__pycache__/`, `cfg.json`). Then:
 
 ```bash
+# 0. Refresh proxy BEFORE submitting (critical for EOS/xrootd access)
+cp /tmp/x509up_u1279 /grid_mnt/data__data.polcms/cms/adufour/proxy.pem
+
 spritz-shell
-cd /grid_mnt/.../configs/test_v1
+cd /grid_mnt/.../configs/myconfig
+
+# Option A: reuse existing fileset (saves ~10 min, skip if samples changed)
+mkdir -p data
+cp /grid_mnt/.../configs/test_v2/data/fileset.json data/
+
+# Option B: regenerate fileset from scratch
 spritz-fileset
+
 spritz-chunks
 spritz-batch-llr     # generates condor/ with correct run.sh and submit.jdl
 exit
 cd condor
 condor_submit submit.jdl
+```
+
+**Key settings in config:**
+- `njobs = 2000` — keeps each job short enough for the `short` queue (~1-2h each)
+- Proxy must be fresh: `timeleft > 0` in `proxy.pem`
+
+**After jobs finish:**
+```bash
+spritz-shell
+cd /grid_mnt/.../configs/myconfig
+spritz-merge       # run from config dir, NOT from condor/
+spritz-postproc
+spritz-plot        # or dy_analysis + custom plot script
 ```
 
 ---
