@@ -212,6 +212,8 @@ def process(events, **kwargs):
     events = correctRochester(events, isData, rochester, s=5)
     events = match_trigger_object(events, cfg)
 
+    doTheoryVariations = special_analysis_cfg.get("do_theory_variations", False)
+
     if not isData:
         events, variations = puweight_sf(events, variations, ceval_puWeight, cfg)
         events, variations = trigger_sf(events, variations, ceval_lepton_sf, cfg)
@@ -235,7 +237,6 @@ def process(events, **kwargs):
         else:
             events["prefireWeight"] = ak.ones_like(events.weight)
 
-        doTheoryVariations = special_analysis_cfg.get("do_theory_variations", False)
         if doTheoryVariations:
             events, variations = theory_unc(events, variations)
     else:

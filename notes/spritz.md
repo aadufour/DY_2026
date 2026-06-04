@@ -55,15 +55,19 @@ Run Fabian's config on standard CMS backgrounds (DY MiNNLO, TT, WW, WZ, ZZ, sing
 
 Build EFT signal on top of Fabian's background framework using our DY SMEFTsim LO NanoAOD.
 
-**Approach:**
-- The EFT signal (our DY SMEFTsim LO samples) needs to be run through Fabian's runner (`runner_3DY.py`) with the same selections as the backgrounds
-- Apply k-factor bin-by-bin: `k = MiNNLO / SM_MG` to rescale all EFT components
-- When Wilson coefficients → 0, recover Fabian's SM DY plot
+**Config:** `analysis/spritz/config_combined_v1.py` → deploy as `spritz_fabian/configs/combined_v1/config.py`
 
-**Implementation plan:**
-1. Add our SMEFTsim NanoAOD samples to the fileset
-2. Create a new config that includes both Fabian's backgrounds AND our EFT subsamples
-3. Apply k-factor rescaling at postproc/plotting stage
+**Runner:** `runner_dy_smeft_v8.py` — handles both EFT subsamples (via LHEReweightingWeight) and standard MC/data in a single config. `do_theory_variations=False` for now (lumi only).
+
+**K-factor:** k(bin) = MiNNLO(bin) / SM_MG(bin), applied bin-by-bin at plotting stage to all EFT components (sm, w1_{op}, wm1_{op}) consistently. See notes on why all three must be rescaled.
+
+**Runner fix (June 2026):** `doTheoryVariations` was only defined inside `if not isData:` block, causing NameError for data events. Fixed by initializing it before the block.
+
+**TODO on LLR before running:**
+1. Add DYSMEFTsim_LO_mll_* entries to Fabian's samples.json at
+   `/grid_mnt/data__data.polcms/cms/adufour/spritz_fabian/data/Full2018v9/samples/samples.json`
+   — copy structure from our spritz's samples.json, using xsecs from the Cross sections section above
+2. Patch `data/fileset.json` after jobs finish (see v7 fileset patch snippet, use sm/w1_/wm1_ keys)
 
 ---
 
