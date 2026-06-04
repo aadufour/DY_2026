@@ -41,13 +41,16 @@ echo "submit.jdl patched for LLR T3."
 # Fix run.sh: replace with apptainer call + gridmount proxy
 cat > condor/run.sh << RUNEOF
 #!/bin/bash
-export X509_USER_PROXY=/grid_mnt/data__data.polcms/cms/adufour/proxy.pem
+# Copy proxy to /tmp so xrootd can find it
+cp /grid_mnt/data__data.polcms/cms/adufour/proxy.pem /tmp/x509up_u\$(id -u)
+export X509_USER_PROXY=/tmp/x509up_u\$(id -u)
 time apptainer exec \
     -B /etc/grid-security/certificates:/etc/grid-security/certificates \
     -B /cvmfs \
     -B /grid_mnt \
     --env SPRITZ_PATH=${FW_PATH} \
     --env PYTHONPATH=${FW_PATH}/src:${FW_PATH} \
+    --env X509_USER_PROXY=/tmp/x509up_u\$(id -u) \
     /grid_mnt/data__data.polcms/cms/adufour/spritz-env.sif \
     python ${RUNNER_NAME} .
 RUNEOF
