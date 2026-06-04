@@ -213,7 +213,10 @@ def process(events, **kwargs):
         events['topPtWeight'] = ak.ones_like(events.weight)
 
     # Correct Muons with rochester
-    events = correctRochester(events, isData, rochester, s=5)
+    try:
+        events = correctRochester(events, isData, rochester, s=5)           # Giacomo's signature
+    except TypeError:
+        events, variations = correctRochester(events, variations, isData, rochester, s=5)  # Fabian's signature
     events = match_trigger_object(events, cfg)
 
     doTheoryVariations = special_analysis_cfg.get("do_theory_variations", False)
