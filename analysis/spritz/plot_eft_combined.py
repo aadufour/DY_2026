@@ -152,11 +152,14 @@ def main():
         lin  = 0.5 * (w1_k - wm1_k)
         quad = 0.5 * (w1_k + wm1_k) - sm_k
 
-        # EFT at c=1: sm_k + lin + quad = w1_k  (sanity: c=0 -> sm_k = dyll )
-        eft = sm_k + lin + quad
+        # EFT at c=+1: sm_k + lin + quad = w1_k
+        # EFT at c=-1: sm_k - lin + quad = wm1_k
+        eft_p1 = sm_k + lin + quad   # = w1_k
+        eft_m1 = sm_k - lin + quad   # = wm1_k
 
-        sm_total  = bkg_total + dyll
-        eft_total = bkg_total + eft
+        sm_total   = bkg_total + dyll
+        eft_total  = bkg_total + eft_p1
+        eftm_total = bkg_total + eft_m1
 
         # -- figure -----------------------------------------------------------
         fig, (ax_top, ax_bot) = plt.subplots(
@@ -190,11 +193,16 @@ def main():
             label="SM (MiNNLO)", fill=False, zorder=2,
         )
 
-        # EFT total (bkg + EFT signal at c=1)
+        # EFT total at c=+1 and c=-1
         ax_top.stairs(
             eft_total / widths, edges=edges,
             color="crimson", linewidth=1.5,
-            label=f"EFT {op} (c=1)", fill=False, zorder=3,
+            label=f"EFT {op} (c=+1)", fill=False, zorder=3,
+        )
+        ax_top.stairs(
+            eftm_total / widths, edges=edges,
+            color="steelblue", linewidth=1.5,
+            label=f"EFT {op} (c=-1)", fill=False, zorder=3,
         )
 
         # Data as black dots with Poisson error bars (blind above threshold)
@@ -217,7 +225,7 @@ def main():
         )
 
         # y-axis range
-        ymax = max(np.max(sm_total / widths), np.max(eft_total / widths), np.max(data / widths))
+        ymax = max(np.max(sm_total / widths), np.max(eft_total / widths), np.max(eftm_total / widths), np.max(data / widths))
         pos_vals = np.concatenate([v[v > 0] / widths[v > 0] for v in stack if np.any(v > 0)])
         ymin = max(1e-4, 0.3 * np.min(pos_vals)) if pos_vals.size else 1e-4
 
@@ -229,10 +237,12 @@ def main():
 
         # ratio panel: EFT/SM and Data/SM
         denom = np.where(sm_total > 0, sm_total, 1e-30)
-        ratio_eft  = eft_total / denom
+        ratio_eft  = eft_total  / denom
+        ratio_eftm = eftm_total / denom
         ratio_data = data / denom
 
-        ax_bot.stairs(ratio_eft, edges=edges, color="crimson", linewidth=1.2, label="EFT/SM")
+        ax_bot.stairs(ratio_eft,  edges=edges, color="crimson",   linewidth=1.2, label="c=+1 / SM")
+        ax_bot.stairs(ratio_eftm, edges=edges, color="steelblue", linewidth=1.2, label="c=-1 / SM")
         ax_bot.errorbar(
             centers,
             np.where(blind_mask if not args.no_blind else False, np.nan, ratio_data),
@@ -243,7 +253,7 @@ def main():
         ax_bot.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
         ax_bot.set_ylabel("Ratio")
         # auto-range: symmetric around 1, padded 20%, minimum half-width 0.05
-        finite = ratio_eft[np.isfinite(ratio_eft)]
+        finite = np.concatenate([ratio_eft[np.isfinite(ratio_eft)], ratio_eftm[np.isfinite(ratio_eftm)]])
         half = max(np.max(np.abs(finite - 1.0)) * 1.2, 0.05)
         ax_bot.set_ylim(1.0 - half, 1.0 + half)
         ax_bot.set_xlabel(r"$m_{\ell\ell}$ (GeV)")
