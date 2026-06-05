@@ -60,6 +60,10 @@ def get_vals(directory, name):
     return vals.copy()
 
 
+def get_variances(directory, name):
+    return directory[f"histo_{name}"].variances().copy()
+
+
 def get_edges(directory, name):
     _, edges = directory[f"histo_{name}"].to_numpy()
     return edges
@@ -95,6 +99,7 @@ def main():
     edges   = get_edges(directory, "sm")
     widths  = edges[1:] - edges[:-1]
 
+
     # ── read backgrounds ─────────────────────────────────────────────────────
     bkg_vals = {}
     for s in BKG_STACK:
@@ -103,8 +108,11 @@ def main():
         except Exception:
             pass  # sample absent in this histos.root; silently skip
 
-    dyll = get_vals(directory, "DYll")
-    sm   = get_vals(directory, "sm")
+    dyll      = get_vals(directory, "DYll")
+    sm        = get_vals(directory, "sm")
+    data      = get_vals(directory, "Data")
+    data_var  = get_variances(directory, "Data")
+    centers   = 0.5 * (edges[:-1] + edges[1:])
 
     # ── bin-by-bin k-factor ──────────────────────────────────────────────────
     k = np.where(sm > 0, dyll / sm, 1.0)
@@ -184,8 +192,19 @@ def main():
             label=f"EFT {op} (c=1)", fill=False, zorder=3,
         )
 
+        # Data as black dots with Poisson error bars
+        data_unc = np.sqrt(np.abs(data_var))
+        ax_top.errorbar(
+            centers,
+            data / widths,
+            yerr=data_unc / widths,
+            fmt="o", markersize=4, color="black",
+            label=f"Data [{int(round(data.sum()))}]",
+            zorder=4,
+        )
+
         # y-axis range
-        ymax = max(np.max(sm_total / widths), np.max(eft_total / widths))
+        ymax = max(np.max(sm_total / widths), np.max(eft_total / widths), np.max(data / widths))
         pos_vals = np.concatenate([v[v > 0] / widths[v > 0] for v in stack if np.any(v > 0)])
         ymin = max(1e-4, 0.3 * np.min(pos_vals)) if pos_vals.size else 1e-4
 
@@ -195,22 +214,31 @@ def main():
         ax_top.tick_params(labelbottom=False)
         ax_top.legend(loc="upper right", fontsize=7, ncols=2, framealpha=0.8)
 
-        # ratio panel: EFT total / SM total
+        # ratio panel: EFT/SM and Data/SM
         denom = np.where(sm_total > 0, sm_total, 1e-30)
-        ratio = eft_total / denom
+        ratio_eft  = eft_total / denom
+        ratio_data = data / denom
 
-        ax_bot.stairs(ratio, edges=edges, color="crimson", linewidth=1.2)
+        ax_bot.stairs(ratio_eft, edges=edges, color="crimson", linewidth=1.2, label="EFT/SM")
+        ax_bot.errorbar(
+            centers, ratio_data,
+            yerr=data_unc / denom,
+            fmt="o", markersize=3, color="black", label="Data/SM",
+            zorder=4,
+        )
         ax_bot.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
-        ax_bot.set_ylabel("EFT / SM")
+        ax_bot.set_ylabel("/ SM")
         ax_bot.set_ylim(0.5, 1.5)
         ax_bot.set_xlabel(r"$m_{\ell\ell}$ (GeV)")
         ax_bot.set_xscale("log")
         ax_bot.set_xlim(edges[0], edges[-1])
+        ax_bot.legend(loc="upper right", fontsize=7, framealpha=0.8)
 
-        out = os.path.join(args.outdir, f"eft_{op}.png")
-        fig.savefig(out, facecolor="white", pad_inches=0.1, bbox_inches="tight")
+        stem = os.path.join(args.outdir, f"eft_{op}")
+        for ext in ("png", "pdf"):
+            fig.savefig(f"{stem}.{ext}", facecolor="white", pad_inches=0.1, bbox_inches="tight")
         plt.close()
-        print(f"  {op:10s}  →  {out}")
+        print(f"  {op:10s}  →  {stem}.png / .pdf")
 
     print("Done.")
 
