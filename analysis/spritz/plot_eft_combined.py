@@ -227,8 +227,13 @@ def main():
             zorder=4,
         )
         ax_bot.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
-        ax_bot.set_ylabel("ratio")
-        ax_bot.set_ylim(0.5, 1.5)
+        ax_bot.set_ylabel("/ SM")
+        # auto-range: pad 20% around the actual spread, minimum ±0.05 around 1
+        finite = ratio_eft[np.isfinite(ratio_eft)]
+        rmin = min(finite.min(), 1.0) - 0.05
+        rmax = max(finite.max(), 1.0) + 0.05
+        pad  = 0.2 * (rmax - rmin)
+        ax_bot.set_ylim(rmin - pad, rmax + pad)
         ax_bot.set_xlabel(r"$m_{\ell\ell}$ (GeV)")
         ax_bot.set_xscale("log")
         ax_bot.set_xlim(edges[0], edges[-1])
