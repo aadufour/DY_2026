@@ -241,13 +241,8 @@ def main():
             zorder=4,
         )
         ax_bot.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
-<<<<<<< Updated upstream
-        ax_bot.set_ylabel("/ SM")
-        # auto-range: symmetric around 1, padded 20%, minimum half-width 0.05
-=======
         ax_bot.set_ylabel("Ratio")
-        # auto-range: pad 20% around the actual spread, minimum +-0.05 around 1
->>>>>>> Stashed changes
+        # auto-range: symmetric around 1, padded 20%, minimum half-width 0.05
         finite = ratio_eft[np.isfinite(ratio_eft)]
         half = max(np.max(np.abs(finite - 1.0)) * 1.2, 0.05)
         ax_bot.set_ylim(1.0 - half, 1.0 + half)
