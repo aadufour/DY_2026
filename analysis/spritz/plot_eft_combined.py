@@ -56,11 +56,13 @@ def _darker(color):
 
 
 def get_vals(directory, name):
-    return directory[f"histo_{name}"].to_hist().values().copy()
+    vals, _ = directory[f"histo_{name}"].to_numpy()
+    return vals.copy()
 
 
 def get_edges(directory, name):
-    return directory[f"histo_{name}"].to_hist().axes[0].edges
+    _, edges = directory[f"histo_{name}"].to_numpy()
+    return edges
 
 
 def main():
