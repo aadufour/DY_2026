@@ -75,6 +75,10 @@ def main():
     parser.add_argument("--region",   default="inc_mm",             help="Region key in histos.root")
     parser.add_argument("--variable", default="mll",                help="Variable key in histos.root")
     parser.add_argument("--outdir",   default="plots/eft_operators", help="Output directory for PNGs")
+    parser.add_argument("--blind-above", type=float, default=500.,
+                        help="Blind data above this mll value in GeV (default: 500)")
+    parser.add_argument("--no-blind", action="store_true",
+                        help="Disable blinding and show all data")
     args = parser.parse_args()
 
     os.makedirs(args.outdir, exist_ok=True)
@@ -192,14 +196,22 @@ def main():
             label=f"EFT {op} (c=1)", fill=False, zorder=3,
         )
 
-        # Data as black dots with Poisson error bars
+        # Data as black dots with Poisson error bars (blind above threshold)
         data_unc = np.sqrt(np.abs(data_var))
+        if not args.no_blind:
+            blind_mask = centers > args.blind_above
+            data_plot     = np.where(blind_mask, np.nan, data)
+            data_unc_plot = np.where(blind_mask, np.nan, data_unc)
+        else:
+            data_plot     = data
+            data_unc_plot = data_unc
+        blind_label = f" [blind > {int(args.blind_above)} GeV]" if not args.no_blind else ""
         ax_top.errorbar(
             centers,
-            data / widths,
-            yerr=data_unc / widths,
+            data_plot / widths,
+            yerr=data_unc_plot / widths,
             fmt="o", markersize=4, color="black",
-            label=f"Data [{int(round(data.sum()))}]",
+            label=f"Data [{int(round(data.sum()))}]{blind_label}",
             zorder=4,
         )
 
@@ -221,8 +233,9 @@ def main():
 
         ax_bot.stairs(ratio_eft, edges=edges, color="crimson", linewidth=1.2, label="EFT/SM")
         ax_bot.errorbar(
-            centers, ratio_data,
-            yerr=data_unc / denom,
+            centers,
+            np.where(blind_mask if not args.no_blind else False, np.nan, ratio_data),
+            yerr=np.where(blind_mask if not args.no_blind else False, np.nan, data_unc / denom),
             fmt="o", markersize=3, color="black", label="Data/SM",
             zorder=4,
         )
