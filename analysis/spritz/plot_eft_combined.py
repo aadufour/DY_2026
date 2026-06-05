@@ -25,14 +25,14 @@ import mplhep as hep
 import numpy as np
 import uproot
 
-# ── operator list (27 operators, v7/v8 naming) ──────────────────────────────
+# -- operator list (27 operators) ------------------------------
 OPERATORS = [
     "cHDD", "cHWB", "cbWRe", "cbBRe", "cHj1", "cHQ1", "cHj3", "cHQ3",
     "cHu", "cHd", "cHbq", "cHl1", "cHl3", "cHe", "cll1", "clj1", "clj3",
     "cQl1", "cQl3", "ceu", "ced", "cbe", "cje", "cQe", "clu", "cld", "cbl",
 ]
 
-# background stack order (bottom → top), matching Fabian's colour convention
+# background stack order (bottom -> top)
 BKG_STACK = ["DYtt", "GGToLL", "Single Top", "ZZ", "WZ", "WW", "TT"]
 
 # fallback colours (Petroff palette) if config.py doesn't provide them
@@ -79,7 +79,7 @@ def main():
 
     os.makedirs(args.outdir, exist_ok=True)
 
-    # ── try to get colours / lumi from config.py in CWD ─────────────────────
+    # -- try to get colours / lumi from config.py in CWD ---------------------
     colors = dict(DEFAULT_COLORS)
     lumi = 59.74
     year_label = "2018"
@@ -92,7 +92,7 @@ def main():
     except Exception:
         pass  # analysis_venv may not have spritz_fabian in PYTHONPATH; defaults are fine
 
-    # ── open histos.root ─────────────────────────────────────────────────────
+    # -- open histos.root -----------------------------------------------------
     f = uproot.open(args.input)
     directory = f[f"{args.region}/{args.variable}"]
 
@@ -100,7 +100,7 @@ def main():
     widths  = edges[1:] - edges[:-1]
 
 
-    # ── read backgrounds ─────────────────────────────────────────────────────
+    # -- read backgrounds -----------------------------------------------------
     bkg_vals = {}
     for s in BKG_STACK:
         try:
@@ -114,22 +114,22 @@ def main():
     data_var  = get_variances(directory, "Data")
     centers   = 0.5 * (edges[:-1] + edges[1:])
 
-    # ── bin-by-bin k-factor ──────────────────────────────────────────────────
+    # -- bin-by-bin k-factor --------------------------------------------------
     k = np.where(sm > 0, dyll / sm, 1.0)
 
-    # ── background cumulative stack (shared across all operators) ─────────────
+    # -- background cumulative stack (shared across all operators) -------------
     present = [s for s in BKG_STACK if s in bkg_vals]
     stack   = np.array([bkg_vals[s] for s in present])   # shape (n_samples, n_bins)
     cumsum  = np.cumsum(stack, axis=0)                    # shape (n_samples, n_bins)
     bkg_total = cumsum[-1]
 
-    # ── matplotlib style ─────────────────────────────────────────────────────
+    # -- matplotlib style -----------------------------------------------------
     style = deepcopy(hep.style.CMS)
     style["font.size"] = 12
     style["figure.figsize"] = (6, 6)
     plt.style.use(style)
 
-    # ── one plot per operator ────────────────────────────────────────────────
+    # -- one plot per operator ------------------------------------------------
     for op in OPERATORS:
         try:
             w1  = get_vals(directory, f"w1_{op}")
@@ -138,22 +138,22 @@ def main():
             print(f"  [skip] {op}: histo_w1_{op} / histo_wm1_{op} not found in {args.input}")
             continue
 
-        # k-factor rescaling (all three components, keeps decomposition consistent)
-        sm_k  = sm  * k
-        w1_k  = w1  * k
-        wm1_k = wm1 * k
+        # k-factor rescaling
+        sm_k  = sm  * k             #becomes MiNNLO
+        w1_k  = w1  * k             #becomes consistent with MiNNLO
+        wm1_k = wm1 * k 
 
         # EFT decomposition
         lin  = 0.5 * (w1_k - wm1_k)
         quad = 0.5 * (w1_k + wm1_k) - sm_k
 
-        # EFT at c=1: sm_k + lin + quad = w1_k  (sanity: c=0 → sm_k = dyll ✓)
+        # EFT at c=1: sm_k + lin + quad = w1_k  (sanity: c=0 -> sm_k = dyll )
         eft = sm_k + lin + quad
 
         sm_total  = bkg_total + dyll
         eft_total = bkg_total + eft
 
-        # ── figure ───────────────────────────────────────────────────────────
+        # -- figure -----------------------------------------------------------
         fig, (ax_top, ax_bot) = plt.subplots(
             2, 1, sharex=True,
             gridspec_kw={"height_ratios": [3, 1]},
@@ -162,7 +162,7 @@ def main():
         fig.tight_layout(pad=-0.5)
         hep.cms.label("", data=False, lumi=round(lumi, 2), ax=ax_top, year=year_label)
 
-        # draw stacked backgrounds (bottom → top)
+        # draw stacked backgrounds (bottom -> top)
         for i, name in enumerate(present):
             base = cumsum[i - 1] if i > 0 else np.zeros_like(bkg_total)
             ax_top.stairs(
@@ -227,7 +227,7 @@ def main():
             zorder=4,
         )
         ax_bot.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
-        ax_bot.set_ylabel("/ SM")
+        ax_bot.set_ylabel("ratio")
         ax_bot.set_ylim(0.5, 1.5)
         ax_bot.set_xlabel(r"$m_{\ell\ell}$ (GeV)")
         ax_bot.set_xscale("log")
@@ -238,7 +238,7 @@ def main():
         for ext in ("png", "pdf"):
             fig.savefig(f"{stem}.{ext}", facecolor="white", pad_inches=0.1, bbox_inches="tight")
         plt.close()
-        print(f"  {op:10s}  →  {stem}.png / .pdf")
+        print(f"  {op:10s}  ->  {stem}.png / .pdf")
 
     print("Done.")
 
