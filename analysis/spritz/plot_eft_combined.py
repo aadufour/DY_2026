@@ -88,7 +88,7 @@ def main():
 
     # ── open histos.root ─────────────────────────────────────────────────────
     f = uproot.open(args.input)
-    directory = f[f"{args.region}/{args.variable}/nominal"]
+    directory = f[f"{args.region}/{args.variable}"]
 
     edges   = get_edges(directory, "sm")
     widths  = edges[1:] - edges[:-1]
