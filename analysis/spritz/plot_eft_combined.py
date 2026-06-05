@@ -119,7 +119,8 @@ def main():
     centers   = 0.5 * (edges[:-1] + edges[1:])
 
     # -- bin-by-bin k-factor --------------------------------------------------
-    k = np.where(sm > 0, dyll / sm, 1.0)
+    # k = np.where(sm > 0, dyll / sm, 1.0)
+    k = dyll / sm
 
     # -- background cumulative stack (shared across all operators) -------------
     present = [s for s in BKG_STACK if s in bkg_vals]
@@ -240,8 +241,13 @@ def main():
             zorder=4,
         )
         ax_bot.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
+<<<<<<< Updated upstream
         ax_bot.set_ylabel("/ SM")
         # auto-range: symmetric around 1, padded 20%, minimum half-width 0.05
+=======
+        ax_bot.set_ylabel("Ratio")
+        # auto-range: pad 20% around the actual spread, minimum +-0.05 around 1
+>>>>>>> Stashed changes
         finite = ratio_eft[np.isfinite(ratio_eft)]
         half = max(np.max(np.abs(finite - 1.0)) * 1.2, 0.05)
         ax_bot.set_ylim(1.0 - half, 1.0 + half)
