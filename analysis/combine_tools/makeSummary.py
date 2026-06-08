@@ -8,12 +8,12 @@ from HiggsAnalysis.AnalyticAnomalousCoupling.utils.scan import scanEFT
 
 plt.style.use(hep.style.CMS)
 plt.rcParams.update({
-    "font.size":        24,
-    "axes.titlesize":   24,
-    "axes.labelsize":   24,
-    "xtick.labelsize":  22,
-    "ytick.labelsize":  22,
-    "legend.fontsize":  22,
+    "font.size":        34,
+    "axes.titlesize":   30,
+    "axes.labelsize":   34,
+    "xtick.labelsize":  32,
+    "ytick.labelsize":  32,
+    "legend.fontsize":  26,
 })
 
 # -------------------------
