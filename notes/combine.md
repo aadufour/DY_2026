@@ -211,6 +211,30 @@ runScans.py 1 scan    --doOnly cll1 --stat
 runPlots_compare.py 1 --label "Stat + Syst" --compare-stat
 ```
 
+### Step 9 — Summary plot (all operators, two-panel)
+
+Requires both full and stat-only scans to be complete (`higgsCombine.{op}.individual.*.root` AND `higgsCombine.{op}_stat.individual.*.root`).
+
+Switch back to analysis env (NOT combine env — uses matplotlib):
+```bash
+dy_analysis
+cd /path/to/datacards/inc_mm/mll
+makeSummary.py --indir .
+```
+
+Output: `eft_summary_two_panel.pdf` and `eft_summary_two_panel.png`
+- Left panel: 1σ/2σ Wilson coefficient intervals per operator (blue = full, red = stat-only)
+- Right panel: Λ reach at 95% CL in TeV (stacked bars, log scale)
+
+Copy to EOS web area:
+```bash
+# Create dir if it doesn't exist:
+xrdfs root://eosuser.cern.ch mkdir -p /eos/user/a/aldufour/www/my_output_dir
+xrdcp eft_summary_two_panel.p* root://eosuser.cern.ch//eos/user/a/aldufour/www/my_output_dir/
+```
+
+**Note:** `makeSummary.py` crashes with `Singular matrix` if `results` is empty — this means no scan files were found (wrong `--indir`) or stat-only files are missing (skip operator). Always run stat scans before calling it.
+
 ---
 
 ## Process Index Convention (AnomalousCouplingMorphing — RECO only)

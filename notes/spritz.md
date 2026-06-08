@@ -51,23 +51,23 @@ Run Fabian's config on standard CMS backgrounds (DY MiNNLO, TT, WW, WZ, ZZ, sing
 - Config: `analysis/spritz/config_fabian_test.py` → deployed as `spritz_fabian/configs/test_v2/config.py`
 - Reproduced Fabian's pag.5 (29 May) background stack plot ✓
 
-### Step 2: add EFT signal on top (IN PROGRESS)
+### Step 2: add EFT signal on top ✓ DONE
 
-Build EFT signal on top of Fabian's background framework using our DY SMEFTsim LO NanoAOD.
+Built EFT signal on top of Fabian's background framework using our DY SMEFTsim LO NanoAOD.
 
-**Config:** `analysis/spritz/config_combined_v1.py` → deploy as `spritz_fabian/configs/combined_v1/config.py`
+**Config:** `analysis/spritz/config.py` → deployed as `spritz_fabian/configs/test_v3/config.py`
 
-**Runner:** `runner_dy_smeft_v8.py` — handles both EFT subsamples (via LHEReweightingWeight) and standard MC/data in a single config. `do_theory_variations=False` for now (lumi only).
+**Runner:** `analysis/spritz/runner.py` — Fabian's `runner_3DY.py` with 4 EFT additions (marked `### EFT ###`):
+1. Filter events to exactly 406 LHEReweightingWeights when `EFT` kwarg is set
+2. LHE mll filter to avoid double-counting between the 7 mll-binned EFT samples
+3. Subsample handling: supports `(mask_expr, weight_expr)` tuples for EFT weights
+4. Per-subsample weight in histogram fill
+
+`do_theory_variations=False` (lumi only). No systematics in this config — see Giacomo's v8 for theory systs.
 
 **K-factor:** k(bin) = MiNNLO(bin) / SM_MG(bin), applied bin-by-bin at plotting stage to all EFT components (sm, w1_{op}, wm1_{op}) consistently. See notes on why all three must be rescaled.
 
-**Runner fix (June 2026):** `doTheoryVariations` was only defined inside `if not isData:` block, causing NameError for data events. Fixed by initializing it before the block.
-
-**TODO on LLR before running:**
-1. Add DYSMEFTsim_LO_mll_* entries to Fabian's samples.json at
-   `/grid_mnt/data__data.polcms/cms/adufour/spritz_fabian/data/Full2018v9/samples/samples.json`
-   — copy structure from our spritz's samples.json, using xsecs from the Cross sections section above
-2. Patch `data/fileset.json` after jobs finish (see v7 fileset patch snippet, use sm/w1_/wm1_ keys)
+**3000 condor jobs ran successfully** (batch 807506). Result in `spritz_fabian/configs/test_v3/`.
 
 ---
 
@@ -186,6 +186,88 @@ cd /grid_mnt/.../configs/myconfig
 spritz-merge       # run from config dir, NOT from condor/
 spritz-postproc
 spritz-plot        # or dy_analysis + custom plot script
+```
+
+---
+
+## Full Pipeline (Fabian's spritz — combined EFT+bkg, test_v3)
+
+### Active files
+- Config: `analysis/spritz/config.py` → `spritz_fabian/configs/test_v3/config.py`
+- Runner: `analysis/spritz/runner.py` → `spritz_fabian/configs/test_v3/condor/runner.py`
+- 3000 jobs, lumi-only uncertainty, no theory systematics
+
+### Required patches to Fabian's spritz (one-time, already applied)
+
+| File | Patch |
+|------|-------|
+| `src/spritz/scripts/fileset.py` | Added `xrdfs ls -R` for xrootd paths + parallel uproot opens with tqdm + `-r` recycle flag |
+| `data/common/forms.json` | Added `LHEReweightingWeight` to the mc form |
+| `data/Full2018v9/samples/samples.json` | Added 7 DYSMEFTsim_LO_mll_* entries with xsec, kfact, ref, path |
+| `src/spritz/scripts/make_cards.py` | Replaced hardcoded `good_regions`/`good_variables` with `list(analysis_dict["regions/variables"].keys())` |
+| `src/spritz/scripts/make_cards.py` | Added `.replace(" ", "_")` to process name (fixes "Single Top" space → combine parse error) |
+
+### Workflow
+
+```bash
+# Inside apptainer (spritz-shell)
+cd /grid_mnt/data__data.polcms/cms/adufour/spritz_fabian/configs/test_v3
+
+spritz-fileset     # discovers files via xrdfs ls -R for EFT samples
+spritz-chunks
+spritz-batch-llr
+exit               # condor_submit must be outside apptainer
+cd condor && condor_submit submit.jdl
+
+# After jobs finish — back inside apptainer
+spritz-merge
+# Patch fileset.json for EFT subsamples (see snippet below)
+spritz-postproc    # produces histos.root
+spritz-cards       # produces datacards/inc_mm/mll/datacard.txt + shapes.root
+```
+
+### fileset.json patch (before spritz-postproc)
+
+```python
+import json
+path = "data/fileset.json"
+with open(path) as f: s = json.load(f)
+MLL_BINS = ["50_120","120_200","200_400","400_600","600_800","800_1000","1000_3000"]
+OPERATORS = ["cHDD","cHWB","cbWRe","cbBRe","cHj1","cHQ1","cHj3","cHQ3",
+             "cHu","cHd","cHbq","cHl1","cHl3","cHe","cll1","clj1","clj3",
+             "cQl1","cQl3","ceu","ced","cbe","cje","cQe","clu","cld","cbl"]
+for b in MLL_BINS:
+    base = f"DYSMEFTsim_LO_mll_{b}"
+    parent = s[base].copy()
+    s[f"{base}_sm"] = parent.copy()
+    for op in OPERATORS:
+        s[f"{base}_w1_{op}"]  = parent.copy()
+        s[f"{base}_wm1_{op}"] = parent.copy()
+with open(path, "w") as f: json.dump(s, f, indent=2)
+```
+
+### spritz-cards → combine
+
+```bash
+# Still inside apptainer, from test_v3/
+dy_analysis
+spritz-cards     # → datacards/inc_mm/mll/datacard.txt + shapes.root
+
+dy_combine_morphing
+cd datacards/inc_mm/mll
+createCombineJson.py --datacard datacard.txt --binname w1_ --output jsonComb.json
+# Create metadata.json (scan ranges per operator)
+createWS.py 1
+runScans.py 1 initial
+runScans.py 1 scan
+runScans.py 1 initial --stat
+runScans.py 1 scan --stat
+runPlots_compare.py 1
+
+# Summary plot (analysis_venv)
+dy_analysis
+makeSummary.py --indir .
+xrdcp eft_summary_two_panel.p* root://eosuser.cern.ch//eos/user/a/aldufour/www/
 ```
 
 ---
