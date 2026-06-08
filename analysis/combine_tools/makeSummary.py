@@ -125,7 +125,7 @@ if args.horizontal:
     fig, (ax, ax2) = plt.subplots(
         nrows=2,
         figsize=(max(10, 0.9 * n_ops), 10),
-        gridspec_kw={"height_ratios": [2.5, 1]},
+        gridspec_kw={"height_ratios": [2.5, 1.4]},
         sharex=True
     )
 else:
@@ -269,7 +269,7 @@ hep.cms.label(ax=ax, data=True, label="Preliminary")
 
 suffix = "_horizontal" if args.horizontal else ""
 plt.tight_layout()
-plt.savefig(f"eft_summary_two_panel{suffix}.pdf")
-plt.savefig(f"eft_summary_two_panel{suffix}.png", dpi=150)
+plt.savefig(f"eft_summary_two_panel{suffix}.pdf", bbox_inches='tight')
+plt.savefig(f"eft_summary_two_panel{suffix}.png", dpi=150, bbox_inches='tight')
 
 plt.show()
