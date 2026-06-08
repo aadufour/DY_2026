@@ -1,8 +1,8 @@
 # ruff: noqa: E501
 """
-config_combined_v1.py  —  Fabian's backgrounds + DY SMEFTsim LO EFT signal
-===========================================================================
-Runner: runner_dy_smeft_v8.py
+config.py  —  Fabian's backgrounds + DY SMEFTsim LO EFT signal
+===============================================================
+Runner: runner.py
   - Handles both EFT subsamples (LHEReweightingWeight) and standard MC/data
   - No theory systematics (do_theory_variations=False)
   - Only lumi uncertainty
@@ -37,7 +37,7 @@ plot_label = "DY EFT"
 year_label = "2018"
 njobs = 3000
 
-runner = "/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz/runner_combined.py"
+runner = "/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz/runner.py"
 
 special_analysis_cfg = {
     "do_theory_variations": False,
