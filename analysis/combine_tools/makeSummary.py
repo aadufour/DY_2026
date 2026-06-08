@@ -214,7 +214,7 @@ else:
 
 if args.horizontal:
     ax2.set_ylabel(r"$\Lambda$ at 95% CL [TeV]")
-    ax2.set_xticklabels(list(results.keys()), rotation=45, ha='left')
+    ax2.set_xticklabels(list(results.keys()), rotation=45, ha='center')
     ax2.set_yscale("log")
 else:
     ax2.set_xlabel(r"$\Lambda$ at 95% CL [TeV]")
