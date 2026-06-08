@@ -125,7 +125,7 @@ if args.horizontal:
     fig, (ax, ax2) = plt.subplots(
         nrows=2,
         figsize=(max(10, 0.9 * n_ops), 10),
-        gridspec_kw={"height_ratios": [2.5, 1.4]},
+        gridspec_kw={"height_ratios": [2.5, 1.8]},
         sharex=True
     )
 else:
@@ -187,11 +187,13 @@ for i, (op, res) in enumerate(results.items()):
 # =========================
 
 if args.horizontal:
+    # ticks live on the shared axis — set once, show only on bottom panel
     ax.set_xticks(pos)
-    ax.set_xticklabels(list(results.keys()), rotation=45, ha='right', fontsize=14)
+    ax.tick_params(axis='x', labelbottom=False)   # hide on top panel
     ax.axhline(0, color='black', linestyle='--', linewidth=1)
     ax.set_xlim(-1.0, n_ops + 0.5)
-    ax.set_ylabel("Wilson coefficient")
+    ax.set_ylabel("Wilson coefficient", fontsize=20)
+    ax.tick_params(axis='y', labelsize=17)
 else:
     ax.set_yticks(pos)
     ax.set_yticklabels(list(results.keys()))
@@ -204,8 +206,9 @@ else:
 # =========================
 
 if args.horizontal:
-    ax2.set_ylabel(r"$\Lambda$ at 95% CL [TeV]")
-    ax2.tick_params(axis='x', bottom=False, labelbottom=False)
+    ax2.set_ylabel(r"$\Lambda$ at 95% CL [TeV]", fontsize=20)
+    ax2.set_xticklabels(list(results.keys()), rotation=45, ha='right', fontsize=16)
+    ax2.tick_params(axis='y', labelsize=16)
     ax2.set_yscale("log")
 else:
     ax2.set_xlabel(r"$\Lambda$ at 95% CL [TeV]")
@@ -235,7 +238,7 @@ labels = [
 ax.legend(
     handles, labels,
     ncol=2,
-    fontsize=17,
+    fontsize=19,
     columnspacing=3.0,
     loc='upper right' if args.horizontal else 'upper center',
     frameon=False
@@ -251,7 +254,7 @@ bar_handles = [
 ax2.legend(
     handles=bar_handles,
     ncol=1,
-    fontsize=17,
+    fontsize=19,
     loc='upper right',
     frameon=False
 )
