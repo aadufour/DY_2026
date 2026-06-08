@@ -234,10 +234,10 @@ handles = [
 ]
 
 labels = [
-    "With MC 1σ",
-    "With MC 2σ",
-    "Without MC 1σ",
-    "Without MC 2σ",
+    "Stat + Syst 1σ",
+    "Stat + Syst 2σ",
+    "Stat only 1σ",
+    "Stat only 2σ",
 ]
 
 ax.legend(
