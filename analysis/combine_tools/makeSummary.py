@@ -121,6 +121,12 @@ for op in operators:
     }
 
 
+# sort by 2σ interval width (MC scan), narrowest = best sensitivity first
+results = dict(sorted(
+    results.items(),
+    key=lambda kv: abs(kv[1]["MC"]["2sigma"][1] - kv[1]["MC"]["2sigma"][0])
+))
+
 # -------------------------
 # Plot
 # -------------------------
