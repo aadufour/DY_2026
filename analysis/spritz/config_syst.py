@@ -256,6 +256,8 @@ variables = {
 mc_samples = [s for s in samples if not samples[s].get("is_data", False)]
 bkg_samples = [s for s in mc_samples if not samples[s].get("noStat", False) and not samples[s].get("is_signal", False)]
 theory_samples = ["DYll", "DYtt", "Single Top", "TT", "WW"]
+# Single Top does not have reliable LHEPdfWeight in NanoAOD → exclude from PDF/alphaS
+pdf_samples = ["DYll", "DYtt", "TT", "WW"]
 
 nuisances = {
     "lumi": {
@@ -287,7 +289,7 @@ nuisances = {
         "name": "PDFweight",
         "type": "shape",
         "kind": "square",
-        "samples": {k: [f"PDFWeight_{i}" for i in range(101)] for k in theory_samples},
+        "samples": {k: [f"PDFWeight_{i}" for i in range(101)] for k in pdf_samples},
         "is_theory_unc": True,
     },
     "alphaS": {
