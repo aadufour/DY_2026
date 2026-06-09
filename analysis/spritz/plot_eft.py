@@ -25,6 +25,31 @@ import mplhep as hep
 import numpy as np
 import uproot
 
+# ============================================================
+# PLOT CONFIGURATION  — edit these to tune the output
+# ============================================================
+
+FONT_SIZE        = 22   # base font size (axis labels, titles, ticks inherit from this)
+LEGEND_FONTSIZE  = 16   # legend text size
+TICK_LABELSIZE   = 18   # tick-label size (both axes)
+LABEL_SIZE       = 20   # x / y axis label size
+
+FIG_SIZE         = (8, 8)    # (width, height) in inches
+FIG_DPI          = 200
+
+LEGEND_NCOLS_TOP = 2    # columns in the main-panel legend
+LEGEND_LOC_TOP   = "upper right"
+LEGEND_LOC_BOT   = "upper right"
+
+MARKER_SIZE_DATA = 5    # data point marker size (main panel)
+MARKER_SIZE_RATIO= 4    # data point marker size (ratio panel)
+
+LINE_WIDTH_EFT   = 2.0  # linewidth for EFT signal lines
+LINE_WIDTH_SM    = 1.5  # linewidth for SM reference line
+LINE_WIDTH_BKG   = 0.8  # edge linewidth for stacked backgrounds
+
+# ============================================================
+
 # -- operator list (27 operators) ------------------------------
 OPERATORS = [
     "cHDD", "cHWB", "cbWRe", "cbBRe", "cHj1", "cHQ1", "cHj3", "cHQ3",
@@ -130,8 +155,12 @@ def main():
 
     # -- matplotlib style -----------------------------------------------------
     style = deepcopy(hep.style.CMS)
-    style["font.size"] = 12
-    style["figure.figsize"] = (6, 6)
+    style["font.size"]        = FONT_SIZE
+    style["axes.labelsize"]   = LABEL_SIZE
+    style["xtick.labelsize"]  = TICK_LABELSIZE
+    style["ytick.labelsize"]  = TICK_LABELSIZE
+    style["legend.fontsize"]  = LEGEND_FONTSIZE
+    style["figure.figsize"]   = FIG_SIZE
     plt.style.use(style)
 
     # -- one plot per operator ------------------------------------------------
@@ -165,7 +194,7 @@ def main():
         fig, (ax_top, ax_bot) = plt.subplots(
             2, 1, sharex=True,
             gridspec_kw={"height_ratios": [3, 1]},
-            dpi=200,
+            dpi=FIG_DPI,
         )
         fig.tight_layout(pad=-0.5)
         hep.cms.label("", data=False, lumi=round(lumi, 2), ax=ax_top, year=year_label)
@@ -180,7 +209,7 @@ def main():
                 fill=True,
                 color=colors.get(name, "grey"),
                 edgecolor=_darker(colors.get(name, "grey")),
-                linewidth=0.5,
+                linewidth=LINE_WIDTH_BKG,
                 label=name,
                 zorder=1.0 - i * 0.01,
             )
@@ -189,19 +218,19 @@ def main():
         ax_top.stairs(
             sm_total / widths, edges=edges,
             color=colors.get("DYll", DEFAULT_COLORS["DYll"]),
-            linewidth=1.5, linestyle="dashed",
+            linewidth=LINE_WIDTH_SM, linestyle="dashed",
             label="SM (MiNNLO)", fill=False, zorder=2,
         )
 
         # EFT total at c=+1 and c=-1
         ax_top.stairs(
             eft_total / widths, edges=edges,
-            color="crimson", linewidth=1.5,
+            color="crimson", linewidth=LINE_WIDTH_EFT,
             label=f"EFT {op} (c=+1)", fill=False, zorder=3,
         )
         ax_top.stairs(
             eftm_total / widths, edges=edges,
-            color="steelblue", linewidth=1.5,
+            color="steelblue", linewidth=LINE_WIDTH_EFT,
             label=f"EFT {op} (c=-1)", fill=False, zorder=3,
         )
 
@@ -219,7 +248,7 @@ def main():
             centers,
             data_plot / widths,
             yerr=data_unc_plot / widths,
-            fmt="o", markersize=4, color="black",
+            fmt="o", markersize=MARKER_SIZE_DATA, color="black",
             label=f"Data [{int(round(data.sum()))}]{blind_label}",
             zorder=4,
         )
@@ -233,7 +262,7 @@ def main():
         ax_top.set_ylim(ymin, ymax * 3e3)
         ax_top.set_ylabel("Events / GeV")
         ax_top.tick_params(labelbottom=False)
-        ax_top.legend(loc="upper right", fontsize=7, ncols=2, framealpha=0.8)
+        ax_top.legend(loc=LEGEND_LOC_TOP, ncols=LEGEND_NCOLS_TOP, framealpha=0.8)
 
         # ratio panel: EFT/SM and Data/SM
         denom = np.where(sm_total > 0, sm_total, 1e-30)
@@ -247,7 +276,7 @@ def main():
             centers,
             np.where(blind_mask if not args.no_blind else False, np.nan, ratio_data),
             yerr=np.where(blind_mask if not args.no_blind else False, np.nan, data_unc / denom),
-            fmt="o", markersize=3, color="black", label="Data/SM",
+            fmt="o", markersize=MARKER_SIZE_RATIO, color="black", label="Data/SM",
             zorder=4,
         )
         ax_bot.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
@@ -259,7 +288,7 @@ def main():
         ax_bot.set_xlabel(r"$m_{\ell\ell}$ (GeV)")
         ax_bot.set_xscale("log")
         ax_bot.set_xlim(edges[0], edges[-1])
-        ax_bot.legend(loc="upper right", fontsize=7, framealpha=0.8)
+        ax_bot.legend(loc=LEGEND_LOC_BOT, framealpha=0.8)
 
         stem = os.path.join(args.outdir, f"eft_{op}")
         for ext in ("png", "pdf"):
