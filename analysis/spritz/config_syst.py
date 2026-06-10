@@ -284,7 +284,7 @@ nuisances = {
         "samples": (
             {k: [f"QCDScale_{i}" for i in [0,1,3,4,5,7,8]] for k in ["Single Top", "TT", "WW"]}
             | {k: [(f"QCDScale_{2*i}", f"QCDScale_{i}") for i in [0,1,3,4,5,7,8]] for k in ["DYll", "DYtt"]}
-            | {k: [f"QCDScale_{i}" for i in [0,1,3,4,5,7,8]] for k in eft_samples}
+            | {k: [f"QCDScale_{i}" for i in [0,1,3,5,7]] for k in eft_samples}  # EFT: only 8 scale weights (0-7), no index 8
         ),
         "is_theory_unc": True,
     },
