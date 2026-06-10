@@ -138,6 +138,15 @@ if __name__ == "__main__":
     # --- manual escape hatch ---
 
     parser.add_option(
+        "--doOnly",
+        type="str",
+        dest="doOnly",
+        default="",
+        help="Comma-separated list of operators to process (e.g. 'cHDD,cHWB'). "
+             "Only combinations involving exclusively these operators are run.",
+    )
+
+    parser.add_option(
         "--others",
         type="str",
         dest="others",
@@ -166,6 +175,14 @@ if __name__ == "__main__":
         metadata = json.load(file)
 
     ops = list(metadata["operators"].keys())
+
+    if options.doOnly:
+        only_set = set(options.doOnly.split(","))
+        unknown = only_set - set(ops)
+        if unknown:
+            print(f"ERROR: --doOnly contains unknown operators: {', '.join(sorted(unknown))}")
+            sys.exit(1)
+        ops = [op for op in ops if op in only_set]
 
     if mode__ == 3:
         mode__ = len(ops)
