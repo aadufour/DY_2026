@@ -97,7 +97,6 @@ def get_edges(directory, name):
 def main():
     parser = argparse.ArgumentParser(description="EFT operator plots with k-factor")
     parser.add_argument("--input",    default="histos.root",        help="Path to histos.root")
-    parser.add_argument("--shapes",   default=None,                 help="Path to shapes.root (for syst band). If not given, no syst band is drawn.")
     parser.add_argument("--region",   default="inc_mm",             help="Region key in histos.root")
     parser.add_argument("--variable", default="mll",                help="Variable key in histos.root")
     parser.add_argument("--outdir",   default="plots/eft_operators", help="Output directory for PNGs")
@@ -129,6 +128,7 @@ def main():
     edges   = get_edges(directory, "sm")
     widths  = edges[1:] - edges[:-1]
 
+
     # -- read backgrounds -----------------------------------------------------
     bkg_vals = {}
     for s in BKG_STACK:
@@ -144,6 +144,7 @@ def main():
     centers   = 0.5 * (edges[:-1] + edges[1:])
 
     # -- bin-by-bin k-factor --------------------------------------------------
+    # k = np.where(sm > 0, dyll / sm, 1.0)
     k = dyll / sm
 
     # -- background cumulative stack (shared across all operators) -------------
@@ -151,71 +152,6 @@ def main():
     stack   = np.array([bkg_vals[s] for s in present])   # shape (n_samples, n_bins)
     cumsum  = np.cumsum(stack, axis=0)                    # shape (n_samples, n_bins)
     bkg_total = cumsum[-1]
-
-    # -- systematic uncertainty band on bkg+DYll total (SM) -------------------
-    # Reads Up/Down shapes from shapes.root, computes quadrature sum of (var - nom)
-    syst_up_sm   = np.zeros_like(bkg_total)
-    syst_down_sm = np.zeros_like(bkg_total)
-    if args.shapes is not None:
-        try:
-            fs = uproot.open(args.shapes)
-            # nuisances that have Up/Down histos for backgrounds (not EFT)
-            bkg_nuisances = [
-                ("QCDScale",      ["Single_Top", "TT", "WW", "DYtt", "DYll"]),
-                ("PDFweight",     ["TT", "WW", "DYtt", "DYll"]),
-                ("alphaS",        ["DYtt", "DYll"]),
-                ("PSWeight",      ["Single_Top", "TT", "WW", "WZ", "ZZ", "DYtt", "DYll"]),
-                ("mu_reco",       ["GGToLL", "Single_Top", "TT", "WW", "WZ", "ZZ", "DYtt"]),
-                ("mu_idiso",      ["GGToLL", "Single_Top", "TT", "WW", "WZ", "ZZ", "DYtt"]),
-                ("mu_trig",       ["GGToLL", "Single_Top", "TT", "WW", "WZ", "ZZ", "DYtt"]),
-                ("PU",            ["GGToLL", "Single_Top", "TT", "WW", "WZ", "ZZ", "DYtt"]),
-                ("prefireWeight", ["GGToLL", "Single_Top", "TT", "WW", "WZ", "ZZ", "DYtt"]),
-                ("tt_ptrw",       ["TT"]),
-                ("rochester_stat",["GGToLL", "Single_Top", "TT", "WW", "WZ", "ZZ", "DYtt"]),
-                ("rochester_syst",["GGToLL", "Single_Top", "TT", "WW", "WZ", "ZZ", "DYtt"]),
-                ("lumi",          ["Single_Top", "TT", "WW", "WZ", "ZZ", "DYtt", "DYll", "GGToLL"]),
-            ]
-            # nominal SM total from shapes.root (bkg + DYll)
-            sm_samples_shapes = list(bkg_vals.keys()) + ["DYll"]
-            nom_total = np.zeros_like(bkg_total)
-            for s in sm_samples_shapes:
-                key = f"histo_{s.replace(' ', '_')}"
-                try:
-                    nom_total += fs[key].values().copy()
-                except Exception:
-                    pass
-
-            for nuis_name, affected in bkg_nuisances:
-                tot_up   = nom_total.copy()
-                tot_down = nom_total.copy()
-                for s in affected:
-                    skey = s.replace(" ", "_")
-                    nom_s_key = f"histo_{skey}"
-                    up_key    = f"histo_{skey}_{nuis_name}Up"
-                    down_key  = f"histo_{skey}_{nuis_name}Down"
-                    try:
-                        nom_s = fs[nom_s_key].values().copy()
-                        up_s  = fs[up_key].values().copy()
-                        do_s  = fs[down_key].values().copy()
-                        tot_up   += (up_s  - nom_s)
-                        tot_down += (do_s  - nom_s)
-                    except Exception:
-                        pass
-                    if nuis_name == "lumi":
-                        # lnN: scale nom by 1.0084 / 1/1.0084
-                        try:
-                            nom_s = fs[nom_s_key].values().copy()
-                            tot_up   += (1.0084 - 1.0) * nom_s
-                            tot_down += (1.0 / 1.0084 - 1.0) * nom_s
-                        except Exception:
-                            pass
-                syst_up_sm   += np.square(tot_up   - nom_total)
-                syst_down_sm += np.square(tot_down - nom_total)
-            syst_up_sm   = np.sqrt(syst_up_sm)
-            syst_down_sm = np.sqrt(syst_down_sm)
-            print(f"  Syst band loaded from {args.shapes}")
-        except Exception as e:
-            print(f"  [warn] Could not compute syst band from {args.shapes}: {e}")
 
     # -- matplotlib style -----------------------------------------------------
     style = deepcopy(hep.style.CMS)
@@ -286,16 +222,6 @@ def main():
             label="SM (MiNNLO)", fill=False, zorder=2,
         )
 
-        # systematic uncertainty band on SM total
-        if args.shapes is not None and np.any(syst_up_sm > 0):
-            ax_top.fill_between(
-                np.repeat(edges, 2)[1:-1],
-                np.repeat((sm_total - syst_down_sm) / widths, 2),
-                np.repeat((sm_total + syst_up_sm)   / widths, 2),
-                step="pre", alpha=0.30, color="grey",
-                hatch="///", linewidth=0, label="Syst. unc.", zorder=2,
-            )
-
         # EFT total at c=+1 and c=-1
         ax_top.stairs(
             eft_total / widths, edges=edges,
@@ -354,14 +280,6 @@ def main():
             zorder=4,
         )
         ax_bot.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
-        if args.shapes is not None and np.any(syst_up_sm > 0):
-            ax_bot.fill_between(
-                np.repeat(edges, 2)[1:-1],
-                np.repeat((sm_total - syst_down_sm) / denom, 2),
-                np.repeat((sm_total + syst_up_sm)   / denom, 2),
-                step="pre", alpha=0.30, color="grey",
-                hatch="///", linewidth=0, zorder=0,
-            )
         ax_bot.set_ylabel("Ratio")
         # auto-range: symmetric around 1, padded 20%, minimum half-width 0.05
         finite = np.concatenate([ratio_eft[np.isfinite(ratio_eft)], ratio_eftm[np.isfinite(ratio_eftm)]])
