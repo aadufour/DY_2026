@@ -259,6 +259,8 @@ bkg_samples = [s for s in mc_samples if not samples[s].get("noStat", False) and 
 theory_samples = ["DYll", "DYtt", "Single Top", "TT", "WW"]
 # Single Top does not have reliable LHEPdfWeight in NanoAOD → exclude from PDF/alphaS
 pdf_samples = ["DYll", "DYtt", "TT", "WW"]
+# EFT samples — theory systs apply to sm + all w1/wm1 operators
+eft_samples = ["sm"] + [f"w1_{op}" for op in OPERATORS] + [f"wm1_{op}" for op in OPERATORS]
 
 nuisances = {
     "lumi": {
@@ -283,6 +285,7 @@ nuisances = {
         "samples": (
             {k: [f"QCDScale_{i}" for i in [0,1,3,4,5,7,8]] for k in ["Single Top", "TT", "WW"]}
             | {k: [(f"QCDScale_{2*i}", f"QCDScale_{i}") for i in [0,1,3,4,5,7,8]] for k in ["DYll", "DYtt"]}
+            | {k: [f"QCDScale_{i}" for i in [0,1,3,5,7]] for k in eft_samples}  # EFT: only 8 scale weights (0-7)
         ),
         "is_theory_unc": True,
     },
@@ -290,14 +293,17 @@ nuisances = {
         "name": "PDFweight",
         "type": "shape",
         "kind": "square",
-        "samples": {k: [f"PDFWeight_{i}" for i in range(101)] for k in pdf_samples},
+        "samples": (
+            {k: [f"PDFWeight_{i}" for i in range(101)] for k in pdf_samples}
+            | {k: [f"PDFWeight_{i}" for i in range(101)] for k in eft_samples}
+        ),
         "is_theory_unc": True,
     },
     "alphaS": {
         "name": "alphaS",
         "type": "shape",
         "kind": "envelope",
-        "samples": {k: [f"PDFWeight_{i}" for i in [101, 102]] for k in ["DYll", "DYtt"]},
+        "samples": {k: [f"PDFWeight_{i}" for i in [101, 102]] for k in ["DYll", "DYtt"] + eft_samples},
         "is_theory_unc": True,
     },
     "PSWeight": {
