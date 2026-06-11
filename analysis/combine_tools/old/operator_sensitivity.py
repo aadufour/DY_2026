@@ -34,6 +34,21 @@ import mplhep as hep
 import numpy as np
 import uproot
 
+# ============================================================
+# PLOT CONFIGURATION  — edit these to tune the output
+# ============================================================
+
+FONT_SIZE       = 22   # base font size
+LABEL_SIZE      = 22   # axis label size
+TICK_LABELSIZE  = 18   # tick label size
+LEGEND_FONTSIZE = 16   # legend font size
+TITLE_SIZE      = 20   # panel title / CMS label size
+
+FIG_WIDTH       = 11   # figure width in inches
+LINE_WIDTH      = 2.0  # histogram line width
+
+# ============================================================
+
 # -- operator list (Warsaw basis, SMEFTsim) ---------------------------------
 ALL_OPS = [
     "cHDD", "cHWB", "cbWRe", "cbBRe",
@@ -141,7 +156,7 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
 
     # -- figure: 3 panels sharing the mll x-axis -----------------------
     fig, (ax1, ax2, ax3) = plt.subplots(
-        3, 1, figsize=(9, 11),
+        3, 1, figsize=(FIG_WIDTH, FIG_WIDTH * 1.2),
         gridspec_kw={"height_ratios": [4, 2, 2], "hspace": 0.05},
         sharex=True,
         layout="constrained",
@@ -150,17 +165,17 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
     # -- Panel 1: absolute shapes --------------------------------------
     fill_step(ax1, edges, qcd_dn, qcd_up, alpha=0.25, color=C_QCD, label="QCD scale")
     fill_step(ax1, edges, pdf_dn, pdf_up, alpha=0.25, color=C_PDF, label="PDF")
-    hep.histplot(sm,  bins=edges, ax=ax1, color=C_SM,  linewidth=1.8,
+    hep.histplot(sm,  bins=edges, ax=ax1, color=C_SM,  linewidth=LINE_WIDTH,
                  histtype="step", label="SM")
-    hep.histplot(eft, bins=edges, ax=ax1, color=C_EFT, linewidth=1.8,
+    hep.histplot(eft, bins=edges, ax=ax1, color=C_EFT, linewidth=LINE_WIDTH,
                  histtype="step", linestyle="--",
                  label=rf"SM+lin+quad  ({op}=1.0)")
 
     ax1.semilogy()
     ax1.set_xscale("log")
     ax1.set_xlim(edges[0], edges[-1])
-    ax1.set_ylabel("Events / bin", fontsize=11)
-    ax1.legend(frameon=False, fontsize=9, ncol=2, loc="upper right")
+    ax1.set_ylabel("Events / bin")
+    ax1.legend(frameon=False, ncol=2, loc="upper right")
     hep.cms.label(f"{op} = 1.0", ax=ax1, data=True, lumi=lumi_fb, loc=0)
 
     # -- Panel 2: fractional deviation (asymmetric syst bands) --------
@@ -168,11 +183,11 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
     fill_step(ax2, edges, qcd_dn_rel, qcd_up_rel, alpha=0.25, color=C_QCD, label="QCD scale")
     fill_step(ax2, edges, pdf_dn_rel, pdf_up_rel, alpha=0.25, color=C_PDF,  label="PDF")
     fill_step(ax2, edges, -stat_rel,  +stat_rel,  alpha=0.15, color=C_STAT, label="Stat")
-    hep.histplot(ratio, bins=edges, ax=ax2, color=C_EFT, linewidth=1.8,
+    hep.histplot(ratio, bins=edges, ax=ax2, color=C_EFT, linewidth=LINE_WIDTH,
                  histtype="step", label="EFT / SM - 1")
 
-    ax2.set_ylabel("EFT / SM - 1", fontsize=11)
-    ax2.legend(frameon=False, fontsize=8, ncol=4, loc="best")
+    ax2.set_ylabel("EFT / SM - 1")
+    ax2.legend(frameon=False, ncol=4, loc="best")
 
     # -- Panel 3: |EFT - SM| / sqrt(SM) -------------------------------
     ax3.axhline(1, color="gray", linestyle="--", linewidth=0.8, alpha=0.7)
@@ -181,11 +196,11 @@ def make_operator_plot(f, op, channel, outdir, lumi_fb, tail_thr):
     hep.histplot(pull_neg, bins=edges, ax=ax3, color="navy", alpha=0.75,
                  histtype="fill", label="EFT < SM")
 
-    ax3.set_ylabel(r"$|\mathrm{EFT}-\mathrm{SM}|\,/\,\sqrt{\mathrm{SM}}$", fontsize=11)
+    ax3.set_ylabel(r"$|\mathrm{EFT}-\mathrm{SM}|\,/\,\sqrt{\mathrm{SM}}$")
     ax3.set_xlabel(r"$m_{\ell\ell}$ [GeV]")
     ax3.set_xticks(edges)
-    ax3.set_xticklabels([str(int(e)) for e in edges], rotation=45, ha="right", fontsize=8)
-    ax3.legend(frameon=False, fontsize=8, loc="upper left")
+    ax3.set_xticklabels([str(int(e)) for e in edges], rotation=45, ha="right")
+    ax3.legend(frameon=False, loc="upper left")
 
     # bin-edge separators on all panels
     for e in edges[1:-1]:
@@ -226,20 +241,19 @@ def make_heatmap(results, edges, outdir):
     vmax = np.percentile(mat[mat > 0], 95) if mat.max() > 0 else 1.0
     im = ax.imshow(mat, aspect="auto", cmap="YlOrRd", vmin=0, vmax=vmax)
     cbar = plt.colorbar(im, ax=ax)
-    cbar.ax.tick_params(labelsize=7)
-    cbar.set_label(r"$|\mathrm{EFT}-\mathrm{SM}|\,/\,\sqrt{\mathrm{SM}}$", fontsize=9)
+    cbar.set_label(r"$|\mathrm{EFT}-\mathrm{SM}|\,/\,\sqrt{\mathrm{SM}}$")
 
     ax.set_xticks(range(len(labels)))
-    ax.set_xticklabels(labels, rotation=30, ha="right", fontsize=8)
+    ax.set_xticklabels(labels, rotation=30, ha="right")
     ax.set_yticks(range(len(ops)))
-    ax.set_yticklabels(ops, fontsize=8)
-    ax.set_xlabel(r"$m_{\ell\ell}$ bin [GeV]", fontsize=9)
+    ax.set_yticklabels(ops)
+    ax.set_xlabel(r"$m_{\ell\ell}$ bin [GeV]")
 
     for i, row in enumerate(mat):
         for j, val in enumerate(row):
             text_col = "white" if val > 0.65 * vmax else "black"
             ax.text(j, i, f"{val:.2f}", ha="center", va="center",
-                    fontsize=6, color=text_col)
+                    fontsize=TICK_LABELSIZE - 4, color=text_col)
 
 
     path = os.path.join(outdir, "summary_sensitivity_heatmap.pdf")
@@ -260,16 +274,16 @@ def make_ratio_heatmap(results, edges, outdir):
     plt.colorbar(im, ax=ax, label="EFT / SM - 1")
 
     ax.set_xticks(range(len(labels)))
-    ax.set_xticklabels(labels, rotation=30, ha="right", fontsize=8)
+    ax.set_xticklabels(labels, rotation=30, ha="right")
     ax.set_yticks(range(len(ops)))
-    ax.set_yticklabels(ops, fontsize=8)
+    ax.set_yticklabels(ops)
     ax.set_xlabel(r"$m_{\ell\ell}$ bin [GeV]")
-    ax.set_title(r"EFT / SM - 1 per operator per $m_{\ell\ell}$ bin  ($C=1$)", fontsize=12)
+    ax.set_title(r"EFT / SM - 1 per operator per $m_{\ell\ell}$ bin  ($C=1$)")
 
     for i, row in enumerate(mat):
         for j, val in enumerate(row):
             ax.text(j, i, f"{val:.2f}", ha="center", va="center",
-                    fontsize=5.5, color="black")
+                    fontsize=TICK_LABELSIZE - 4, color="black")
 
 
     path = os.path.join(outdir, "summary_ratio_heatmap.pdf")
@@ -293,7 +307,7 @@ def make_ranking(results, outdir):
     fig, ax = plt.subplots(figsize=(9, max(4, 0.38 * len(ops))))
     ax.barh(range(len(ops)), vals, color=colors, alpha=0.85, edgecolor="white", linewidth=0.5)
     ax.set_yticks(range(len(ops)))
-    ax.set_yticklabels(ops, fontsize=9)
+    ax.set_yticklabels(ops)
     ax.set_xscale("log")
     ax.set_xlabel(r"max $|\mathrm{EFT}-\mathrm{SM}|\,/\,\sqrt{\mathrm{SM}}$ across $m_{\ell\ell}$ bins")
     ax.set_title(
@@ -301,7 +315,6 @@ def make_ranking(results, outdir):
         "\n"
         r"colour: green = tail-dominated ($m_{\ell\ell} \gg M_Z$), "
         r"red = Z-peak dominated",
-        fontsize=10,
     )
     ax.axvline(1, color="gray", linestyle="--", linewidth=0.8)
     ax.invert_yaxis()
@@ -309,7 +322,7 @@ def make_ranking(results, outdir):
 
     sm_p = mpatches.Patch(color=cmap(0.05), label=r"bulk ($m_{\ell\ell} \sim M_Z$)")
     tl_p = mpatches.Patch(color=cmap(0.95), label=r"tail ($m_{\ell\ell} \gg M_Z$)")
-    ax.legend(handles=[sm_p, tl_p], frameon=False, fontsize=9, loc="lower right")
+    ax.legend(handles=[sm_p, tl_p], frameon=False, loc="lower right")
 
 
     path = os.path.join(outdir, "summary_operator_ranking.pdf")
@@ -346,6 +359,14 @@ def main():
     os.makedirs(args.outdir, exist_ok=True)
 
     hep.style.use("CMS")
+    plt.rcParams.update({
+        "font.size":       FONT_SIZE,
+        "axes.labelsize":  LABEL_SIZE,
+        "axes.titlesize":  TITLE_SIZE,
+        "xtick.labelsize": TICK_LABELSIZE,
+        "ytick.labelsize": TICK_LABELSIZE,
+        "legend.fontsize": LEGEND_FONTSIZE,
+    })
 
     lumi_fb = args.lumi / 1000.
     ops     = args.operators or ALL_OPS
