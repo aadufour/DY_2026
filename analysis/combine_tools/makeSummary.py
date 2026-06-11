@@ -121,10 +121,10 @@ for op in operators:
     }
 
 
-# sort by 2σ interval width (MC scan), narrowest = best sensitivity first
+# sort by MC stat+syst 95% CL: smallest farthest bound from zero = best sensitivity first
 results = dict(sorted(
     results.items(),
-    key=lambda kv: abs(kv[1]["MC"]["2sigma"][1] - kv[1]["MC"]["2sigma"][0])
+    key=lambda kv: max(abs(kv[1]["MC"]["2sigma"][0]), abs(kv[1]["MC"]["2sigma"][1]))
 ))
 
 # -------------------------
@@ -200,16 +200,17 @@ for i, (op, res) in enumerate(results.items()):
 # Formatting FIRST panel
 # =========================
 
+op_labels = list(results.keys())
+
 if args.horizontal:
-    # ticks live on the shared axis — set once, show only on bottom panel
     ax.set_xticks(pos)
-    ax.tick_params(axis='x', labelbottom=False)   # hide on top panel
+    ax.tick_params(axis='x', labelbottom=False)
     ax.axhline(0, color='black', linestyle='--', linewidth=1)
     ax.set_xlim(-1.0, n_ops + 0.5)
     ax.set_ylabel("Wilson coefficient")
 else:
     ax.set_yticks(pos)
-    ax.set_yticklabels(list(results.keys()))
+    ax.set_yticklabels(op_labels)
     ax.axvline(0, color='black', linestyle='--', linewidth=1)
     ax.set_ylim(-1.0, n_ops + 2)
     ax.set_xlabel("Wilson coefficient")
@@ -219,10 +220,13 @@ else:
 # =========================
 
 if args.horizontal:
+    ax2.set_xticks(pos)
+    ax2.set_xticklabels(op_labels, rotation=45, ha='left')
     ax2.set_ylabel(r"$\Lambda$ at 95% CL [TeV]")
-    ax2.set_xticklabels(list(results.keys()), rotation=45, ha='center')
     ax2.set_yscale("log")
 else:
+    ax2.set_yticks(pos)
+    ax2.set_yticklabels(op_labels)
     ax2.set_xlabel(r"$\Lambda$ at 95% CL [TeV]")
     ax2.tick_params(axis='y', left=False, labelleft=False)
     ax2.set_xscale("log")
