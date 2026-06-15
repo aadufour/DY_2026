@@ -119,7 +119,8 @@ def plot_task(d):
         ax.set_ylabel("Events / GeV")
         ax.set_title(f"{label}  [{op}]  —  {nuis}", fontsize=13)
         ax.legend(loc="best")
-        if logy:
+        # lin can be negative → always linear; sm/quad use --logy if requested
+        if logy and label != "lin":
             ax.set_yscale("log")
 
         hep.cms.label(loc=0, label="Preliminary", data=False, ax=ax)
