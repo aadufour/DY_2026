@@ -38,10 +38,10 @@ import uproot
 # PLOT CONFIGURATION  — edit these to tune the output
 # ============================================================
 
-FONT_SIZE       = 22   # base font size
-LABEL_SIZE      = 22   # axis label size
-TICK_LABELSIZE  = 18   # tick label size
-LEGEND_FONTSIZE = 16   # legend font size
+FONT_SIZE       = 26   # base font size
+LABEL_SIZE      = 26   # axis label size
+TICK_LABELSIZE  = 26   # tick label size
+LEGEND_FONTSIZE = 21   # legend font size
 TITLE_SIZE      = 20   # panel title / CMS label size
 
 FIG_WIDTH       = 11   # figure width in inches
