@@ -310,38 +310,38 @@ nuisances = {
         "name": "PSWeight",
         "type": "shape",
         "kind": "envelope",
-        "samples": {k: [f"PSWeight_{i}" for i in range(4)] for k in ["DYll", "DYtt", "Single Top", "TT", "WW", "WZ", "ZZ"]},
+        "samples": {k: [f"PSWeight_{i}" for i in range(4)] for k in ["DYll", "DYtt", "Single Top", "TT", "WW", "WZ", "ZZ"] + eft_samples},
         "is_theory_unc": True,
     },
-    # ---- Experimental systematics --------------------------------------------
+    # ---- Experimental systematics (bkgs + DYll + EFT — all are full NanoAOD) --
     "mu_reco": {
         "name": "mu_reco",
         "type": "shape",
-        "samples": {k: None for k in bkg_samples},
+        "samples": {k: None for k in bkg_samples + ["DYll"] + eft_samples},
         "kind": "weight",
     },
     "mu_idiso": {
         "name": "mu_idiso",
         "type": "shape",
-        "samples": {k: None for k in bkg_samples},
+        "samples": {k: None for k in bkg_samples + ["DYll"] + eft_samples},
         "kind": "weight",
     },
     "mu_trig": {
         "name": "mu_trig",
         "type": "shape",
-        "samples": {k: None for k in bkg_samples},
+        "samples": {k: None for k in bkg_samples + ["DYll"] + eft_samples},
         "kind": "weight",
     },
     "PU": {
         "name": "PU",
         "type": "shape",
-        "samples": {k: None for k in bkg_samples},
+        "samples": {k: None for k in bkg_samples + ["DYll"] + eft_samples},
         "kind": "weight",
     },
     "prefireWeight": {
         "name": "prefireWeight",
         "type": "shape",
-        "samples": {k: None for k in bkg_samples},
+        "samples": {k: None for k in bkg_samples + ["DYll"] + eft_samples},
         "kind": "weight",
     },
     "tt_ptrw": {
@@ -354,13 +354,13 @@ nuisances = {
         "name": "rochester_stat",
         "type": "shape",
         "kind": "stdev",
-        "samples": {k: [f"rochester_stat{i}" for i in range(100)] for k in bkg_samples},
+        "samples": {k: [f"rochester_stat{i}" for i in range(100)] for k in bkg_samples + ["DYll"] + eft_samples},
     },
     "rochester_syst": {
         "name": "rochester_syst",
         "type": "shape",
         "kind": "square",
-        "samples": {k: [f"rochester_{s}" for s in ["set2", "set3", "set4"]] for k in bkg_samples},
+        "samples": {k: [f"rochester_{s}" for s in ["set2", "set3", "set4"]] for k in bkg_samples + ["DYll"] + eft_samples},
     },
 }
 
