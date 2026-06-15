@@ -99,6 +99,9 @@ def plot_task(d):
         print(f"  [skip] {op} / {nuis}: {e}")
         return
 
+    _UP_COLOR   = "#f89c20"
+    _DOWN_COLOR = "#e42536"
+
     def make_axes(vals_nom, vals_up, vals_down, label, color):
         """Return (fig, ax_top, ax_bot) for one component."""
         fig, (ax, rax) = plt.subplots(2, 1, sharex=True, **ratio_fig_style)
@@ -110,8 +113,8 @@ def plot_task(d):
                        linestyle=ls, label=lab, fill=False)
 
         stairs(ax, vals_nom,  ls="-",  lw=2.0, lab="Nominal")
-        stairs(ax, vals_up,   ls="--", lw=1.5, col=UP_COLOR,   lab=f"{nuis} Up")
-        stairs(ax, vals_down, ls=":",  lw=1.5, col=DOWN_COLOR,  lab=f"{nuis} Down")
+        stairs(ax, vals_up,   ls="--", lw=1.5, col=_UP_COLOR,   lab=f"{nuis} Up")
+        stairs(ax, vals_down, ls=":",  lw=1.5, col=_DOWN_COLOR,  lab=f"{nuis} Down")
 
         ax.set_ylabel("Events / GeV")
         ax.set_title(f"{label}  [{op}]  —  {nuis}", fontsize=13)
@@ -123,8 +126,8 @@ def plot_task(d):
 
         # ratio panel
         safe = np.where(np.abs(vals_nom) > 0, vals_nom, np.nan)
-        rax.stairs(vals_up   / safe, edges=edges, color=UP_COLOR,  linewidth=1.5, linestyle="--", label=f"{nuis} Up")
-        rax.stairs(vals_down / safe, edges=edges, color=DOWN_COLOR, linewidth=1.5, linestyle=":",  label=f"{nuis} Down")
+        rax.stairs(vals_up   / safe, edges=edges, color=_UP_COLOR,   linewidth=1.5, linestyle="--", label=f"{nuis} Up")
+        rax.stairs(vals_down / safe, edges=edges, color=_DOWN_COLOR, linewidth=1.5, linestyle=":",  label=f"{nuis} Down")
         rax.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
         rax.set_ylim(0.7, 1.3)
         rax.set_ylabel("Var / Nom.")
