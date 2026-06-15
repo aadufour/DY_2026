@@ -44,7 +44,8 @@ DOWN_COLOR = "#e42536"
 
 
 def plot(d__):
-    
+    import numpy as np
+
     file__ =  d__["file"]
     nominal = d__["nominal"]
     systUp = d__["up"]
@@ -55,74 +56,58 @@ def plot(d__):
     out = d__["out"]
     logy = d__["logy"]
 
-    f = uproot.open(file__) 
+    f = uproot.open(file__)
 
-    nom = f[nominal]
-
-    up = f[systUp]
-    down = f[systDown]
+    nom = f[nominal].to_boost()
+    up  = f[systUp].to_boost()
+    down = f[systDown].to_boost()
 
     print(file__, nominal, systUp, systDown)
 
-    nom = nom.to_boost()
-    up = up.to_boost()
-    down = down.to_boost()
+    # bin-width normalisation: divide values (but not variances) by bin widths
+    edges  = nom.axes.edges[0]
+    widths = np.diff(edges)
 
-    
+    nom_plot  = nom.copy();  nom_plot.view().value  = nom.values()  / widths
+    up_plot   = up.copy();   up_plot.view().value   = up.values()   / widths
+    down_plot = down.copy(); down_plot.view().value = down.values() / widths
+
     fig, (ax, rax) = plt.subplots(2, 1, sharex=True, **ratio_fig_style)
-    fig.subplots_adjust(hspace=.07)  # this controls the margin between the two axes
-    
+    fig.subplots_adjust(hspace=.07)
 
-    hep.histplot(nom, ax=ax, color=NOMINAL_COLOR)
-    hep.histplot(up, ax=ax, color=UP_COLOR)
-    hep.histplot(down, ax=ax, color=DOWN_COLOR)
-
+    hep.histplot(nom_plot,  ax=ax, color=NOMINAL_COLOR, label="Nominal")
+    hep.histplot(up_plot,   ax=ax, color=UP_COLOR,      label=f"{shn} Up")
+    hep.histplot(down_plot, ax=ax, color=DOWN_COLOR,    label=f"{shn} Down")
 
     ax.set_xlabel("")
-    ax.set_ylabel("")
+    ax.set_ylabel("Events / GeV")
+    ax.set_title(f"{sample}  —  {shn}", fontsize=14)
+    ax.legend(loc="best")
     if logy:
         ax.set_yscale("log")
 
-    
-    nom_ratio = nom.copy()
-    up_ratio = up.copy()
-    down_ratio = down.copy()
-    
-    nom_ratio.view().value = [nom_ratio.values()[i]/nom.values()[i] if nom.values()[i] != 0 else 1 for i in range(len(nom.values()))] # 1, 1, 1
-    
-    # nom_ratio.view().variance = [nom_ratio.variances()[i]/nom.values()[i] if nom.values()[i] != 0 else 1 for i in range(len(nom.values()))] # 1, 1, 1
-    nom_ratio.view().variance = [0]*len(nom.values())
+    # ratio panel (use un-normalised values for the ratio)
+    nom_v = nom.values()
+    safe  = np.where(nom_v != 0, nom_v, 1.0)
 
-    up_ratio.view().value = [up_ratio.values()[i]/nom.values()[i] if nom.values()[i] != 0 else 1 for i in range(len(nom.values()))] # 1, 1, 1
-    down_ratio.view().value = [down_ratio.values()[i]/nom.values()[i] if nom.values()[i] != 0 else 1 for i in range(len(nom.values()))] # 1, 1, 1
+    nom_ratio  = nom.copy();  nom_ratio.view().value  = np.ones_like(nom_v);             nom_ratio.view().variance  = np.zeros_like(nom_v)
+    up_ratio   = up.copy();   up_ratio.view().value   = up.values()   / safe;            up_ratio.view().variance   = np.zeros_like(nom_v)
+    down_ratio = down.copy(); down_ratio.view().value = down.values() / safe;            down_ratio.view().variance = np.zeros_like(nom_v)
 
-    # up_ratio.view().variance = [up_ratio.variances()[i]/nom.values()[i] if nom.values()[i] != 0 else 1 for i in range(len(nom.values()))] # 1, 1, 1
-    # down_ratio.view().variance = [down_ratio.variances()[i]/nom.values()[i] if nom.values()[i] != 0 else 1 for i in range(len(nom.values()))] # 1, 1, 1
+    hep.histplot(down_ratio, ax=rax, color=DOWN_COLOR, label=f"{shn} Down")
+    hep.histplot(up_ratio,   ax=rax, color=UP_COLOR,   label=f"{shn} Up")
+    hep.histplot(nom_ratio,  ax=rax, color=NOMINAL_COLOR, label="Nominal")
 
-    up_ratio.view().variance = [0]*len(nom.values()) 
-    down_ratio.view().variance = [0]*len(nom.values()) #  if nom.values()[i] != 0 else 1 for i in range(len(nom.values()))] # 1, 1, 1
-
-    err_up = [1 + i for i in sqrt(nom_ratio.view().variance)]
-    err_down = [1 - i for i in sqrt(nom_ratio.view().variance)]
-
-    err_up.append(err_up[-1])
-    err_down.append(err_down[-1])
-    
-
-    # rax.fill_between(x=nom_ratio.axes.edges[0], y1=err_down , y2=err_up, step='post', **shaded_style)
-    hep.histplot(down_ratio, ax=rax, color=DOWN_COLOR)
-    hep.histplot(up_ratio, ax=rax, color=UP_COLOR)
-    hep.histplot(nom_ratio, ax=rax, color=NOMINAL_COLOR)
-
-    
+    rax.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
     rax.set_ylim(0.7, 1.3)
-    rax.set_ylabel('Var / Nom.')
+    rax.set_ylabel("Var / Nom.")
+    rax.set_xlabel(r"$m_{\ell\ell}$ (GeV)")
     rax.autoscale(axis='x', tight=True)
 
     hep.cms.label(loc=0, label="Preliminary", data=True, ax=ax)
 
-    fig.savefig(f"{out}/{binDC__}_{sample}_{shn}.png")
-    fig.savefig(f"{out}/{binDC__}_{sample}_{shn}.pdf")
+    fig.savefig(f"{out}/{binDC__}_{sample}_{shn}.png", bbox_inches="tight")
+    fig.savefig(f"{out}/{binDC__}_{sample}_{shn}.pdf", bbox_inches="tight")
     plt.close(fig)
 
 
