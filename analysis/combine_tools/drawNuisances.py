@@ -68,9 +68,9 @@ def plot(d__):
     edges  = nom.axes.edges[0]
     widths = np.diff(edges)
 
-    nom_plot  = nom.copy();  nom_plot.view().value  = nom.values()  / widths
-    up_plot   = up.copy();   up_plot.view().value   = up.values()   / widths
-    down_plot = down.copy(); down_plot.view().value = down.values() / widths
+    nom_plot  = nom.copy();  nom_plot.view().value  = nom.values()  / widths;  nom_plot.view().variance  = np.zeros_like(widths)
+    up_plot   = up.copy();   up_plot.view().value   = up.values()   / widths;  up_plot.view().variance   = np.zeros_like(widths)
+    down_plot = down.copy(); down_plot.view().value = down.values() / widths;  down_plot.view().variance = np.zeros_like(widths)
 
     fig, (ax, rax) = plt.subplots(2, 1, sharex=True, **ratio_fig_style)
     fig.subplots_adjust(hspace=.07)
