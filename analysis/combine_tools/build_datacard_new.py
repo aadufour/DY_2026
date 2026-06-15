@@ -82,23 +82,28 @@ w_pdf_central = cache.get("w_pdf_central", None)
 pdf_arr       = cache.get(PDF_KEY,         None)
 
 # ---- Normalization fix -------------------------------------------------------
-# LHE weights are not divided by N_gen : sum(w) = N_gen x xsec instead of xsec.
-# Dividing by N_gen gives sum(w)/N_gen x LUMI = xsec x LUMI = N_expected.
+# The cache merges 7 mll-binned samples each with N_GEN_PER_SAMPLE events.
+# Each sample's weights sum to σ_sample × N_GEN_PER_SAMPLE (not ÷ N_gen).
+# Dividing by N_GEN_PER_SAMPLE gives sum(w)/N_GEN_PER_SAMPLE × LUMI = σ × LUMI.
+# DO NOT divide by len(w_SM) (= 7 × N_GEN_PER_SAMPLE) — that underestimates by 7×.
 
+N_GEN_PER_SAMPLE = 100_000   # events generated per mll-binned gridpack
 N_gen = len(w_SM)
-print(f"  N_gen                          : {N_gen:,}")
+print(f"  N_gen total                    : {N_gen:,}")
+print(f"  N_gen per mll-bin sample       : {N_GEN_PER_SAMPLE:,}")
 print(f"  sum(w_SM) before fix           : {w_SM.sum():.4e} pb")
-w_SM          = w_SM / N_gen
-w_p1_all      = {op: w / N_gen for op, w in w_p1_all.items()}
-w_m1_all      = {op: w / N_gen for op, w in w_m1_all.items()}
-w_pp_all      = {k:  w / N_gen for k,  w in w_pp_all.items()}
-w_scale_all   = {k:  w / N_gen for k,  w in w_scale_all.items()}
+w_SM          = w_SM / N_GEN_PER_SAMPLE
+w_p1_all      = {op: w / N_GEN_PER_SAMPLE for op, w in w_p1_all.items()}
+w_m1_all      = {op: w / N_GEN_PER_SAMPLE for op, w in w_m1_all.items()}
+w_pp_all      = {k:  w / N_GEN_PER_SAMPLE for k,  w in w_pp_all.items()}
+w_scale_all   = {k:  w / N_GEN_PER_SAMPLE for k,  w in w_scale_all.items()}
 if w_pdf_central is not None:
-    w_pdf_central = w_pdf_central / N_gen
+    w_pdf_central = w_pdf_central / N_GEN_PER_SAMPLE
 if pdf_arr is not None:
-    pdf_arr = pdf_arr / N_gen
+    pdf_arr = pdf_arr / N_GEN_PER_SAMPLE
 print(f"  sum(w_SM) after fix            : {w_SM.sum():.4e} pb")
 print(f"  N_expected at {LUMI:.0f} pb^-1       : {w_SM.sum() * LUMI:.4e}")
+print(f"  (cross-check: sum(xwgt)/N_GEN_PER_SAMPLE*L = {cache.get('xwgt', w_SM*N_GEN_PER_SAMPLE).sum()/N_GEN_PER_SAMPLE*LUMI:.4e})")
 print()
 
 has_scale = bool(w_scale_all)
