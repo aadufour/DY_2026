@@ -12,6 +12,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument("rootfile")
 parser.add_argument("--tol", type=float, default=0.0,
                      help="treat |value| <= tol as zero (default: exactly 0)")
+parser.add_argument("--negative", action="store_true",
+                     help="instead of zero bins, report bins with value < -tol")
 args = parser.parse_args()
 
 f = uproot.open(args.rootfile)
@@ -28,16 +30,22 @@ for name in names:
         continue
     obj = f[name]
     vals = obj.values()
-    zero_bins = [i for i, v in enumerate(vals) if abs(v) <= args.tol]
-    if zero_bins:
+    if args.negative:
+        bad_bins = [i for i, v in enumerate(vals) if v < -args.tol]
+        label = "negative"
+    else:
+        bad_bins = [i for i, v in enumerate(vals) if abs(v) <= args.tol]
+        label = "zero"
+    if bad_bins:
         found_any = True
         edges = obj.axes[0].edges() if hasattr(obj, "axes") else None
-        print(f"{name}: {len(zero_bins)} zero bin(s) / {len(vals)} total")
-        for i in zero_bins:
+        print(f"{name}: {len(bad_bins)} {label} bin(s) / {len(vals)} total")
+        for i in bad_bins:
             if edges is not None:
                 print(f"    bin {i:3d}  [{edges[i]:.1f}, {edges[i+1]:.1f}]  value={vals[i]}")
             else:
                 print(f"    bin {i:3d}  value={vals[i]}")
 
 if not found_any:
-    print("No zero bins found (excluding *mixed* distributions).")
+    label = "negative" if args.negative else "zero"
+    print(f"No {label} bins found (excluding *mixed* distributions).")
