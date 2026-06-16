@@ -663,3 +663,114 @@ grep -A 4 "<init>" unweighted_events.lhe | grep -v "[<>]" | sed -n '2p'
 ```bash
 grep "<weight " unweighted_events.lhe | head -60
 ```
+
+---
+
+## Full-systematics config: `config_syst_full.py` / `eft_bkg_fullsyst_v1` (v2)
+
+The complete analysis config — backgrounds + EFT signal + ALL theory and experimental
+systematics, applied consistently because the EFT samples (DYSMEFTsim LO) are **full
+NanoAOD** and go through the same RECO/detector simulation as the backgrounds.
+
+Config: `analysis/spritz/config_syst_full.py` → deployed as
+`spritz_fabian/configs/eft_bkg_fullsyst_v1/config.py` (and `_v2` copy with EFT
+experimental systs added).
+
+### Confirmed: EFT samples are muon-only at generation
+
+Checked the MG5 proc card (`DYSMEFTMll50_120_proc_card.dat`):
+```
+generate p p > mu+ mu- QCD=0 SMHLOOP=0 NP<=1
+```
+Explicitly `mu+ mu-`, not the generic `l+ l-` (the `define l+ = e+ mu+` line is unused
+leftover). No flavor-overcounting concern — cross sections and the `mm` RECO selection
+are fully consistent.
+
+### Nuisance list (13 total, all confirmed present in shapes.root)
+
+Theory (apply to backgrounds **and** all 55 EFT templates `sm`, `w1_{op}`, `wm1_{op}`):
+- `QCDscale` — envelope of `LHEScaleWeight` (EFT only has indices 0,1,3,5,7 — LO samples
+  lack indices 2,4,6,8 that backgrounds have)
+- `PDFweight` — square-sum of `LHEPdfWeight` replicas (excludes Single Top — no reliable
+  LHEPdfWeight in its NanoAOD; use `pdf_samples` not `theory_samples`)
+- `alphaS` — envelope of last 2 PDFWeight indices (101,102)
+- `PSWeight` — envelope of 4 PSWeight indices (now also applied to EFT — confirmed
+  PSWeight branch exists in EFT NanoAOD)
+
+Experimental (originally bkg-only; **now also added to DYll + all 55 EFT templates**,
+since they're full NanoAOD too — DYll/EFT were wrongly excluded via `is_signal`/`noStat`
+flags which only matter for `autoMCStats`, not for these shape systs):
+- `mu_reco`, `mu_idiso`, `mu_trig` — muon SF shape variations
+- `PU` — pileup reweighting
+- `prefireWeight` — ECAL prefiring
+- `rochester_stat` (100 toys, kind=stdev), `rochester_syst` (3 sets, kind=square)
+- `tt_ptrw` — TT only (top pT reweighting, not flavor-universal)
+
+Plus `lumi` (lnN, 1.0084) and `stat` (autoMCStats, `maxPoiss=10 includeSignal=0`; EFT
+templates additionally have `noStat=True` so their bin variances are zeroed — they're
+correlated across sm/w1/wm1, not independent Poisson).
+
+### N_gen normalization bug in `build_datacard_new.py` (LHE-level cache)
+
+The LHE cache (`lhe_cache_new.pkl`, via `build_cache_parallel.py`) merges 7
+mll-binned gridpacks, each with its own 100k-event generation and its own cross
+section. **Each event's weight in the LHE `<rwgt>` block (`wkeys['SM']`, etc.) follows
+the convention `Σ w_sample = σ_sample × N_gen_sample`** — i.e. NOT pre-divided by N_gen.
+
+Original bug: `build_datacard_new.py` divided by `N_gen = len(w_SM)` = the **total**
+across all 7 samples (700,000), instead of the **per-sample** N_gen (100,000 each).
+This silently undercounted every bin's expected yield by exactly 7×, which is why
+combine couldn't fit Asimov data after applying the lumi normalization (signal too
+small relative to itself). Fixed by hardcoding `N_GEN_PER_SAMPLE = 100_000` and
+dividing all weight arrays (`w_SM`, `w_p1_all`, `w_m1_all`, `w_pp_all`, `w_scale_all`,
+PDF arrays) by that instead of the total.
+
+Also noted: `sum(w_SM) ≈ 0.72 × sum(xwgt)` — the SM-point LHE reweighting consistently
+gives ~28% less cross section than the raw generation weight (`eventinfo.weight`).
+This is expected reweighting-accuracy behavior (different effective PDF/scale in the
+reweighting vs the original generation) — **always use `w_SM`/`w_p1`/`w_m1` together**
+(never mix with `xwgt`) since they share the same reweighting framework and must stay
+internally consistent for the lin/quad decomposition to close.
+
+### mll-binning stitching artifacts (RECO level)
+
+With multiple mll-binned samples merged (e.g. DY MiNNLO 50-100, 100-200, ... or the 7
+EFT mll bins), an event generated at LHE mll=119 can reconstruct to RECO mll=121, while
+the adjacent 120-200 sample also populates that region → double-counting / artificial
+steps exactly at the bin boundaries (120, 200, 400 GeV, etc.). Fixed in the runner by
+applying a **generator-level (LHE) mll cut** per sample before filling histograms (see
+`runner.py` lines ~147-170, "LHE mll filter for mll-binned EFT samples"). Symptom if
+missing: visible bumps/steps in stacked plots and in `drawNuisances`/`drawNuisancesEFT`
+right at the mll-bin gridpack boundaries.
+
+### Plotting tools
+
+| Script | Location | Purpose |
+|--------|----------|---------|
+| `plot_eft.py` | `analysis/spritz/` | Stacked bkg + EFT(c=±1) overlay plot with k-factor rescaling, data, ratio panel. `--shapes shapes.root` adds a quadrature-sum systematic uncertainty band (pre-fit, no correlations) computed from all bkg shape nuisances in `shapes.root`. Backup at `plot_eft.py.bak`. |
+| `plot_eft_spritz.py` | `analysis/spritz/` | Fabian's original (unmodified) — kept for reference, NOT actively used. |
+| `drawNuisances.py` | `analysis/combine_tools/` | Giacomo's tool (moved from `analysis/spritz/`). Reads the datacard via `HiggsAnalysis.CombinedLimit.DatacardParser`, plots Nominal/Up/Down per sample×nuisance. Needs `dy_combine_morphing` env (NOT `dy_analysis`/apptainer — imports `HiggsAnalysis`). Fixed: values divided by bin width (events/GeV) with variance correctly rescaled by `widths**2` (error bars = MC stat, `sqrt(Σw_i²)`); added labels, title (`sample — nuisance`), axis labels. |
+| `drawNuisancesEFT.py` | `analysis/combine_tools/` | New — reads `shapes.root` directly (no datacard needed), computes `sm`/`lin = 0.5*(w1-wm1)`/`quad = 0.5*(w1+wm1)-sm` decomposition for Nominal/Up/Down per operator×nuisance. One plot per (component, op, nuisance). **`lin` is always linear-scale** (can go negative — `--logy` is ignored for it, sm/quad still respect `--logy`). Run via `dy_combine_morphing`. |
+
+### Error bars in drawNuisances / drawNuisancesEFT — what they mean
+
+Plotted histograms use boost-histogram `Weight()` storage: `value = Σ w_i`,
+`variance = Σ w_i²`. The error bar is `sqrt(variance)` = pure **MC statistical
+uncertainty** (how many generated/weighted events landed in that bin), NOT a
+systematic uncertainty. For uniform-weight events, relative error = `1/sqrt(n_bin)`.
+A near-zero `quad_*` value at the Z peak (large cancellation in
+`0.5*(w_p1+w_m1)-w_SM` since EFT barely affects the resonance) legitimately has a huge
+relative MC stat error and can look like "garbage" — that's real, not a plotting bug.
+`drawNuisances`/`drawNuisancesEFT` show exactly what's stored in the ROOT file, nothing
+is recomputed.
+
+### Misc gotchas
+
+- `git config core.fileMode false` — avoids `chmod +x` on LLR blocking subsequent
+  `git pull` (permission bit changes count as local modifications by default).
+- After moving an executable script, run `hash -r` in bash or it'll keep resolving the
+  old cached path.
+- When copying a whole config dir (`cp -r config_v1 config_v2`) to add new systematics
+  without re-running condor jobs, the `condor/results_merged_new.pkl` carries over as-is
+  — only `histos.root`/`datacards/`/`plots/`/`__pycache__` need to be wiped and
+  regenerated via `spritz-postproc` + `spritz-cards`.
