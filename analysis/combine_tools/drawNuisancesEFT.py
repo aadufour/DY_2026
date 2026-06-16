@@ -2,20 +2,29 @@
 """
 drawNuisancesEFT.py
 ===================
-Plot EFT decomposition (sm, lin, quad) Up/Down nuisance variations from shapes.root.
+Plot EFT decomposition (sm, lin, quad) Up/Down nuisance variations from
+shapes.root (RECO morphing pipeline) or histograms.root (LHE pipeline).
 
-For each operator × nuisance, computes:
+RECO morphing mode (flat keys, "histo_" prefix):
     sm   = histo_sm
     lin  = 0.5 * (histo_w1_op  - histo_wm1_op)
     quad = 0.5 * (histo_w1_op  + histo_wm1_op) - histo_sm
+    nuisance suffix: histo_sm_{nuis}Up / histo_w1_op_{nuis}Up / ...
 
-And for Up/Down variations:
-    sm_Up   = histo_sm_{nuis}Up
-    lin_Up  = 0.5 * (histo_w1_op_{nuis}Up - histo_wm1_op_{nuis}Up)
-    quad_Up = 0.5 * (histo_w1_op_{nuis}Up + histo_wm1_op_{nuis}Up) - histo_sm_{nuis}Up
+LHE mode (keys nested under a channel directory, e.g. "triple_DY/...",
+processes already decomposed by build_datacard_new.py):
+    sm   = {channel}/sm
+    quad = {channel}/quad_op
+    lin  = {channel}/sm_lin_quad_op - sm - quad   (C=1 reference point)
+    nuisance suffix: {channel}/sm_{nuis}Up / {channel}/quad_op_{nuis}Up / ...
+    (nuisance names are "muf_scale"/"pdf", not "QCDScale"/"PDFweight" —
+    common aliases are accepted, see NUISANCE_ALIASES)
+
+The pipeline is auto-detected from the file structure; no flag needed.
 
 Usage:
-    drawNuisancesEFT.py --shapes shapes.root --outdir plots/eft_nuisances
+    drawNuisancesEFT.py --shapes shapes.root      --outdir plots/eft_nuisances
+    drawNuisancesEFT.py --shapes histograms.root  --outdir plots/eft_nuisances_lhe
     drawNuisancesEFT.py --shapes shapes.root --operators cHDD cHWB --nuisances QCDScale PDFweight
 """
 
@@ -36,11 +45,34 @@ OPERATORS = [
     "cQl1", "cQl3", "ceu", "ced", "cbe", "cje", "cQe", "clu", "cld", "cbl",
 ]
 
-NUISANCES = [
+NUISANCES_MORPHING = [
     "QCDScale", "PDFweight", "alphaS", "PSWeight",
     "mu_reco", "mu_idiso", "mu_trig", "PU", "prefireWeight",
     "rochester_stat", "rochester_syst",
 ]
+
+NUISANCES_LHE = ["muf_scale", "pdf"]
+
+# accepted aliases when running against the LHE pipeline, so the same
+# --nuisances spelling used for the morphing pipeline still works
+NUISANCE_ALIASES_LHE = {
+    "QCDScale": "muf_scale", "QCDscale": "muf_scale", "qcdscale": "muf_scale",
+    "PDFweight": "pdf", "PDF": "pdf", "pdfweight": "pdf",
+}
+
+
+def detect_mode(f):
+    """Return ('morphing', None) or ('lhe', channel_name) based on file layout."""
+    keys = [k.split(";")[0] for k in f.keys()]
+    if any(k == "histo_sm" for k in keys):
+        return "morphing", None
+    for k in keys:
+        if k.endswith("/sm"):
+            return "lhe", k.rsplit("/", 1)[0]
+    raise RuntimeError(
+        "Could not detect pipeline: no 'histo_sm' (morphing) or '<channel>/sm' "
+        "(LHE) key found in file."
+    )
 
 SM_COLOR   = "#5790fc"
 LIN_COLOR  = "#f89c20"
@@ -64,13 +96,20 @@ def get_edges(f, key):
     return f[key].axes[0].edges()
 
 
-def decompose(f, op, suffix=""):
-    """Return (sm, lin, quad) values for a given operator and histogram suffix (e.g. '_QCDScaleUp')."""
-    sm   = get_vals(f, f"histo_sm{suffix}")
-    w1   = get_vals(f, f"histo_w1_{op}{suffix}")
-    wm1  = get_vals(f, f"histo_wm1_{op}{suffix}")
-    lin  = 0.5 * (w1 - wm1)
-    quad = 0.5 * (w1 + wm1) - sm
+def decompose(f, op, mode, channel, suffix=""):
+    """Return (sm, lin, quad) values for a given operator and histogram suffix
+    (e.g. '_QCDScaleUp' for morphing, '_muf_scaleUp' for LHE)."""
+    if mode == "morphing":
+        sm   = get_vals(f, f"histo_sm{suffix}")
+        w1   = get_vals(f, f"histo_w1_{op}{suffix}")
+        wm1  = get_vals(f, f"histo_wm1_{op}{suffix}")
+        lin  = 0.5 * (w1 - wm1)
+        quad = 0.5 * (w1 + wm1) - sm
+    else:  # lhe
+        sm   = get_vals(f, f"{channel}/sm{suffix}")
+        quad = get_vals(f, f"{channel}/quad_{op}{suffix}")
+        slq  = get_vals(f, f"{channel}/sm_lin_quad_{op}{suffix}")
+        lin  = slq - sm - quad   # sm_lin_quad = sm + C*lin + C^2*quad, C=1 reference
     return sm, lin, quad
 
 
@@ -80,20 +119,23 @@ def plot_task(d):
     nuis        = d["nuis"]
     outdir      = d["outdir"]
     logy        = d["logy"]
+    mode        = d["mode"]
+    channel     = d["channel"]
 
     try:
         f = uproot.open(shapes_file)
 
-        edges  = get_edges(f, "histo_sm")
+        sm_key = "histo_sm" if mode == "morphing" else f"{channel}/sm"
+        edges  = get_edges(f, sm_key)
         widths = np.diff(edges)
         centers = 0.5 * (edges[:-1] + edges[1:])
 
         # nominal decomposition
-        sm_nom,  lin_nom,  quad_nom  = decompose(f, op)
+        sm_nom,  lin_nom,  quad_nom  = decompose(f, op, mode, channel)
 
         # up/down decomposition
-        sm_up,   lin_up,   quad_up   = decompose(f, op, f"_{nuis}Up")
-        sm_down, lin_down, quad_down = decompose(f, op, f"_{nuis}Down")
+        sm_up,   lin_up,   quad_up   = decompose(f, op, mode, channel, f"_{nuis}Up")
+        sm_down, lin_down, quad_down = decompose(f, op, mode, channel, f"_{nuis}Down")
 
     except Exception as e:
         print(f"  [skip] {op} / {nuis}: {e}")
@@ -153,33 +195,50 @@ def plot_task(d):
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--shapes",     required=True,        help="Path to shapes.root")
+    parser.add_argument("--shapes",     required=True,        help="Path to shapes.root or histograms.root")
     parser.add_argument("--outdir",     default="plots/eft_nuisances")
     parser.add_argument("--operators",  nargs="+", default=OPERATORS)
-    parser.add_argument("--nuisances",  nargs="+", default=NUISANCES)
+    parser.add_argument("--nuisances",  nargs="+", default=None,
+                        help="Default: all morphing nuisances, or "
+                             "['muf_scale', 'pdf'] in LHE mode. "
+                             "QCDScale/PDFweight aliases accepted in LHE mode.")
     parser.add_argument("--logy",       action="store_true")
     parser.add_argument("--ncores",     type=int, default=4)
     args = parser.parse_args()
 
     os.makedirs(args.outdir, exist_ok=True)
 
-    # check which nuisances actually exist in shapes.root
     f = uproot.open(args.shapes)
+    mode, channel = detect_mode(f)
     available_keys = [k.split(";")[0] for k in f.keys()]
-    available_nuis = [n for n in args.nuisances
-                      if any(f"_sm_{n}Up" in k or f"histo_sm_{n}Up" in k for k in available_keys)]
+
+    if mode == "lhe":
+        # strip channel prefix so suffix-matching below works the same as morphing mode
+        available_keys = [k.split("/", 1)[1] if k.startswith(f"{channel}/") else k
+                          for k in available_keys]
+        requested = args.nuisances if args.nuisances is not None else NUISANCES_LHE
+        requested = [NUISANCE_ALIASES_LHE.get(n, n) for n in requested]
+    else:
+        requested = args.nuisances if args.nuisances is not None else NUISANCES_MORPHING
+
+    # check which nuisances actually exist in the file
+    available_nuis = [n for n in requested
+                      if any(f"_sm_{n}Up" in k or f"sm_{n}Up" in k for k in available_keys)]
     if not available_nuis:
-        # fallback: check without histo_ prefix
-        available_nuis = [n for n in args.nuisances
+        # fallback: looser match, no "sm_" anchor
+        available_nuis = [n for n in requested
                           if any(f"{n}Up" in k for k in available_keys)]
+
     print(f"Shapes file : {args.shapes}")
+    print(f"Pipeline    : {mode}" + (f"  (channel: {channel})" if mode == "lhe" else ""))
     print(f"Operators   : {args.operators}")
     print(f"Nuisances   : {available_nuis}")
     print(f"Output      : {args.outdir}\n")
 
     tasks = [
         {"shapes": args.shapes, "op": op, "nuis": nuis,
-         "outdir": args.outdir, "logy": args.logy}
+         "outdir": args.outdir, "logy": args.logy,
+         "mode": mode, "channel": channel}
         for op in args.operators
         for nuis in available_nuis
     ]
