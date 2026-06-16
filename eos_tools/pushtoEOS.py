@@ -28,6 +28,20 @@ def xrd(eos_abs_path: str) -> str:
     return f"{EOS_MGM_URL}/{eos_abs_path}"
 
 
+def ancestor_dirs(base: str, subpath: str) -> list[str]:
+    """Intermediate dirs between base and base/subpath that `eos mkdir -p`
+    creates as a side effect, e.g. base='www', subpath='a/b/c' ->
+    ['www/a', 'www/a/b']. These need index.php planted too, otherwise
+    browsing into them 403s."""
+    parts = subpath.split("/")[:-1]
+    dirs = []
+    cur = base
+    for p in parts:
+        cur = f"{cur}/{p}"
+        dirs.append(cur)
+    return dirs
+
+
 def run(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess:
     print("  $", " ".join(cmd))
     result = subprocess.run(cmd, check=check, text=True,
@@ -76,7 +90,7 @@ def main() -> None:
     #    the local tree (structure is identical after the upload).
     # ------------------------------------------------------------------ #
     print(f"\n[2/3] Collecting directories to index...")
-    eos_dirs: list[str] = []
+    eos_dirs: list[str] = ancestor_dirs(EOS_WWW_BASE, eos_subpath)
 
     for root, dirs, _ in os.walk(local_dir):
         dirs.sort()  # deterministic order

@@ -34,6 +34,20 @@ def xrd(eos_abs_path: str) -> str:
     return f"{EOS_MGM_URL}/{eos_abs_path}"
 
 
+def ancestor_dirs(base: str, subpath: str) -> list[str]:
+    """Intermediate dirs between base and base/subpath that `eos mkdir -p`
+    creates as a side effect, e.g. base='www', subpath='a/b/c' ->
+    ['www/a', 'www/a/b']. These need index.php planted too, otherwise
+    browsing into them 403s."""
+    parts = subpath.split("/")[:-1]
+    dirs = []
+    cur = base
+    for p in parts:
+        cur = f"{cur}/{p}"
+        dirs.append(cur)
+    return dirs
+
+
 def run(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess:
     result = subprocess.run(cmd, check=False, text=True,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -115,7 +129,7 @@ def main() -> None:
     # 2. Collect every directory created on EOS
     # ------------------------------------------------------------------ #
     print(f"\n[2/3] Collecting directories to index...")
-    eos_dirs: list[str] = []
+    eos_dirs: list[str] = ancestor_dirs(EOS_WWW_BASE, eos_subpath)
     for root, dirs, _ in os.walk(local_dir):
         dirs.sort()
         rel = Path(root).relative_to(local_dir)
@@ -123,16 +137,15 @@ def main() -> None:
     print(f"  Found {len(eos_dirs)} directories")
 
     # ------------------------------------------------------------------ #
-    # 3. Plant index.php in every directory (parallel)
+    # 3. Plant index.php in every directory (sequential — small/fast op,
+    #    not worth racing against itself)
     # ------------------------------------------------------------------ #
-    print(f"\n[3/3] Planting index.php  (workers={workers})")
+    print(f"\n[3/3] Planting index.php ...")
     failed_index = []
-    with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = {pool.submit(plant_index, d): d for d in eos_dirs}
-        for future in as_completed(futures):
-            eos_dir, ok = future.result()
-            if not ok:
-                failed_index.append(eos_dir)
+    for eos_dir in eos_dirs:
+        _, ok = plant_index(eos_dir)
+        if not ok:
+            failed_index.append(eos_dir)
 
     # ------------------------------------------------------------------ #
     # Summary
