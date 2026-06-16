@@ -16,17 +16,17 @@ args = parser.parse_args()
 
 f = uproot.open(args.rootfile)
 
-# top-level keys without the ";cycle" suffix, deduplicated
-names = sorted(set(k.split(";")[0] for k in f.keys()))
+# recurse through all subdirectories, only keep actual histogram objects (TH1*)
+names = sorted(set(
+    k.split(";")[0] for k, cls in f.classnames(recursive=True).items()
+    if cls.startswith("TH1")
+))
 
 found_any = False
 for name in names:
     if "mixed" in name.lower():
         continue
     obj = f[name]
-    # only look at histogram-like objects
-    if not hasattr(obj, "values"):
-        continue
     vals = obj.values()
     zero_bins = [i for i, v in enumerate(vals) if abs(v) <= args.tol]
     if zero_bins:
