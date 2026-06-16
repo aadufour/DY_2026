@@ -113,7 +113,76 @@ def decompose(f, op, mode, channel, suffix=""):
     return sm, lin, quad
 
 
+def render_panel(edges, widths, vals_nom, vals_up, vals_down, nuis, logy, title, color):
+    """Build and return a (Nominal/Up/Down + ratio) figure for one histogram component."""
+    _UP_COLOR   = "#f89c20"
+    _DOWN_COLOR = "#e42536"
+
+    fig, (ax, rax) = plt.subplots(2, 1, sharex=True, **ratio_fig_style)
+    fig.subplots_adjust(hspace=0.07)
+
+    def stairs(ax_, vals, ls="-", lw=1.5, col=color, lab=None):
+        ax_.stairs(vals / widths, edges=edges, color=col, linewidth=lw,
+                   linestyle=ls, label=lab, fill=False)
+
+    stairs(ax, vals_nom,  ls="-",  lw=2.0, lab="Nominal")
+    stairs(ax, vals_up,   ls="--", lw=1.5, col=_UP_COLOR,   lab=f"{nuis} Up")
+    stairs(ax, vals_down, ls=":",  lw=1.5, col=_DOWN_COLOR,  lab=f"{nuis} Down")
+
+    ax.set_ylabel("Events / GeV")
+    ax.set_title(title, fontsize=13)
+    ax.legend(loc="best")
+    # lin can be negative → always linear; sm/quad use --logy if requested
+    if logy and "lin" not in title.split()[0]:
+        ax.set_yscale("log")
+
+    hep.cms.label(loc=0, label="Preliminary", data=False, ax=ax)
+
+    safe = np.where(np.abs(vals_nom) > 0, vals_nom, np.nan)
+    rax.stairs(vals_up   / safe, edges=edges, color=_UP_COLOR,   linewidth=1.5, linestyle="--", label=f"{nuis} Up")
+    rax.stairs(vals_down / safe, edges=edges, color=_DOWN_COLOR, linewidth=1.5, linestyle=":",  label=f"{nuis} Down")
+    rax.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
+    rax.set_ylim(0.7, 1.3)
+    rax.set_ylabel("Var / Nom.")
+    rax.set_xlabel(r"$m_{\ell\ell}$ (GeV)")
+    rax.autoscale(axis="x", tight=True)
+
+    return fig
+
+
+def plot_sm_task(d):
+    """sm doesn't depend on the operator (C=0 reference) — plot it once per nuisance."""
+    shapes_file = d["shapes"]
+    nuis        = d["nuis"]
+    outdir      = d["outdir"]
+    logy        = d["logy"]
+    mode        = d["mode"]
+    channel     = d["channel"]
+
+    try:
+        f = uproot.open(shapes_file)
+        sm_key = "histo_sm" if mode == "morphing" else f"{channel}/sm"
+        edges  = get_edges(f, sm_key)
+        widths = np.diff(edges)
+
+        sm_nom  = get_vals(f, sm_key)
+        sm_up   = get_vals(f, f"{sm_key}_{nuis}Up")
+        sm_down = get_vals(f, f"{sm_key}_{nuis}Down")
+    except Exception as e:
+        print(f"  [skip] sm / {nuis}: {e}")
+        return
+
+    fig = render_panel(edges, widths, sm_nom, sm_up, sm_down, nuis, logy,
+                        title=f"sm  —  {nuis}", color=SM_COLOR)
+    stem = os.path.join(outdir, f"sm_{nuis}")
+    fig.savefig(f"{stem}.png", bbox_inches="tight", facecolor="white")
+    fig.savefig(f"{stem}.pdf", bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+    print(f"  {'sm':4s}  {'(shared)':10s}  {nuis:20s}  ->  {stem}.png")
+
+
 def plot_task(d):
+    """lin/quad depend on the operator — one plot per (op, nuisance)."""
     shapes_file = d["shapes"]
     op          = d["op"]
     nuis        = d["nuis"]
@@ -128,7 +197,6 @@ def plot_task(d):
         sm_key = "histo_sm" if mode == "morphing" else f"{channel}/sm"
         edges  = get_edges(f, sm_key)
         widths = np.diff(edges)
-        centers = 0.5 * (edges[:-1] + edges[1:])
 
         # nominal decomposition
         sm_nom,  lin_nom,  quad_nom  = decompose(f, op, mode, channel)
@@ -141,50 +209,13 @@ def plot_task(d):
         print(f"  [skip] {op} / {nuis}: {e}")
         return
 
-    _UP_COLOR   = "#f89c20"
-    _DOWN_COLOR = "#e42536"
-
-    def make_axes(vals_nom, vals_up, vals_down, label, color):
-        """Return (fig, ax_top, ax_bot) for one component."""
-        fig, (ax, rax) = plt.subplots(2, 1, sharex=True, **ratio_fig_style)
-        fig.subplots_adjust(hspace=0.07)
-
-        # top panel — events/GeV
-        def stairs(ax_, vals, ls="-", lw=1.5, col=color, lab=None):
-            ax_.stairs(vals / widths, edges=edges, color=col, linewidth=lw,
-                       linestyle=ls, label=lab, fill=False)
-
-        stairs(ax, vals_nom,  ls="-",  lw=2.0, lab="Nominal")
-        stairs(ax, vals_up,   ls="--", lw=1.5, col=_UP_COLOR,   lab=f"{nuis} Up")
-        stairs(ax, vals_down, ls=":",  lw=1.5, col=_DOWN_COLOR,  lab=f"{nuis} Down")
-
-        ax.set_ylabel("Events / GeV")
-        ax.set_title(f"{label}  [{op}]  —  {nuis}", fontsize=13)
-        ax.legend(loc="best")
-        # lin can be negative → always linear; sm/quad use --logy if requested
-        if logy and label != "lin":
-            ax.set_yscale("log")
-
-        hep.cms.label(loc=0, label="Preliminary", data=False, ax=ax)
-
-        # ratio panel
-        safe = np.where(np.abs(vals_nom) > 0, vals_nom, np.nan)
-        rax.stairs(vals_up   / safe, edges=edges, color=_UP_COLOR,   linewidth=1.5, linestyle="--", label=f"{nuis} Up")
-        rax.stairs(vals_down / safe, edges=edges, color=_DOWN_COLOR, linewidth=1.5, linestyle=":",  label=f"{nuis} Down")
-        rax.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
-        rax.set_ylim(0.7, 1.3)
-        rax.set_ylabel("Var / Nom.")
-        rax.set_xlabel(r"$m_{\ell\ell}$ (GeV)")
-        rax.autoscale(axis="x", tight=True)
-
-        return fig
-
     for component, vals_nom, vals_up, vals_down, color in [
-        ("sm",   sm_nom,   sm_up,   sm_down,   SM_COLOR),
         ("lin",  lin_nom,  lin_up,  lin_down,  LIN_COLOR),
         ("quad", quad_nom, quad_up, quad_down, QUAD_COLOR),
     ]:
-        fig = make_axes(vals_nom, vals_up, vals_down, component, color)
+        title = f"{component}  [{op}]  —  {nuis}"
+        fig = render_panel(edges, widths, vals_nom, vals_up, vals_down, nuis, logy,
+                            title=title, color=color)
         stem = os.path.join(outdir, f"{component}_{op}_{nuis}")
         fig.savefig(f"{stem}.png", bbox_inches="tight", facecolor="white")
         fig.savefig(f"{stem}.pdf", bbox_inches="tight", facecolor="white")
@@ -235,7 +266,13 @@ def main():
     print(f"Nuisances   : {available_nuis}")
     print(f"Output      : {args.outdir}\n")
 
-    tasks = [
+    sm_tasks = [
+        {"shapes": args.shapes, "nuis": nuis,
+         "outdir": args.outdir, "logy": args.logy,
+         "mode": mode, "channel": channel}
+        for nuis in available_nuis
+    ]
+    eft_tasks = [
         {"shapes": args.shapes, "op": op, "nuis": nuis,
          "outdir": args.outdir, "logy": args.logy,
          "mode": mode, "channel": channel}
@@ -244,7 +281,8 @@ def main():
     ]
 
     with Pool(processes=args.ncores) as pool:
-        pool.map(plot_task, tasks)
+        pool.map(plot_sm_task, sm_tasks)
+        pool.map(plot_task, eft_tasks)
 
     print("\nDone.")
 
