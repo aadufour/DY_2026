@@ -383,7 +383,10 @@ def main():
     f = uproot.open(args.input)
     if args.variable == "all":
         region_dir = f[args.region]
-        variables = [k.split(";")[0] for k in region_dir.keys()]
+        variables = [
+            k.split(";")[0] for k, cls in region_dir.classnames().items()
+            if "TDirectory" in cls and "/" not in k
+        ]
     else:
         variables = [args.variable]
 
