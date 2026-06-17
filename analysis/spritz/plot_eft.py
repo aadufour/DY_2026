@@ -129,7 +129,7 @@ def plot_one_variable(
     data     = get_vals(directory, "Data")
     data_var = get_variances(directory, "Data")
 
-    k = np.where(sm > 0, dyll / sm, 1.0)
+    k = np.divide(dyll, sm, out=np.ones_like(dyll), where=sm > 0)
 
     present = [s for s in BKG_STACK if s in bkg_vals]
     stack   = np.array([bkg_vals[s] for s in present])
@@ -348,7 +348,12 @@ def plot_one_variable(
 def main():
     parser = argparse.ArgumentParser(description="EFT operator plots with k-factor")
     parser.add_argument("--input",    default="histos.root",         help="Path to histos.root")
-    parser.add_argument("--shapes",   default=None,                  help="Path to shapes.root (for syst band)")
+    parser.add_argument("--shapes",   default=None,
+                        help="Path to shapes.root (for syst band). When --variable all is used "
+                             "and this is omitted, auto-detected from --datacards-dir/<variable>/shapes.root")
+    parser.add_argument("--datacards-dir", default=None,
+                        help="Directory containing per-variable datacard subdirs "
+                             "(e.g. datacards/inc_mm). Used to auto-find shapes.root per variable.")
     parser.add_argument("--region",   default="inc_mm",              help="Region key in histos.root")
     parser.add_argument("--variable", default="mll",
                         help="Variable key in histos.root, or 'all' to loop over every variable in the region")
@@ -403,11 +408,18 @@ def main():
             outdir = args.outdir
         os.makedirs(outdir, exist_ok=True)
 
+        # auto-detect shapes.root per variable when --datacards-dir is given
+        shapes_path = args.shapes
+        if shapes_path is None and args.datacards_dir is not None:
+            candidate = os.path.join(args.datacards_dir, variable, "shapes.root")
+            if os.path.isfile(candidate):
+                shapes_path = candidate
+
         print(f"\n=== {args.region} / {variable} ===")
         plot_one_variable(
             f, args.region, variable, meta, outdir,
             colors, lumi, year_label,
-            args.shapes, args.blind_above, args.no_blind,
+            shapes_path, args.blind_above, args.no_blind,
         )
 
     print("\nDone.")
