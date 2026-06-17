@@ -56,7 +56,7 @@ LINE_WIDTH_BKG   = 0.8
 VAR_META_DEFAULT = {
     "mll":          {"label": r"$m_{\ell\ell}$ (GeV)", "log_x": True,  "blind": True},
     "costhetastar": {"label": r"$\cos\theta^*$",        "log_x": False, "blind": False},
-    "rapll_abs":    {"label": r"$|y_{\ell\ell}|$",      "log_x": False, "blind": False},
+    "rapll_abs":    {"label": r"$|y_{\ell\ell}|$",      "log_x": False, "blind": False, "range_max": 2.4},
 }
 
 OPERATORS = [
@@ -329,8 +329,14 @@ def plot_one_variable(
             )
 
         ax_bot.set_ylabel("Ratio")
-        finite = np.concatenate([ratio_eft[np.isfinite(ratio_eft)], ratio_eftm[np.isfinite(ratio_eftm)]])
-        half = max(np.max(np.abs(finite - 1.0)) * 1.2, 0.05) if finite.size else 0.3
+        ratio_data_visible = np.where(blind_mask, np.nan, ratio_data)
+        candidates = [ratio_eft, ratio_eftm, ratio_data_visible]
+        if shapes_path is not None and np.any(syst_up_sm > 0):
+            candidates += [(sm_total + syst_up_sm) / denom, (sm_total - syst_down_sm) / denom]
+        # mask bins outside selection acceptance (e.g. |y_ll| > 2.4 always empty)
+        range_mask = centers <= var_meta.get("range_max", np.inf)
+        all_finite = np.concatenate([a[range_mask][np.isfinite(a[range_mask])] for a in candidates])
+        half = max(np.max(np.abs(all_finite - 1.0)) * 1.2, 0.05) if all_finite.size else 0.3
         ax_bot.set_ylim(1.0 - half, 1.0 + half)
         ax_bot.set_xlabel(xlabel)
         if log_x:
