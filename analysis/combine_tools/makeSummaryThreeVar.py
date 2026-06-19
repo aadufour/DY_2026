@@ -187,14 +187,7 @@ pos   = np.arange(n_ops)
 
 # linthresh for symlog: half the smallest non-zero 1σ bound across all data
 if args.logscale:
-    all_bounds = [
-        abs(v)
-        for var_res in all_results.values()
-        for res in var_res.values()
-        for v in res["1sigma"]
-        if abs(v) > 0
-    ]
-    linthresh = min(all_bounds) * 0.5 if all_bounds else 1e-3
+    linthresh = 1e-2
     print(f"symlog linthresh = {linthresh:.2e}")
 
 # -------------------------
