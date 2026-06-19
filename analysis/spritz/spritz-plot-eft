@@ -13,6 +13,11 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLOT_SCRIPT="${SCRIPT_DIR}/plot_eft.py"
+VENV=/grid_mnt/data__data.polcms/cms/adufour/analysis_venv
+
+# activate analysis_venv for mplhep (works both inside and outside apptainer)
+# shellcheck disable=SC1091
+source "${VENV}/bin/activate"
 
 # -- defaults ------------------------------------------------------------------
 OUTDIR="plots"
