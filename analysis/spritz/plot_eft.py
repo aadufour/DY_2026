@@ -56,9 +56,10 @@ LINE_WIDTH_BKG   = 0.8
 VAR_META_DEFAULT = {
     # blind_all=True: hide all data (variable is mll-integrated, can't threshold-cut)
     # blind_all=False: hide data above blind_above (only meaningful for mll)
-    "mll":          {"label": r"$m_{\ell\ell}$ (GeV)", "log_x": True,  "blind": True,  "blind_all": False},
-    "costhetastar": {"label": r"$\cos\theta^*$",        "log_x": False, "blind": True,  "blind_all": True},
-    "rapll_abs":    {"label": r"$|y_{\ell\ell}|$",      "log_x": False, "blind": True,  "blind_all": True},
+    # range_max: ignore bins above this value when auto-ranging the ratio y-axis
+    "mll":          {"label": r"$m_{\ell\ell}$ (GeV)", "log_x": True,  "blind": True,  "blind_all": False, "range_max": None},
+    "costhetastar": {"label": r"$\cos\theta^*$",        "log_x": False, "blind": False, "blind_all": False, "range_max": None},
+    "rapll_abs":    {"label": r"$|y_{\ell\ell}|$",      "log_x": False, "blind": False, "blind_all": False, "range_max": 2.4},
 }
 
 OPERATORS = [
