@@ -54,9 +54,11 @@ LINE_WIDTH_BKG   = 0.8
 # whether to blind data (only meaningful for mll).
 # These are defaults; get_analysis_dict() can override labels if spritz is available.
 VAR_META_DEFAULT = {
-    "mll":          {"label": r"$m_{\ell\ell}$ (GeV)", "log_x": True,  "blind": True},
-    "costhetastar": {"label": r"$\cos\theta^*$",        "log_x": False, "blind": False},
-    "rapll_abs":    {"label": r"$|y_{\ell\ell}|$",      "log_x": False, "blind": False, "range_max": 2.4},
+    # blind_all=True: hide all data (variable is mll-integrated, can't threshold-cut)
+    # blind_all=False: hide data above blind_above (only meaningful for mll)
+    "mll":          {"label": r"$m_{\ell\ell}$ (GeV)", "log_x": True,  "blind": True,  "blind_all": False},
+    "costhetastar": {"label": r"$\cos\theta^*$",        "log_x": False, "blind": True,  "blind_all": True},
+    "rapll_abs":    {"label": r"$|y_{\ell\ell}|$",      "log_x": False, "blind": True,  "blind_all": True},
 }
 
 OPERATORS = [
@@ -114,7 +116,8 @@ def plot_one_variable(
 
     xlabel  = var_meta["label"]
     log_x   = var_meta["log_x"]
-    do_blind = var_meta["blind"] and not no_blind
+    do_blind  = var_meta["blind"] and not no_blind
+    blind_all = var_meta.get("blind_all", False)
 
     # backgrounds
     bkg_vals = {}
@@ -200,11 +203,14 @@ def plot_one_variable(
     style["figure.figsize"]   = FIG_SIZE
     plt.style.use(style)
 
-    # blinding mask — only applied when variable supports it
-    if do_blind:
-        blind_mask = centers > blind_above
-    else:
+    # blinding mask
+    if not do_blind:
         blind_mask = np.zeros(len(centers), dtype=bool)
+    elif blind_all:
+        # variable is mll-integrated: can't threshold-cut, hide all data
+        blind_mask = np.ones(len(centers), dtype=bool)
+    else:
+        blind_mask = centers > blind_above
 
     data_unc = np.sqrt(np.abs(data_var))
 
@@ -404,7 +410,7 @@ def main():
     # -- loop over variables ---------------------------------------------------
     for variable in variables:
         # build var_meta: start from hardcoded defaults, overlay config labels
-        meta = dict(VAR_META_DEFAULT.get(variable, {"label": variable, "log_x": False, "blind": False}))
+        meta = dict(VAR_META_DEFAULT.get(variable, {"label": variable, "log_x": False, "blind": False, "blind_all": False}))
         if variable in var_meta_config:
             meta["label"] = var_meta_config[variable]["label"]
 

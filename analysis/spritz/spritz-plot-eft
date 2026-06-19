@@ -1,0 +1,74 @@
+#!/bin/bash
+# spritz-plot-eft: produce EFT operator plots for every region/variable found in datacards/.
+#
+# Run from the config dir (where histos.root and datacards/ live),
+# inside apptainer + analysis_venv:
+#
+#   spritz-plot-eft [--no-blind] [--blind-above 500] [--outdir plots]
+#
+# For each datacards/{region}/{variable}/shapes.root it calls plot_eft.py
+# with the matching --shapes path, writing PNGs to {outdir}/{region}/{variable}/.
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PLOT_SCRIPT="${SCRIPT_DIR}/plot_eft.py"
+
+# -- defaults ------------------------------------------------------------------
+OUTDIR="plots"
+BLIND_ABOVE="500"
+EXTRA_ARGS=""
+
+# -- parse args ----------------------------------------------------------------
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --outdir)       OUTDIR="$2";       shift 2 ;;
+        --blind-above)  BLIND_ABOVE="$2";  shift 2 ;;
+        --no-blind)     EXTRA_ARGS="$EXTRA_ARGS --no-blind"; shift ;;
+        --shapes-only)  SHAPES_ONLY=1;     shift ;;
+        *)  echo "Unknown option: $1"; exit 1 ;;
+    esac
+done
+
+# -- sanity checks -------------------------------------------------------------
+if [[ ! -f histos.root ]]; then
+    echo "ERROR: histos.root not found in $(pwd). Run from the config directory."
+    exit 1
+fi
+
+if [[ ! -d datacards ]]; then
+    echo "ERROR: datacards/ not found. Run spritz-cards first."
+    exit 1
+fi
+
+# -- loop over region / variable -----------------------------------------------
+n_plots=0
+for region_dir in datacards/*/; do
+    region=$(basename "$region_dir")
+    for variable_dir in "$region_dir"*/; do
+        variable=$(basename "$variable_dir")
+        shapes="${variable_dir}shapes.root"
+
+        if [[ ! -f "$shapes" ]]; then
+            echo "  [skip] $region/$variable — shapes.root not found"
+            continue
+        fi
+
+        outdir="${OUTDIR}/${region}/${variable}"
+        echo ""
+        echo "=== ${region} / ${variable} ==="
+        python3 "$PLOT_SCRIPT" \
+            --input   histos.root \
+            --shapes  "$shapes" \
+            --region  "$region" \
+            --variable "$variable" \
+            --outdir  "$outdir" \
+            --blind-above "$BLIND_ABOVE" \
+            $EXTRA_ARGS
+
+        n_plots=$((n_plots + 27))
+    done
+done
+
+echo ""
+echo "Done. ~${n_plots} plots written under ${OUTDIR}/"

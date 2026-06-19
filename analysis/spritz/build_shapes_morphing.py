@@ -11,7 +11,7 @@ Expected histogram names in histos.root (v7 config, morphing convention):
   histo_wm1_{op}  = c=-1 template  w(-1)
 
 Output:
-  shapes.root   — same histograms, plus histo_Data = SM (Asimov data_obs)
+  shapes.root   — same histograms, plus histo_Data = real data (falls back to SM Asimov if absent)
   datacard.txt  — combine datacard with process/rate lines
 
 Usage (from analysis_venv):
@@ -78,8 +78,12 @@ def get_vals(name, silent=False):
         return None
     return f[key].values()
 
-sm_vals = get_vals("sm")
-edges   = f[f"{base_path}/histo_sm"].axes[0].edges()
+sm_vals   = get_vals("sm")
+edges     = f[f"{base_path}/histo_sm"].axes[0].edges()
+data_vals = get_vals("Data", silent=True)
+if data_vals is None:
+    print("  WARNING: histo_Data not found in histos.root — falling back to Asimov (SM)")
+    data_vals = sm_vals
 
 # --------------------------------------------------
 # Build process list and histogram map
@@ -138,8 +142,7 @@ with uproot.recreate(shapes_path) as out:
     # Nominal
     for name, vals in histo_map.items():
         out[f"histo_{name}"] = (vals, edges)
-    # Asimov data_obs = SM nominal
-    out["histo_Data"] = (sm_vals, edges)
+    out["histo_Data"] = (data_vals, edges)
     # Theory Up/Down
     for (proc, syst, ud), vals in syst_map.items():
         out[f"histo_{proc}_{syst}{ud}"] = (vals, edges)
@@ -159,7 +162,7 @@ lines = [
     "kmax * number of nuisance parameters",
     "-" * 100,
     f"bin         {bin_name}",
-    f"observation {sm_vals.sum():.6f}",
+    f"observation {data_vals.sum():.6f}",
     f"shapes  *         * shapes.root  histo_$PROCESS histo_$PROCESS_$SYSTEMATIC",
     f"shapes  data_obs  * shapes.root  histo_Data",
     "-" * 100,
