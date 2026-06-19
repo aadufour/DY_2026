@@ -341,7 +341,7 @@ def plot_one_variable(
         if shapes_path is not None and np.any(syst_up_sm > 0):
             candidates += [(sm_total + syst_up_sm) / denom, (sm_total - syst_down_sm) / denom]
         # mask bins outside selection acceptance (e.g. |y_ll| > 2.4 always empty)
-        range_mask = centers <= var_meta.get("range_max", np.inf)
+        range_mask = centers <= (var_meta.get("range_max") or np.inf)
         all_finite = np.concatenate([a[range_mask][np.isfinite(a[range_mask])] for a in candidates])
         half = max(np.max(np.abs(all_finite - 1.0)) * 1.2, 0.05) if all_finite.size else 0.3
         ax_bot.set_ylim(1.0 - half, 1.0 + half)
