@@ -154,6 +154,7 @@ parser.add_argument("--costhetastar",  required=True, help="Directory with costh
 parser.add_argument("--ops",        nargs="+", default=None, help="Subset of operators (default: all found in --mll dir)")
 parser.add_argument("--horizontal", action="store_true",    help="Slide-friendly: operators on x-axis, panels stacked vertically")
 parser.add_argument("--logscale",   action="store_true",    help="Symlog scale on the Wilson coefficient axis (handles negatives)")
+parser.add_argument("--linthresh",  type=float, default=1e-2, help="Linear zone half-width for --logscale (default: 1e-2)")
 args = parser.parse_args()
 
 # -------------------------
@@ -187,7 +188,7 @@ pos   = np.arange(n_ops)
 
 # linthresh for symlog: half the smallest non-zero 1σ bound across all data
 if args.logscale:
-    linthresh = 1e-2
+    linthresh = args.linthresh
     print(f"symlog linthresh = {linthresh:.2e}")
 
 # -------------------------
