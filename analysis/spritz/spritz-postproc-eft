@@ -25,4 +25,4 @@ if [[ ! -f condor/results_merged_new.pkl ]]; then
 fi
 
 echo "Running spritz-postproc-eft (with k-factor) from $(pwd)"
-python3 "${POST_PROC}"
+"${VENV}/bin/python3" "${POST_PROC}"
