@@ -27,7 +27,7 @@ import uproot
 
 # ---- Config ------------------------------------------------------------------
 
-CACHE_FILE    = "/grid_mnt/data__data.polcms/cms/adufour/LHE/SYST_slc7/CACHE/lhe_cache_new.pkl"
+CACHE_FILE    = "/grid_mnt/data__data.polcms/cms/adufour/LHE/SYST_slc7/CACHE/lhe_cache_parallel.pkl"
 OUTPUT_FILE   = "histograms.root"
 DATACARD_FILE = "datacard.txt"
 CHANNEL       = "triple_DY"

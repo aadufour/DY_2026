@@ -1,0 +1,3 @@
+- make sure I understand blinding
+- triple diff (unrolled) plot !
+- propapagtor correction! especially important when you are on shell!

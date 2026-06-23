@@ -30,7 +30,7 @@ from HiggsAnalysis.AnalyticAnomalousCoupling.utils.scan import scanEFT
 
 FONT_SIZE       = 34
 LABEL_SIZE      = 26
-TICK_LABELSIZE  = 32
+TICK_LABELSIZE  = 25
 LEGEND_FONTSIZE = 20
 
 FIG_HEIGHT      = 10      # inches
