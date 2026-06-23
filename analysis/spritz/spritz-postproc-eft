@@ -1,0 +1,24 @@
+#!/bin/bash
+# spritz-postproc-eft: drop-in replacement for spritz-postproc that applies the
+# bin-by-bin k-factor (MiNNLO / SMEFTsim LO SM) to all EFT templates before
+# writing histos.root. Run from the config dir, inside apptainer + analysis_venv.
+#
+# Usage: spritz-postproc-eft
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+POST_PROC="${SCRIPT_DIR}/post_process.py"
+
+if [[ ! -f config.py ]]; then
+    echo "ERROR: config.py not found. Run from the config directory."
+    exit 1
+fi
+
+if [[ ! -f condor/results_merged_new.pkl ]]; then
+    echo "ERROR: condor/results_merged_new.pkl not found. Run spritz-merge first."
+    exit 1
+fi
+
+echo "Running spritz-postproc-eft (with k-factor) from $(pwd)"
+python3 "${POST_PROC}"

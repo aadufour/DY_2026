@@ -163,6 +163,53 @@ def blind(region, variable, edges):
         return np.arange(0, len(edges)) > len(edges) / 2
 
 
+def apply_kfactor(dout, regions, variables):
+    """
+    Apply bin-by-bin k-factor (MiNNLO / SMEFTsim LO SM) to all EFT templates.
+
+    For each (region, variable), computes k = histo_DYll / histo_sm and rescales
+    histo_sm, histo_w1_*, histo_wm1_* (nominal + all Up/Down systematics) by k.
+    This ensures the EFT SM template matches MiNNLO normalisation so combine fits
+    the correct SM prediction.
+
+    histo_DYll is kept as-is (it remains in the background stack).
+    """
+    OPERATORS = [
+        "cHDD", "cHWB", "cbWRe", "cbBRe", "cHj1", "cHQ1", "cHj3", "cHQ3",
+        "cHu", "cHd", "cHbq", "cHl1", "cHl3", "cHe", "cll1", "clj1", "clj3",
+        "cQl1", "cQl3", "ceu", "ced", "cbe", "cje", "cQe", "clu", "cld", "cbl",
+    ]
+    eft_prefixes = ["sm"] + [f"w1_{op}" for op in OPERATORS] + [f"wm1_{op}" for op in OPERATORS]
+
+    for region in regions:
+        for variable in variables:
+            if "axis" not in variables[variable]:
+                continue
+            dyll_key = f"{region}/{variable}/histo_DYll"
+            sm_key   = f"{region}/{variable}/histo_sm"
+            if dyll_key not in dout or sm_key not in dout:
+                continue
+
+            dyll_vals = dout[dyll_key].values()
+            sm_vals   = dout[sm_key].values()
+            k = np.divide(dyll_vals, sm_vals, out=np.ones_like(dyll_vals), where=sm_vals > 0)
+
+            # rescale all EFT histograms (nominal + systematics) by k
+            for key in list(dout.keys()):
+                prefix = f"{region}/{variable}/histo_"
+                if not key.startswith(prefix):
+                    continue
+                name = key[len(prefix):]  # e.g. "sm", "w1_cHDD", "wm1_cHDDUp", ...
+                # check if this histogram belongs to an EFT template
+                if not any(name == p or name.startswith(p + "_") for p in eft_prefixes):
+                    continue
+                h = dout[key]
+                view = h.view(True)
+                view.value    = view.value    * k
+                view.variance = view.variance * k * k
+            print(f"  k-factor applied: {region}/{variable}")
+
+
 def single_post_process(results, region, variable, samples, xss, nuisances, lumi):
     dout = {}
     for histoName in samples:
@@ -290,6 +337,9 @@ def post_process(results, regions, variables, samples, xss, nuisances, lumi):
         for task in tasks:
             results.append(task.result())
         dout = add_dict_iterable(results)
+
+    print("Applying k-factor (MiNNLO / SMEFTsim LO SM) to EFT templates")
+    apply_kfactor(dout, regions, variables)
 
     print("start saving in root file")
     fout = uproot.recreate("histos.root")
