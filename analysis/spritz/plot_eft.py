@@ -133,8 +133,6 @@ def plot_one_variable(
     data     = get_vals(directory, "Data")
     data_var = get_variances(directory, "Data")
 
-    k = np.divide(dyll, sm, out=np.ones_like(dyll), where=sm > 0)
-
     present = [s for s in BKG_STACK if s in bkg_vals]
     stack   = np.array([bkg_vals[s] for s in present])
     cumsum  = np.cumsum(stack, axis=0)
@@ -223,15 +221,11 @@ def plot_one_variable(
             print(f"  [skip] {op}: histo_w1_{op} / histo_wm1_{op} not found")
             continue
 
-        sm_k  = sm  * k
-        w1_k  = w1  * k
-        wm1_k = wm1 * k
+        lin  = 0.5 * (w1 - wm1)
+        quad = 0.5 * (w1 + wm1) - sm
 
-        lin  = 0.5 * (w1_k - wm1_k)
-        quad = 0.5 * (w1_k + wm1_k) - sm_k
-
-        eft_p1 = sm_k + lin + quad   # = w1_k
-        eft_m1 = sm_k - lin + quad   # = wm1_k
+        eft_p1 = sm + lin + quad   # = w1
+        eft_m1 = sm - lin + quad   # = wm1
 
         sm_total   = bkg_total + dyll
         eft_total  = bkg_total + eft_p1
