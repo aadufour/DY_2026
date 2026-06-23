@@ -204,9 +204,9 @@ def apply_kfactor(dout, regions, variables):
                 if not any(name == p or name.startswith(p + "_") for p in eft_prefixes):
                     continue
                 h = dout[key]
-                view = h.view(True)
-                view.value    = view.value    * k
-                view.variance = view.variance * k * k
+                view = h.view()   # no flow bins — shape matches k
+                view.value    *= k
+                view.variance *= k * k
             print(f"  k-factor applied: {region}/{variable}")
 
 
