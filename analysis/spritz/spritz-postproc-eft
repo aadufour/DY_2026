@@ -9,6 +9,10 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 POST_PROC="${SCRIPT_DIR}/post_process.py"
+VENV=/grid_mnt/data__data.polcms/cms/adufour/analysis_venv
+
+# shellcheck disable=SC1091
+source "${VENV}/bin/activate"
 
 if [[ ! -f config.py ]]; then
     echo "ERROR: config.py not found. Run from the config directory."
