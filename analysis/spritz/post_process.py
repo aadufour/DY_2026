@@ -218,6 +218,7 @@ def single_post_process(results, region, variable, samples, xss, nuisances, lumi
                 results[sample]["histos"][variable]
             except KeyError:
                 print(f"Could not find key {sample} in {variable}")
+                continue
             h = results[sample]["histos"][variable].copy()
             real_axis = list([slice(None) for _ in range(len(h.axes) - 2)])
             h = h[tuple(real_axis + [hist.loc(region), slice(None)])].copy()
