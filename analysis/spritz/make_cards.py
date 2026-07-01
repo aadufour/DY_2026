@@ -51,13 +51,19 @@ def make_datacard(
         final_name = f"{region}/{variable}/histo_{sample_name}"
         h = input_file[final_name].to_hist().copy()
         name = samples[sample_name].get("name", sample_name).replace(" ", "_")
-        is_signal = samples[sample_name].get("is_signal", False)
         is_data = samples[sample_name].get("is_data", False)
         noStat = samples[sample_name].get("noStat", False)
-        noCards = samples[sample_name].get("noCards", False)
 
-        if noCards:
+        # DYll is k-factor reference only — never goes into combine
+        if sample_name == "DYll":
             continue
+
+        # sm + w1_* + wm1_* are EFT signal templates
+        is_signal = (
+            sample_name == "sm"
+            or sample_name.startswith("w1_")
+            or sample_name.startswith("wm1_")
+        )
 
         if is_signal:
             idx = sig_idx
