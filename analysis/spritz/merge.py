@@ -123,7 +123,7 @@ def main():
     reduce_function = sum
     reduce_function = add_dict_iterable
     elements_for_task = 10
-    cpus = 3
+    cpus = 6
     with concurrent.futures.ProcessPoolExecutor(max_workers=cpus) as executor:
         create_tree(
             inputs,
