@@ -377,7 +377,7 @@ def plot_one_variable(
         print(f"  {op:12s}  ->  {stem}.png / .pdf")
 
 
-def plot_triple_diff(f, region, outdir, colors, lumi, year_label):
+def plot_triple_diff(f, region, outdir, colors, lumi, year_label, shapes_path):
     """Multi-panel EFT plot for the triple_diff unrolled histogram.
 
     Creates one figure per operator: a 4-row (rapll_abs) × 5-col (costhetastar)
@@ -388,15 +388,21 @@ def plot_triple_diff(f, region, outdir, colors, lumi, year_label):
 
     directory = f[f"{region}/triple_diff"]
     mll_widths = MLL_EDGES[1:] - MLL_EDGES[:-1]
+    mll_centers = 0.5 * (MLL_EDGES[:-1] + MLL_EDGES[1:])
 
     def _get(name):
         return directory[f"histo_{name}"].values().copy()
 
+    def _getvar(name):
+        return directory[f"histo_{name}"].variances().copy()
+
     try:
         sm   = _get("sm")
         dyll = _get("DYll")
+        data     = _get("Data")
+        data_var = _getvar("Data")
     except Exception as e:
-        print(f"  [skip] triple_diff: cannot read sm/DYll: {e}")
+        print(f"  [skip] triple_diff: cannot read sm/DYll/Data: {e}")
         return
 
     bkg_vals = {}
@@ -409,6 +415,64 @@ def plot_triple_diff(f, region, outdir, colors, lumi, year_label):
     stack    = np.array([bkg_vals[s] for s in present])   # (n_bkg, 200)
     cumsum   = np.cumsum(stack, axis=0)                    # (n_bkg, 200)
     bkg_total = cumsum[-1]                                 # (200,)
+
+    # --- systematic band from shapes.root (200-bin) ---
+    syst_up   = np.zeros(200)
+    syst_down = np.zeros(200)
+    if shapes_path is not None:
+        try:
+            fs = uproot.open(shapes_path)
+
+            def _sget(name):
+                return fs[f"histo_{name}"].values().copy()
+
+            bkg_nuisances = [
+                ("QCDScale",      ["Single_Top", "TT", "WW", "DYtt", "DYll"]),
+                ("PDFweight",     ["TT", "WW", "DYtt", "DYll"]),
+                ("alphaS",        ["DYtt", "DYll"]),
+                ("PSWeight",      ["Single_Top", "TT", "WW", "WZ", "ZZ", "DYtt", "DYll"]),
+                ("mu_reco",       ["GGToLL", "Single_Top", "TT", "WW", "WZ", "ZZ", "DYtt"]),
+                ("mu_idiso",      ["GGToLL", "Single_Top", "TT", "WW", "WZ", "ZZ", "DYtt"]),
+                ("mu_trig",       ["GGToLL", "Single_Top", "TT", "WW", "WZ", "ZZ", "DYtt"]),
+                ("PU",            ["GGToLL", "Single_Top", "TT", "WW", "WZ", "ZZ", "DYtt"]),
+                ("prefireWeight", ["GGToLL", "Single_Top", "TT", "WW", "WZ", "ZZ", "DYtt"]),
+                ("tt_ptrw",       ["TT"]),
+                ("rochester_stat",["GGToLL", "Single_Top", "TT", "WW", "WZ", "ZZ", "DYtt"]),
+                ("rochester_syst",["GGToLL", "Single_Top", "TT", "WW", "WZ", "ZZ", "DYtt"]),
+                ("lumi",          ["Single_Top", "TT", "WW", "WZ", "ZZ", "DYtt", "DYll", "GGToLL"]),
+            ]
+            sm_samples_shapes = list(bkg_vals.keys()) + ["DYll"]
+            nom_total = np.zeros(200)
+            for s in sm_samples_shapes:
+                try:
+                    nom_total += _sget(s.replace(" ", "_"))
+                except Exception:
+                    pass
+
+            for nuis_name, affected in bkg_nuisances:
+                tot_up   = nom_total.copy()
+                tot_down = nom_total.copy()
+                for s in affected:
+                    skey = s.replace(" ", "_")
+                    try:
+                        nom_s = _sget(skey)
+                        if nuis_name == "lumi":
+                            tot_up   += (1.0084 - 1.0) * nom_s
+                            tot_down += (1.0 / 1.0084 - 1.0) * nom_s
+                        else:
+                            up_s = _sget(f"{skey}_{nuis_name}Up")
+                            do_s = _sget(f"{skey}_{nuis_name}Down")
+                            tot_up   += (up_s - nom_s)
+                            tot_down += (do_s - nom_s)
+                    except Exception:
+                        pass
+                syst_up   += np.square(tot_up   - nom_total)
+                syst_down += np.square(tot_down - nom_total)
+            syst_up   = np.sqrt(syst_up)
+            syst_down = np.sqrt(syst_down)
+            print(f"  Syst band loaded from {shapes_path}")
+        except Exception as e:
+            print(f"  [warn] Could not compute syst band: {e}")
 
     style = deepcopy(hep.style.CMS)
     style["font.size"]       = 7
@@ -444,16 +508,20 @@ def plot_triple_diff(f, region, outdir, colors, lumi, year_label):
                 ax_top = fig.add_subplot(inner[0])
                 ax_bot = fig.add_subplot(inner[1], sharex=ax_top)
 
-                bkg_sl    = cumsum[:, sl]         # (n_bkg, 10)
-                bkg_tot_sl = bkg_total[sl]
-                sm_sl     = sm[sl]
-                dyll_sl   = dyll[sl]
-                eft_p_sl  = w1[sl]
-                eft_m_sl  = wm1[sl]
+                bkg_sl      = cumsum[:, sl]
+                bkg_tot_sl  = bkg_total[sl]
+                sm_sl       = sm[sl]
+                dyll_sl     = dyll[sl]
+                eft_p_sl    = w1[sl]
+                eft_m_sl    = wm1[sl]
+                data_sl     = data[sl]
+                data_unc_sl = np.sqrt(np.abs(data_var[sl]))
+                syst_up_sl  = syst_up[sl]
+                syst_dn_sl  = syst_down[sl]
 
-                sm_total_sl = bkg_tot_sl + dyll_sl
-                eft_tot_sl  = bkg_tot_sl + eft_p_sl
-                eftm_tot_sl = bkg_tot_sl + eft_m_sl
+                sm_total_sl  = bkg_tot_sl + dyll_sl
+                eft_tot_sl   = bkg_tot_sl + eft_p_sl
+                eftm_tot_sl  = bkg_tot_sl + eft_m_sl
 
                 is_first = (irapll == 0 and icos == 0)
 
@@ -473,9 +541,21 @@ def plot_triple_diff(f, region, outdir, colors, lumi, year_label):
                     sm_total_sl / mll_widths, edges=MLL_EDGES,
                     color=colors.get("DYll", DEFAULT_COLORS["DYll"]),
                     linewidth=0.8, linestyle="dashed",
-                    label="SM" if is_first else "_nolegend_",
+                    label="SM (MiNNLO)" if is_first else "_nolegend_",
                     fill=False, zorder=2,
                 )
+
+                has_syst = np.any(syst_up_sl > 0)
+                if has_syst:
+                    ax_top.fill_between(
+                        np.repeat(MLL_EDGES, 2)[1:-1],
+                        np.repeat((sm_total_sl - syst_dn_sl) / mll_widths, 2),
+                        np.repeat((sm_total_sl + syst_up_sl) / mll_widths, 2),
+                        step="pre", alpha=0.30, color="grey",
+                        hatch="///", linewidth=0,
+                        label="Syst. unc." if is_first else "_nolegend_", zorder=2,
+                    )
+
                 ax_top.stairs(
                     eft_tot_sl / mll_widths, edges=MLL_EDGES,
                     color="crimson", linewidth=0.8,
@@ -487,6 +567,14 @@ def plot_triple_diff(f, region, outdir, colors, lumi, year_label):
                     color="steelblue", linewidth=0.8,
                     label=f"{op} c=-1" if is_first else "_nolegend_",
                     fill=False, zorder=3,
+                )
+
+                ax_top.errorbar(
+                    mll_centers, data_sl / mll_widths,
+                    yerr=data_unc_sl / mll_widths,
+                    fmt="o", markersize=2, color="black", linewidth=0.6,
+                    label=f"Data [{int(data_sl.sum())}]" if is_first else "_nolegend_",
+                    zorder=4,
                 )
 
                 ax_top.set_yscale("log")
@@ -513,7 +601,7 @@ def plot_triple_diff(f, region, outdir, colors, lumi, year_label):
                         handlelength=1.2, handletextpad=0.4, columnspacing=0.8,
                     )
                     hep.cms.label(
-                        "", data=False, lumi=round(lumi, 2),
+                        "", data=True, lumi=round(lumi, 2),
                         ax=ax_top, year=year_label, fontsize=6,
                     )
 
@@ -521,16 +609,36 @@ def plot_triple_diff(f, region, outdir, colors, lumi, year_label):
                     ax_top.set_ylabel("Events/GeV", fontsize=5)
 
                 # Ratio panel
-                denom   = np.where(sm_total_sl > 0, sm_total_sl, 1e-30)
-                ratio_p = eft_tot_sl  / denom
-                ratio_m = eftm_tot_sl / denom
+                denom      = np.where(sm_total_sl > 0, sm_total_sl, 1e-30)
+                ratio_p    = eft_tot_sl  / denom
+                ratio_m    = eftm_tot_sl / denom
+                ratio_data = data_sl / denom
 
                 ax_bot.stairs(ratio_p, edges=MLL_EDGES, color="crimson",   linewidth=0.8)
                 ax_bot.stairs(ratio_m, edges=MLL_EDGES, color="steelblue", linewidth=0.8)
+                ax_bot.errorbar(
+                    mll_centers, ratio_data,
+                    yerr=data_unc_sl / denom,
+                    fmt="o", markersize=2, color="black", linewidth=0.6, zorder=4,
+                )
                 ax_bot.axhline(1.0, color="black", linewidth=0.6, linestyle="dashed")
 
-                finite_r = np.concatenate([ratio_p, ratio_m])
-                finite_r = finite_r[np.isfinite(finite_r)]
+                if has_syst:
+                    ax_bot.fill_between(
+                        np.repeat(MLL_EDGES, 2)[1:-1],
+                        np.repeat((sm_total_sl - syst_dn_sl) / denom, 2),
+                        np.repeat((sm_total_sl + syst_up_sl) / denom, 2),
+                        step="pre", alpha=0.30, color="grey",
+                        hatch="///", linewidth=0, zorder=0,
+                    )
+
+                candidates = [ratio_p, ratio_m, ratio_data]
+                if has_syst:
+                    candidates += [
+                        (sm_total_sl + syst_up_sl) / denom,
+                        (sm_total_sl - syst_dn_sl) / denom,
+                    ]
+                finite_r = np.concatenate([a[np.isfinite(a)] for a in candidates])
                 half = max(np.max(np.abs(finite_r - 1.0)) * 1.2, 0.05) if finite_r.size else 0.3
                 ax_bot.set_ylim(1.0 - half, 1.0 + half)
                 ax_bot.set_xlim(MLL_EDGES[0], MLL_EDGES[-1])
@@ -624,7 +732,7 @@ def main():
 
         print(f"\n=== {args.region} / {variable} ===")
         if variable == "triple_diff":
-            plot_triple_diff(f, args.region, outdir, colors, lumi, year_label)
+            plot_triple_diff(f, args.region, outdir, colors, lumi, year_label, shapes_path)
         else:
             plot_one_variable(
                 f, args.region, variable, meta, outdir,
