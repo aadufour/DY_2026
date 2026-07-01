@@ -54,6 +54,10 @@ def make_datacard(
         is_signal = samples[sample_name].get("is_signal", False)
         is_data = samples[sample_name].get("is_data", False)
         noStat = samples[sample_name].get("noStat", False)
+        noCards = samples[sample_name].get("noCards", False)
+
+        if noCards:
+            continue
 
         if is_signal:
             idx = sig_idx

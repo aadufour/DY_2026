@@ -178,14 +178,14 @@ samples = {
             "DYmm_M-700to800", "DYmm_M-800to1000", "DYmm_M-1000to1500",
             "DYmm_M-1500to2000", "DYmm_M-2000toInf",
         ],
-        "is_signal": True,
+        "noCards": True,   # used for k-factor only; sm is the EFT signal in combine
     },
     # EFT signal subsamples (morphing convention)
-    "sm": {"samples": [f"DYSMEFTsim_LO_mll_{b}_sm" for b in MLL_BINS]},
+    "sm": {"samples": [f"DYSMEFTsim_LO_mll_{b}_sm" for b in MLL_BINS], "is_signal": True},
 }
 for _op in OPERATORS:
-    samples[f"w1_{_op}"]  = {"samples": [f"DYSMEFTsim_LO_mll_{b}_w1_{_op}"  for b in MLL_BINS]}
-    samples[f"wm1_{_op}"] = {"samples": [f"DYSMEFTsim_LO_mll_{b}_wm1_{_op}" for b in MLL_BINS]}
+    samples[f"w1_{_op}"]  = {"samples": [f"DYSMEFTsim_LO_mll_{b}_w1_{_op}"  for b in MLL_BINS], "is_signal": True}
+    samples[f"wm1_{_op}"] = {"samples": [f"DYSMEFTsim_LO_mll_{b}_wm1_{_op}" for b in MLL_BINS], "is_signal": True}
 
 # ---- Colors ------------------------------------------------------------------
 colors = {}
