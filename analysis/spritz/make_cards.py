@@ -151,7 +151,7 @@ def main():
     print("Working in analysis path:", path)
     sys.path.insert(0, path)
 
-    exec("import config as analysis_cfg", globals(), globals())
+    exec("import config_syst as analysis_cfg", globals(), globals())
     analysis_dict = analysis_cfg.__dict__  # type: ignore # noqa: F821
     samples = analysis_dict["samples"]
     nuisances = analysis_dict["nuisances"]
