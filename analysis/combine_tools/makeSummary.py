@@ -86,7 +86,13 @@ parser.add_argument("--indir", default=".")
 parser.add_argument("--ops", nargs="+", default=None)
 parser.add_argument("--horizontal", action="store_true",
                     help="Slide-friendly layout: operators on x-axis, panels stacked vertically")
+parser.add_argument("--logscale",   action="store_true",    help="Symlog scale on the Wilson coefficient axis (handles negatives)")
+parser.add_argument("--linthresh",  type=float, default=1e-2, help="Linear zone half-width for --logscale (default: 1e-2)")
 args = parser.parse_args()
+
+if args.logscale:
+    linthresh = args.linthresh
+    print(f"symlog linthresh = {linthresh:.2e}")
 
 base_dir = args.indir
 
@@ -208,12 +214,16 @@ if args.horizontal:
     ax.axhline(0, color='black', linestyle='--', linewidth=1)
     ax.set_xlim(-1.0, n_ops + 0.5)
     ax.set_ylabel("Wilson coefficient")
+    if args.logscale:
+        ax.set_yscale("symlog", linthresh=linthresh)
 else:
     ax.set_yticks(pos)
     ax.set_yticklabels(op_labels)
     ax.axvline(0, color='black', linestyle='--', linewidth=1)
     ax.set_ylim(-1.0, n_ops + 2)
     ax.set_xlabel("Wilson coefficient")
+    if args.logscale:
+        ax.set_xscale("symlog", linthresh=linthresh)
 
 # =========================
 # Formatting SECOND panel
