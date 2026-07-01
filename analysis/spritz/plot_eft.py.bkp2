@@ -61,23 +61,6 @@ LINE_WIDTH_BKG   = 0.8
 # Per-variable display metadata: label, whether to use log x-scale,
 # whether to blind data (only meaningful for mll).
 # These are defaults; get_analysis_dict() can override labels if spritz is available.
-# Physical bin edges for the triple_diff unrolled histogram.
-# Unrolling order: rapll_abs slowest, costhetastar middle, mll fastest (.T.flatten())
-# Flat index for (irapll, icos): irapll * N_COSTH * N_MLL + icos * N_MLL
-MLL_EDGES   = np.array([40, 60, 80, 100, 120, 140, 180, 220, 270, 350, 500], dtype=float)
-COSTH_EDGES = np.array([-1, -0.6, -0.2, 0.2, 0.6, 1], dtype=float)
-RAPLL_EDGES = np.array([0, 0.48, 0.96, 1.44, 2.4], dtype=float)
-N_MLL   = len(MLL_EDGES)   - 1   # 10
-N_COSTH = len(COSTH_EDGES) - 1   # 5
-N_RAPLL = len(RAPLL_EDGES) - 1   # 4
-
-
-def _td_slice(irapll, icos):
-    """Return the slice into the 200-bin triple_diff array for panel (irapll, icos)."""
-    start = irapll * N_COSTH * N_MLL + icos * N_MLL
-    return slice(start, start + N_MLL)
-
-
 VAR_META_DEFAULT = {
     # blind_all=True: hide all data (variable is mll-integrated, can't threshold-cut)
     # blind_all=False: hide data above blind_above (only meaningful for mll)
@@ -377,181 +360,6 @@ def plot_one_variable(
         print(f"  {op:12s}  ->  {stem}.png / .pdf")
 
 
-def plot_triple_diff(f, region, outdir, colors, lumi, year_label):
-    """Multi-panel EFT plot for the triple_diff unrolled histogram.
-
-    Creates one figure per operator: a 4-row (rapll_abs) × 5-col (costhetastar)
-    grid.  Each panel shows the 10 mll bins for that (rapll_abs, costhetastar) slice,
-    with a stacked background + SM + c=±1 EFT overlay and a ratio panel below.
-    """
-    from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
-
-    directory = f[f"{region}/triple_diff"]
-    mll_widths = MLL_EDGES[1:] - MLL_EDGES[:-1]
-
-    def _get(name):
-        return directory[f"histo_{name}"].values().copy()
-
-    try:
-        sm   = _get("sm")
-        dyll = _get("DYll")
-    except Exception as e:
-        print(f"  [skip] triple_diff: cannot read sm/DYll: {e}")
-        return
-
-    bkg_vals = {}
-    for s in BKG_STACK:
-        try:
-            bkg_vals[s] = _get(s)
-        except Exception:
-            pass
-    present  = [s for s in BKG_STACK if s in bkg_vals]
-    stack    = np.array([bkg_vals[s] for s in present])   # (n_bkg, 200)
-    cumsum   = np.cumsum(stack, axis=0)                    # (n_bkg, 200)
-    bkg_total = cumsum[-1]                                 # (200,)
-
-    style = deepcopy(hep.style.CMS)
-    style["font.size"]       = 7
-    style["axes.labelsize"]  = 6
-    style["xtick.labelsize"] = 5
-    style["ytick.labelsize"] = 5
-    style["legend.fontsize"] = 5
-    plt.style.use(style)
-
-    PANEL_W, PANEL_H = 3.5, 3.5
-    fig_w = N_COSTH * PANEL_W
-    fig_h = N_RAPLL * PANEL_H
-
-    for op in OPERATORS:
-        try:
-            w1  = _get(f"w1_{op}")
-            wm1 = _get(f"wm1_{op}")
-        except Exception:
-            print(f"  [skip] triple_diff {op}: w1/wm1 not found")
-            continue
-
-        fig = plt.figure(figsize=(fig_w, fig_h))
-        outer = GridSpec(N_RAPLL, N_COSTH, figure=fig, hspace=0.38, wspace=0.22)
-
-        for irapll in range(N_RAPLL):
-            for icos in range(N_COSTH):
-                sl = _td_slice(irapll, icos)
-
-                inner = GridSpecFromSubplotSpec(
-                    2, 1, subplot_spec=outer[irapll, icos],
-                    height_ratios=[3, 1], hspace=0.06,
-                )
-                ax_top = fig.add_subplot(inner[0])
-                ax_bot = fig.add_subplot(inner[1], sharex=ax_top)
-
-                bkg_sl    = cumsum[:, sl]         # (n_bkg, 10)
-                bkg_tot_sl = bkg_total[sl]
-                sm_sl     = sm[sl]
-                dyll_sl   = dyll[sl]
-                eft_p_sl  = w1[sl]
-                eft_m_sl  = wm1[sl]
-
-                sm_total_sl = bkg_tot_sl + dyll_sl
-                eft_tot_sl  = bkg_tot_sl + eft_p_sl
-                eftm_tot_sl = bkg_tot_sl + eft_m_sl
-
-                is_first = (irapll == 0 and icos == 0)
-
-                for i, name in enumerate(present):
-                    base = bkg_sl[i - 1] if i > 0 else np.zeros(N_MLL)
-                    ax_top.stairs(
-                        bkg_sl[i] / mll_widths, edges=MLL_EDGES,
-                        baseline=base / mll_widths,
-                        fill=True,
-                        color=colors.get(name, "grey"),
-                        edgecolor=_darker(colors.get(name, "grey")),
-                        linewidth=0.4,
-                        label=name if is_first else "_nolegend_",
-                        zorder=1.0 - i * 0.01,
-                    )
-                ax_top.stairs(
-                    sm_total_sl / mll_widths, edges=MLL_EDGES,
-                    color=colors.get("DYll", DEFAULT_COLORS["DYll"]),
-                    linewidth=0.8, linestyle="dashed",
-                    label="SM" if is_first else "_nolegend_",
-                    fill=False, zorder=2,
-                )
-                ax_top.stairs(
-                    eft_tot_sl / mll_widths, edges=MLL_EDGES,
-                    color="crimson", linewidth=0.8,
-                    label=f"{op} c=+1" if is_first else "_nolegend_",
-                    fill=False, zorder=3,
-                )
-                ax_top.stairs(
-                    eftm_tot_sl / mll_widths, edges=MLL_EDGES,
-                    color="steelblue", linewidth=0.8,
-                    label=f"{op} c=-1" if is_first else "_nolegend_",
-                    fill=False, zorder=3,
-                )
-
-                ax_top.set_yscale("log")
-                ax_top.set_xscale("log")
-                ax_top.tick_params(labelbottom=False)
-
-                # Per-panel bin range label
-                cos_lo = COSTH_EDGES[icos]
-                cos_hi = COSTH_EDGES[icos + 1]
-                rap_lo = RAPLL_EDGES[irapll]
-                rap_hi = RAPLL_EDGES[irapll + 1]
-                ax_top.text(
-                    0.03, 0.97,
-                    (f"$\\cos\\theta^* \\in [{cos_lo:.1f},{cos_hi:.1f}]$\n"
-                     f"$|y_{{\\ell\\ell}}| \\in [{rap_lo:.2f},{rap_hi:.2f}]$"),
-                    transform=ax_top.transAxes,
-                    va="top", ha="left", fontsize=5, linespacing=1.4,
-                )
-
-                if is_first:
-                    ax_top.legend(
-                        fontsize=5, ncols=2, framealpha=0.7,
-                        loc="upper right",
-                        handlelength=1.2, handletextpad=0.4, columnspacing=0.8,
-                    )
-                    hep.cms.label(
-                        "", data=False, lumi=round(lumi, 2),
-                        ax=ax_top, year=year_label, fontsize=6,
-                    )
-
-                if icos == 0:
-                    ax_top.set_ylabel("Events/GeV", fontsize=5)
-
-                # Ratio panel
-                denom   = np.where(sm_total_sl > 0, sm_total_sl, 1e-30)
-                ratio_p = eft_tot_sl  / denom
-                ratio_m = eftm_tot_sl / denom
-
-                ax_bot.stairs(ratio_p, edges=MLL_EDGES, color="crimson",   linewidth=0.8)
-                ax_bot.stairs(ratio_m, edges=MLL_EDGES, color="steelblue", linewidth=0.8)
-                ax_bot.axhline(1.0, color="black", linewidth=0.6, linestyle="dashed")
-
-                finite_r = np.concatenate([ratio_p, ratio_m])
-                finite_r = finite_r[np.isfinite(finite_r)]
-                half = max(np.max(np.abs(finite_r - 1.0)) * 1.2, 0.05) if finite_r.size else 0.3
-                ax_bot.set_ylim(1.0 - half, 1.0 + half)
-                ax_bot.set_xlim(MLL_EDGES[0], MLL_EDGES[-1])
-
-                if irapll == N_RAPLL - 1:
-                    ax_bot.set_xlabel(r"$m_{\ell\ell}$ [GeV]", fontsize=5)
-                if icos == 0:
-                    ax_bot.set_ylabel("Ratio", fontsize=5)
-
-        fig.suptitle(f"EFT {op} (c=±1)  —  triple-diff", fontsize=9, y=1.002)
-
-        stem = os.path.join(outdir, f"eft_triple_diff_{op}")
-        for ext in ("png", "pdf"):
-            fig.savefig(
-                f"{stem}.{ext}", facecolor="white",
-                pad_inches=0.05, bbox_inches="tight", dpi=FIG_DPI,
-            )
-        plt.close()
-        print(f"  {op:12s}  ->  {stem}.png / .pdf")
-
-
 def main():
     parser = argparse.ArgumentParser(description="EFT operator plots with k-factor")
     parser.add_argument("--input",    default="histos.root",         help="Path to histos.root")
@@ -623,14 +431,11 @@ def main():
                 shapes_path = candidate
 
         print(f"\n=== {args.region} / {variable} ===")
-        if variable == "triple_diff":
-            plot_triple_diff(f, args.region, outdir, colors, lumi, year_label)
-        else:
-            plot_one_variable(
-                f, args.region, variable, meta, outdir,
-                colors, lumi, year_label,
-                shapes_path, args.blind_above, args.no_blind,
-            )
+        plot_one_variable(
+            f, args.region, variable, meta, outdir,
+            colors, lumi, year_label,
+            shapes_path, args.blind_above, args.no_blind,
+        )
 
     print("\nDone.")
 
