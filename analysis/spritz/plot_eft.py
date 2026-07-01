@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
 """
-EFT operator plots with k-factor rescaling.
+EFT operator plots — read-only, no data modification.
 
 For each of the 27 SMEFT operators, produces a stacked-background plot with the
-EFT signal at c=\pm1 overlaid (replacing DYll / MiNNLO), plus a ratio panel (EFT/SM).
+EFT signal at c=±1 overlaid, plus a ratio panel (EFT/SM).
 
-Run from the config dir (where histos.root lives), inside apptainer + analysis_venv:
+The k-factor (MiNNLO / SMEFTsim LO SM) is applied upstream in spritz-postproc-eft
+(post_process.py). Templates read from shapes.root are already k-scaled — this
+script does NOT compute or apply any k-factor.
+
+Sources:
+  --input   histos.root   background stack + EFT templates (from spritz-postproc-eft)
+  --shapes  shapes.root   systematic band on SM prediction (from spritz-cards, optional)
+
+Run from the config dir, with analysis_venv active:
     python3 .../plot_eft.py [--input histos.root] [--region inc_mm]
                             [--variable mll|costhetastar|rapll_abs|all]
                             [--outdir plots/eft_operators]
