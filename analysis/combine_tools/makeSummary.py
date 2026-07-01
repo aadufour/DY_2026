@@ -88,6 +88,7 @@ parser.add_argument("--horizontal", action="store_true",
                     help="Slide-friendly layout: operators on x-axis, panels stacked vertically")
 parser.add_argument("--logscale",   action="store_true",    help="Symlog scale on the Wilson coefficient axis (handles negatives)")
 parser.add_argument("--linthresh",  type=float, default=1e-2, help="Linear zone half-width for --logscale (default: 1e-2)")
+parser.add_argument("--verbose",    action="store_true",    help="Print extracted best-fit and CL intervals for each operator")
 args = parser.parse_args()
 
 if args.logscale:
@@ -121,10 +122,13 @@ for op in operators:
         print(f"Skipping {op} (missing files)")
         continue
 
-    results[op] = {
-        "MC": extract_intervals(file_mc, poi),
-        "noMC": extract_intervals(file_nomc, poi)
-    }
+    res_mc   = extract_intervals(file_mc,   poi)
+    res_nomc = extract_intervals(file_nomc, poi)
+    results[op] = {"MC": res_mc, "noMC": res_nomc}
+    if args.verbose:
+        print(f"{op}:")
+        print(f"  MC   best={res_mc['best']:+.4f}  1s=[{res_mc['1sigma'][0]:+.4f}, {res_mc['1sigma'][1]:+.4f}]  2s=[{res_mc['2sigma'][0]:+.4f}, {res_mc['2sigma'][1]:+.4f}]")
+        print(f"  noMC best={res_nomc['best']:+.4f}  1s=[{res_nomc['1sigma'][0]:+.4f}, {res_nomc['1sigma'][1]:+.4f}]  2s=[{res_nomc['2sigma'][0]:+.4f}, {res_nomc['2sigma'][1]:+.4f}]")
 
 
 # sort by MC stat+syst 95% CL: smallest farthest bound from zero = best sensitivity first
