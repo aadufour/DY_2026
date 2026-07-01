@@ -147,7 +147,7 @@ def make_datacard(
 
 
 def main():
-    path = os.path.abspath(".")
+    path = os.path.abspath("analysis")
     print("Working in analysis path:", path)
     sys.path.insert(0, path)
 
