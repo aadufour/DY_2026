@@ -55,25 +55,47 @@ def getLSintersections(graphScan, val):
 # -------------------------
 
 def extract_intervals(filepath, poi, maxNLL=10, isNuis=False):
+    import ROOT
+    ROOT.gROOT.SetBatch(True)
+    f = ROOT.TFile(filepath)
+    t = f.Get("limit")
+    xs, ys = [], []
+    for ev in t:
+        x = getattr(ev, "k_" + poi)
+        y = 2 * ev.deltaNLL
+        if y <= maxNLL:
+            xs.append(x)
+            ys.append(y)
+    f.Close()
 
-    scanUtil = scanEFT()
-    scanUtil.setFile(filepath)
-    scanUtil.setTree("limit")
-    scanUtil.setPOI("k_" + poi)
-    scanUtil.setupperNLLimit(maxNLL)
-    scanUtil.setNuisanceStyle(isNuis)
+    xs, ys = zip(*sorted(zip(xs, ys)))
+    # shift so minimum is 0
+    y_min = min(ys)
+    ys = [y - y_min for y in ys]
 
-    gs = scanUtil.getScan()   # <-- correct TGraph
-
-    x_b = getBestFit(gs)
-    x1 = getLSintersections(gs, 1.0)
-    x2 = getLSintersections(gs, 4.0)
+    x_b = xs[ys.index(min(ys))]
+    x1 = getLSintersections_xy(xs, ys, 1.0)
+    x2 = getLSintersections_xy(xs, ys, 4.0)
 
     return {
         "best": x_b,
         "1sigma": x1,
         "2sigma": x2
     }
+
+
+def getLSintersections_xy(xs, ys, val):
+    xings = []
+    for i in range(1, len(xs)):
+        if ys[i] == val:
+            xings.append(xs[i])
+        elif (ys[i] - val) * (ys[i-1] - val) < 0:
+            xings.append(
+                xs[i-1] + (val - ys[i-1]) * (xs[i] - xs[i-1]) / (ys[i] - ys[i-1])
+            )
+    if len(xings) < 2:
+        xings = [min(xs), max(xs)]
+    return xings[:2]
 
 
 # -------------------------
