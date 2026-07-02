@@ -85,16 +85,6 @@ VAR_XLABELS = {
     "triple_diff":  "Unrolled bin",
 }
 
-def _xlabel_from_axis(f, key):
-    """Read the axis name from the histogram and map to a display label."""
-    try:
-        name = f[key].axes[0].metadata  # set by hist when writing ROOT files
-        if name and name in VAR_XLABELS:
-            return VAR_XLABELS[name]
-    except Exception:
-        pass
-    return r"$m_{\ell\ell}$ (GeV)"  # safe fallback
-
 ratio_fig_style = {
     "figsize": (10, 10),
     "gridspec_kw": {"height_ratios": (3, 1)},
@@ -177,13 +167,13 @@ def plot_sm_task(d):
     logy        = d["logy"]
     mode        = d["mode"]
     channel     = d["channel"]
+    xlabel      = d["xlabel"]
 
     try:
         f = uproot.open(shapes_file)
         sm_key = "histo_sm" if mode == "morphing" else f"{channel}/sm"
         edges  = get_edges(f, sm_key)
         widths = np.diff(edges)
-        xlabel = _xlabel_from_axis(f, sm_key)
 
         sm_nom  = get_vals(f, sm_key)
         sm_up   = get_vals(f, f"{sm_key}_{nuis}Up")
@@ -210,6 +200,7 @@ def plot_task(d):
     logy        = d["logy"]
     mode        = d["mode"]
     channel     = d["channel"]
+    xlabel      = d["xlabel"]
 
     try:
         f = uproot.open(shapes_file)
@@ -217,7 +208,6 @@ def plot_task(d):
         sm_key = "histo_sm" if mode == "morphing" else f"{channel}/sm"
         edges  = get_edges(f, sm_key)
         widths = np.diff(edges)
-        xlabel = _xlabel_from_axis(f, sm_key)
 
         # nominal decomposition
         sm_nom,  lin_nom,  quad_nom  = decompose(f, op, mode, channel)
@@ -249,6 +239,9 @@ def main():
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--shapes",     required=True,        help="Path to shapes.root or histograms.root")
     parser.add_argument("--outdir",     default="plots/eft_nuisances")
+    parser.add_argument("--variable",   default="mll",
+                        choices=list(VAR_XLABELS.keys()),
+                        help="Observable plotted (sets x-axis label). Default: mll")
     parser.add_argument("--operators",  nargs="+", default=OPERATORS)
     parser.add_argument("--nuisances",  nargs="+", default=None,
                         help="Default: all morphing nuisances, or "
@@ -287,16 +280,18 @@ def main():
     print(f"Nuisances   : {available_nuis}")
     print(f"Output      : {args.outdir}\n")
 
+    xlabel = VAR_XLABELS[args.variable]
+
     sm_tasks = [
         {"shapes": args.shapes, "nuis": nuis,
          "outdir": args.outdir, "logy": args.logy,
-         "mode": mode, "channel": channel}
+         "mode": mode, "channel": channel, "xlabel": xlabel}
         for nuis in available_nuis
     ]
     eft_tasks = [
         {"shapes": args.shapes, "op": op, "nuis": nuis,
          "outdir": args.outdir, "logy": args.logy,
-         "mode": mode, "channel": channel}
+         "mode": mode, "channel": channel, "xlabel": xlabel}
         for op in args.operators
         for nuis in available_nuis
     ]
