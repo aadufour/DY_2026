@@ -156,7 +156,8 @@ if args.rapll:        dirs["rapll"]        = args.rapll
 if args.costhetastar: dirs["costhetastar"] = args.costhetastar
 if args.triple_diff:  dirs["triple_diff"]  = args.triple_diff
 
-active_vars = list(dirs.keys())
+DISPLAY_ORDER = ["triple_diff", "mll", "costhetastar", "rapll"]
+active_vars = [v for v in DISPLAY_ORDER if v in dirs]
 
 n_vars  = len(active_vars)
 offsets = np.linspace(-0.3, 0.3, n_vars) if n_vars > 1 else [0.0]
