@@ -78,6 +78,23 @@ SM_COLOR   = "#5790fc"
 LIN_COLOR  = "#f89c20"
 QUAD_COLOR = "#e42536"
 
+VAR_XLABELS = {
+    "mll":          r"$m_{\ell\ell}$ (GeV)",
+    "costhetastar": r"$\cos\theta^*$",
+    "rapll_abs":    r"$|y_{\ell\ell}|$",
+    "triple_diff":  "Unrolled bin",
+}
+
+def _xlabel_from_axis(f, key):
+    """Read the axis name from the histogram and map to a display label."""
+    try:
+        name = f[key].axes[0].metadata  # set by hist when writing ROOT files
+        if name and name in VAR_XLABELS:
+            return VAR_XLABELS[name]
+    except Exception:
+        pass
+    return r"$m_{\ell\ell}$ (GeV)"  # safe fallback
+
 ratio_fig_style = {
     "figsize": (10, 10),
     "gridspec_kw": {"height_ratios": (3, 1)},
@@ -113,7 +130,7 @@ def decompose(f, op, mode, channel, suffix=""):
     return sm, lin, quad
 
 
-def render_panel(edges, widths, vals_nom, vals_up, vals_down, nuis, logy, title, color):
+def render_panel(edges, widths, vals_nom, vals_up, vals_down, nuis, logy, title, color, xlabel):
     """Build and return a (Nominal/Up/Down + ratio) figure for one histogram component."""
     _UP_COLOR   = "#f89c20"
     _DOWN_COLOR = "#e42536"
@@ -130,13 +147,15 @@ def render_panel(edges, widths, vals_nom, vals_up, vals_down, nuis, logy, title,
     stairs(ax, vals_down, ls=":",  lw=1.5, col=_DOWN_COLOR,  lab=f"{nuis} Down")
 
     ax.set_ylabel("Events / GeV")
-    ax.set_title(title, fontsize=13)
-    ax.legend(loc="best")
+    # title in top-right corner inside the axes — avoids overlap with CMS label (top-left)
+    ax.text(0.97, 0.97, title, transform=ax.transAxes,
+            ha="right", va="top", fontsize=14)
+    ax.legend(loc="upper left")
     # lin can be negative → always linear; sm/quad use --logy if requested
-    if logy and "lin" not in title.split()[0]:
+    if logy and not title.startswith("lin"):
         ax.set_yscale("log")
 
-    hep.cms.label(loc=0, label="Preliminary", data=False, ax=ax)
+    hep.cms.label(loc=0, label="Simulation Preliminary", data=False, ax=ax)
 
     safe = np.where(np.abs(vals_nom) > 0, vals_nom, np.nan)
     rax.stairs(vals_up   / safe, edges=edges, color=_UP_COLOR,   linewidth=1.5, linestyle="--", label=f"{nuis} Up")
@@ -144,7 +163,7 @@ def render_panel(edges, widths, vals_nom, vals_up, vals_down, nuis, logy, title,
     rax.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
     rax.set_ylim(0.7, 1.3)
     rax.set_ylabel("Var / Nom.")
-    rax.set_xlabel(r"$m_{\ell\ell}$ (GeV)")
+    rax.set_xlabel(xlabel)
     rax.autoscale(axis="x", tight=True)
 
     return fig
@@ -164,6 +183,7 @@ def plot_sm_task(d):
         sm_key = "histo_sm" if mode == "morphing" else f"{channel}/sm"
         edges  = get_edges(f, sm_key)
         widths = np.diff(edges)
+        xlabel = _xlabel_from_axis(f, sm_key)
 
         sm_nom  = get_vals(f, sm_key)
         sm_up   = get_vals(f, f"{sm_key}_{nuis}Up")
@@ -173,7 +193,7 @@ def plot_sm_task(d):
         return
 
     fig = render_panel(edges, widths, sm_nom, sm_up, sm_down, nuis, logy,
-                        title=f"sm  —  {nuis}", color=SM_COLOR)
+                        title=f"sm  —  {nuis}", color=SM_COLOR, xlabel=xlabel)
     stem = os.path.join(outdir, f"sm_{nuis}")
     fig.savefig(f"{stem}.png", bbox_inches="tight", facecolor="white")
     fig.savefig(f"{stem}.pdf", bbox_inches="tight", facecolor="white")
@@ -197,6 +217,7 @@ def plot_task(d):
         sm_key = "histo_sm" if mode == "morphing" else f"{channel}/sm"
         edges  = get_edges(f, sm_key)
         widths = np.diff(edges)
+        xlabel = _xlabel_from_axis(f, sm_key)
 
         # nominal decomposition
         sm_nom,  lin_nom,  quad_nom  = decompose(f, op, mode, channel)
@@ -215,7 +236,7 @@ def plot_task(d):
     ]:
         title = f"{component}  [{op}]  —  {nuis}"
         fig = render_panel(edges, widths, vals_nom, vals_up, vals_down, nuis, logy,
-                            title=title, color=color)
+                            title=title, color=color, xlabel=xlabel)
         stem = os.path.join(outdir, f"{component}_{op}_{nuis}")
         fig.savefig(f"{stem}.png", bbox_inches="tight", facecolor="white")
         fig.savefig(f"{stem}.pdf", bbox_inches="tight", facecolor="white")

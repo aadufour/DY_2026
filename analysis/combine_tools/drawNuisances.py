@@ -43,6 +43,21 @@ DOWN_COLOR = "#e42536"
 
 
 
+VAR_XLABELS = {
+    "mll":          r"$m_{\ell\ell}$ (GeV)",
+    "costhetastar": r"$\cos\theta^*$",
+    "rapll_abs":    r"$|y_{\ell\ell}|$",
+    "triple_diff":  "Unrolled bin",
+}
+
+def _xlabel_from_bin(bin_name):
+    """Infer x-axis label from the datacard bin name (e.g. 'inc_mm_mll')."""
+    for var, label in VAR_XLABELS.items():
+        if bin_name.endswith(f"_{var}"):
+            return label
+    return bin_name  # fallback: show the bin name itself
+
+
 def plot(d__):
     import numpy as np
 
@@ -81,8 +96,9 @@ def plot(d__):
 
     ax.set_xlabel("")
     ax.set_ylabel("Events / GeV")
-    ax.set_title(f"{sample}  —  {shn}", fontsize=14)
-    ax.legend(loc="best")
+    ax.text(0.97, 0.97, f"{sample}  —  {shn}",
+            transform=ax.transAxes, ha="right", va="top", fontsize=13)
+    ax.legend(loc="upper left")
     if logy:
         ax.set_yscale("log")
 
@@ -101,10 +117,10 @@ def plot(d__):
     rax.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
     rax.set_ylim(0.7, 1.3)
     rax.set_ylabel("Var / Nom.")
-    rax.set_xlabel(r"$m_{\ell\ell}$ (GeV)")
+    rax.set_xlabel(_xlabel_from_bin(binDC__))
     rax.autoscale(axis='x', tight=True)
 
-    hep.cms.label(loc=0, label="Preliminary", data=True, ax=ax)
+    hep.cms.label(loc=0, label="Simulation Preliminary", data=False, ax=ax)
 
     fig.savefig(f"{out}/{binDC__}_{sample}_{shn}.png", bbox_inches="tight")
     fig.savefig(f"{out}/{binDC__}_{sample}_{shn}.pdf", bbox_inches="tight")

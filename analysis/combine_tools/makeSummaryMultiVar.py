@@ -138,6 +138,9 @@ parser.add_argument("--rapll",         default=None,  help="Directory with rapll
 parser.add_argument("--costhetastar",  default=None,  help="Directory with costhetastar scan ROOT files")
 parser.add_argument("--triple_diff",   default=None,  help="Directory with triple_diff scan ROOT files")
 parser.add_argument("--ops",        nargs="+", default=None)
+parser.add_argument("--sort-by",    default=None,
+                    help="Variable to use for operator ordering (default: mll). "
+                         "Must be one of the active variables, e.g. --sort-by triple_diff")
 parser.add_argument("--horizontal", action="store_true")
 parser.add_argument("--logscale",   action="store_true")
 parser.add_argument("--linthresh",  type=float, default=1e-2)
@@ -172,11 +175,16 @@ for var, d in dirs.items():
         print(f"\n--- {var} ---")
     all_results[var] = load_results(d, operators, verbose=args.verbose)
 
-operators = [op for op in operators if op in all_results["mll"]]
+sort_var = args.sort_by if args.sort_by else "mll"
+if sort_var not in all_results:
+    raise ValueError(f"--sort-by '{sort_var}' not in active variables {list(all_results.keys())}")
+
+operators = [op for op in operators if op in all_results[sort_var]]
 operators.sort(key=lambda op: max(
-    abs(all_results["mll"][op]["2sigma"][0]),
-    abs(all_results["mll"][op]["2sigma"][1])
+    abs(all_results[sort_var][op]["2sigma"][0]),
+    abs(all_results[sort_var][op]["2sigma"][1])
 ))
+print(f"Ordering by: {sort_var}")
 
 if args.logscale:
     linthresh = args.linthresh
