@@ -139,13 +139,13 @@ def render_panel(edges, widths, vals_nom, vals_up, vals_down, nuis, logy, title,
     ax.set_ylabel("Events / GeV")
     # title in top-right corner inside the axes — avoids overlap with CMS label (top-left)
     ax.text(0.97, 0.97, title, transform=ax.transAxes,
-            ha="right", va="top", fontsize=14)
+            ha="right", va="top", fontsize=18)
     ax.legend(loc="upper left")
     # lin can be negative → always linear; sm/quad use --logy if requested
     if logy and not title.startswith("lin"):
         ax.set_yscale("log")
 
-    hep.cms.label(loc=0, label="Simulation Preliminary", data=False, ax=ax)
+    hep.cms.label(loc=0, label="Preliminary", data=False, ax=ax)
 
     safe = np.where(np.abs(vals_nom) > 0, vals_nom, np.nan)
     rax.stairs(vals_up   / safe, edges=edges, color=_UP_COLOR,   linewidth=1.5, linestyle="--", label=f"{nuis} Up")
@@ -239,9 +239,10 @@ def main():
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--shapes",     required=True,        help="Path to shapes.root or histograms.root")
     parser.add_argument("--outdir",     default="plots/eft_nuisances")
-    parser.add_argument("--variable",   default="mll",
+    parser.add_argument("--variable",   default=None,
                         choices=list(VAR_XLABELS.keys()),
-                        help="Observable plotted (sets x-axis label). Default: mll")
+                        help="Observable plotted (sets x-axis label). "
+                             "Auto-detected from the shapes path if not given.")
     parser.add_argument("--operators",  nargs="+", default=OPERATORS)
     parser.add_argument("--nuisances",  nargs="+", default=None,
                         help="Default: all morphing nuisances, or "
@@ -280,7 +281,14 @@ def main():
     print(f"Nuisances   : {available_nuis}")
     print(f"Output      : {args.outdir}\n")
 
-    xlabel = VAR_XLABELS[args.variable]
+    # auto-detect variable from path (e.g. .../triple_diff/shapes.root → triple_diff)
+    detected = next(
+        (v for v in VAR_XLABELS if f"/{v}/" in args.shapes or args.shapes.endswith(f"/{v}")),
+        "mll",
+    )
+    variable = args.variable if args.variable else detected
+    xlabel = VAR_XLABELS[variable]
+    print(f"Variable    : {variable}  →  x-label: {xlabel}")
 
     sm_tasks = [
         {"shapes": args.shapes, "nuis": nuis,

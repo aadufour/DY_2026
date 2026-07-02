@@ -97,7 +97,7 @@ def plot(d__):
     ax.set_xlabel("")
     ax.set_ylabel("Events / GeV")
     ax.text(0.97, 0.97, f"{sample}  —  {shn}",
-            transform=ax.transAxes, ha="right", va="top", fontsize=13)
+            transform=ax.transAxes, ha="right", va="top", fontsize=18)
     ax.legend(loc="upper left")
     if logy:
         ax.set_yscale("log")
@@ -120,7 +120,7 @@ def plot(d__):
     rax.set_xlabel(_xlabel_from_bin(binDC__))
     rax.autoscale(axis='x', tight=True)
 
-    hep.cms.label(loc=0, label="Simulation Preliminary", data=False, ax=ax)
+    hep.cms.label(loc=0, label="Preliminary", data=False, ax=ax)
 
     fig.savefig(f"{out}/{binDC__}_{sample}_{shn}.png", bbox_inches="tight")
     fig.savefig(f"{out}/{binDC__}_{sample}_{shn}.pdf", bbox_inches="tight")
