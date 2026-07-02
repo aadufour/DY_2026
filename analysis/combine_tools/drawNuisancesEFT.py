@@ -281,12 +281,24 @@ def main():
     print(f"Nuisances   : {available_nuis}")
     print(f"Output      : {args.outdir}\n")
 
-    # auto-detect variable from path (e.g. .../triple_diff/shapes.root → triple_diff)
-    detected = next(
-        (v for v in VAR_XLABELS if f"/{v}/" in args.shapes or args.shapes.endswith(f"/{v}")),
-        "mll",
-    )
-    variable = args.variable if args.variable else detected
+    # auto-detect variable from histogram shape (works even when running from the variable dir)
+    if args.variable:
+        variable = args.variable
+    else:
+        f_tmp = uproot.open(args.shapes)
+        sm_key_tmp = "histo_sm" if mode == "morphing" else f"{channel}/sm"
+        edges_tmp  = get_edges(f_tmp, sm_key_tmp)
+        n = len(edges_tmp) - 1
+        if n == 200:
+            variable = "triple_diff"
+        elif n == 50 and edges_tmp[-1] > 2.0:
+            variable = "rapll_abs"
+        elif n == 50:
+            variable = "costhetastar"
+        else:
+            variable = "mll"
+        f_tmp.close()
+
     xlabel = VAR_XLABELS[variable]
     print(f"Variable    : {variable}  →  x-label: {xlabel}")
 
