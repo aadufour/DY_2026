@@ -1,3 +1,2 @@
-- make sure I understand blinding
-- triple diff (unrolled) plot !
+- plots with SAME BINNING FOR EACH VARIABLE!
 - propapagtor correction! especially important when you are on shell!
