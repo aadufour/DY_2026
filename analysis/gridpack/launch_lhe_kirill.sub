@@ -1,0 +1,30 @@
+# Parameters (need absolute paths)
+ProcName = mlll_800
+BasePath = /grid_mnt/data__data.polcms/cms/biriukov/Wgamma/CMSSW_14_1_0_pre4/src/Acorn/Analysis/WZRun3/gridpacks
+ExecutablePath = $(BasePath)/scripts
+GridPath = $(BasePath)/wz_prod_testing/$(ProcName)
+
+executable = $(ExecutablePath)/launch_lhe.sh
+transfer_input_files = $(GridPath)/WZto3LNu-1Jets-4FS_amcatnloFXFX-pythia8_el8_amd64_gcc10_CMSSW_12_4_8_tarball.tar.xz
+environment = "SEEDID=$(SampleId) SAVEFILE=$(GridPath) GRIDDIR=$(ProcName)"
+
+universe = vanilla
+include : mkdir -p $(BasePath)/logs_lhe_$(ProcName) |
+output = $(BasePath)/logs_lhe_$(ProcName)/$(SampleId).out
+error = $(BasePath)/logs_lhe_$(ProcName)/$(SampleId).err
+log = $(BasePath)/logs_lhe_$(ProcName)/$(SampleId).log
+transfer_output_files = ""
+
+request_memory = 20G
+# can only be 1, 8 or 32 on LLR T3
+request_cpus = 8
+
+T3Queue = $(T3Queue:long)
+WNTag = $(WNTag:el9)
+include : /opt/exp_soft/cms/t3/t3queue |
+requirements = regexp("llrgrwnvm[0-9]+.in2p3.fr", Machine) == FALSE
+
+priority=-50
+max_retries = 1
+
+queue SampleId from seq 401 500 |
