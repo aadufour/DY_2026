@@ -1,16 +1,17 @@
 ProcName = DYSMEFTMll200_400_propcorr
 BasePath = /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/gridpack
-GridPath = $(BasePath)/propcorr_lhe_output/$(ProcName)
+OutputBase = /grid_mnt/data__data.polcms/cms/adufour/LHE/propcorr
+GridPath = $(OutputBase)/$(ProcName)
 
 executable = $(BasePath)/launch_lhe_propcorr.sh
 transfer_input_files = /grid_mnt/data__data.polcms/cms/adufour/genproductions/bin/MadGraph5_aMCatNLO/DYSMEFTMll200_400_propcorr_slc7_amd64_gcc700_CMSSW_10_6_19_tarball.tar.xz
 environment = "SEEDID=$(SampleId) SAVEFILE=$(GridPath) TARBALL=DYSMEFTMll200_400_propcorr_slc7_amd64_gcc700_CMSSW_10_6_19_tarball.tar.xz"
 
 universe = vanilla
-include : mkdir -p $(BasePath)/logs_lhe_$(ProcName) |
-output = $(BasePath)/logs_lhe_$(ProcName)/$(SampleId).out
-error = $(BasePath)/logs_lhe_$(ProcName)/$(SampleId).err
-log = $(BasePath)/logs_lhe_$(ProcName)/$(SampleId).log
+include : mkdir -p $(GridPath)/logs |
+output = $(GridPath)/logs/$(SampleId).out
+error = $(GridPath)/logs/$(SampleId).err
+log = $(GridPath)/logs/$(SampleId).log
 transfer_output_files = ""
 
 request_memory = 20G
