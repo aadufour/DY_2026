@@ -1,0 +1,27 @@
+ProcName = DYSMEFTMll400_600_propcorr
+BasePath = /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/gridpack
+GridPath = $(BasePath)/propcorr_lhe_output/$(ProcName)
+
+executable = $(BasePath)/launch_lhe_propcorr.sh
+transfer_input_files = /grid_mnt/data__data.polcms/cms/adufour/genproductions/bin/MadGraph5_aMCatNLO/DYSMEFTMll400_600_propcorr_slc7_amd64_gcc700_CMSSW_10_6_19_tarball.tar.xz
+environment = "SEEDID=$(SampleId) SAVEFILE=$(GridPath) TARBALL=DYSMEFTMll400_600_propcorr_slc7_amd64_gcc700_CMSSW_10_6_19_tarball.tar.xz"
+
+universe = vanilla
+include : mkdir -p $(BasePath)/logs_lhe_$(ProcName) |
+output = $(BasePath)/logs_lhe_$(ProcName)/$(SampleId).out
+error = $(BasePath)/logs_lhe_$(ProcName)/$(SampleId).err
+log = $(BasePath)/logs_lhe_$(ProcName)/$(SampleId).log
+transfer_output_files = ""
+
+request_memory = 20G
+request_cpus = 8
+
+T3Queue = long
+WNTag = el9
+include : /opt/exp_soft/cms/t3/t3queue |
+requirements = regexp("llrgrwnvm[0-9]+.in2p3.fr", Machine) == FALSE
+
+priority=-50
+max_retries = 1
+
+queue SampleId from seq 4001 4010 |
