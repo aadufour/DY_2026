@@ -1,2 +1,3 @@
 - plots with SAME BINNING FOR EACH VARIABLE!
 - propapagtor correction! especially important when you are on shell!
+- scan woth ONLY LINEAR/QUADRATIC
