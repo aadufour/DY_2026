@@ -19,8 +19,12 @@ Usage:
 """
 
 import argparse
+import os
 import pickle
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')   # no display on the cluster -- write straight to file
+import matplotlib.pyplot as plt
 
 PROP_CACHE = '/grid_mnt/data__data.polcms/cms/adufour/LHE/propcorr/CACHE/lhe_cache_propcorr.pkl'
 BASE_CACHE = '/grid_mnt/data__data.polcms/cms/adufour/LHE/SYST_slc7/CACHE/lhe_cache_parallel.pkl'
@@ -35,7 +39,9 @@ parser.add_argument('--binwidth', type=float, default=0.5)
 parser.add_argument('--C', type=float, default=1.0, help='Wilson coefficient value for --component complete')
 parser.add_argument('--prop-cache', default=PROP_CACHE)
 parser.add_argument('--base-cache', default=BASE_CACHE)
+parser.add_argument('--outdir', default='./compare_ops_plots', help='where to save the .pdf/.png')
 args = parser.parse_args()
+os.makedirs(args.outdir, exist_ok=True)
 
 with open(args.prop_cache, 'rb') as f:
     prop = pickle.load(f)
@@ -79,13 +85,6 @@ def shape_and_n(cache, component, op1, op2, C):
     return (h / total if total != 0 else h), n
 
 
-def ascii_bar(value, max_value, width=40, char='#'):
-    if max_value <= 0:
-        return ''
-    n = int(round(width * max(value, 0) / max_value))
-    return char * n
-
-
 def run_comparison(component, op1, op2):
     sp, n_prop = shape_and_n(prop, component, op1, op2, args.C)
     sb, n_base = shape_and_n(base, component, op1, op2, args.C)
@@ -107,15 +106,30 @@ def run_comparison(component, op1, op2):
         print(f"{lo:6.1f}-{hi:<6.1f}   {sp[i]:10.5f} {sb[i]:10.5f} {r:8.4f} {pull[i]:7.2f} {n_prop[i]:8d} {n_base[i]:8d}")
     print(f"\nchi2/dof = {chi2/ndof:.2f} over {ndof} bins\n")
 
-    print(f"ASCII shape overlay ('P' = propcorr, 'B' = baseline):")
-    max_val = max(sp.max(), sb.max())
-    for i in range(len(edges) - 1):
-        lo, hi = edges[i], edges[i + 1]
-        bar_p = ascii_bar(sp[i], max_val, char='P')
-        bar_b = ascii_bar(sb[i], max_val, char='B')
-        print(f"{lo:6.1f}-{hi:<6.1f} P|{bar_p}")
-        print(f"{'':16} B|{bar_b}")
-    print()
+    # --- plot: shape overlay on top, ratio panel below ---
+    centers = 0.5 * (edges[:-1] + edges[1:])
+    fig, (ax1, ax2) = plt.subplots(
+        2, 1, sharex=True, figsize=(8, 7),
+        gridspec_kw={'height_ratios': [3, 1], 'hspace': 0.05})
+
+    ax1.step(edges[:-1], sp, where='post', color='tab:red',  label='propcorr')
+    ax1.step(edges[:-1], sb, where='post', color='tab:blue', label='baseline')
+    ax1.set_ylabel('normalized shape')
+    ax1.set_title(f"{component}   {label}")
+    ax1.legend()
+
+    ratio = np.divide(sp, sb, out=np.full_like(sp, np.nan), where=sb != 0)
+    ax2.step(edges[:-1], ratio, where='post', color='black')
+    ax2.axhline(1.0, color='gray', linestyle='--', linewidth=1)
+    ax2.set_ylabel('propcorr / baseline')
+    ax2.set_xlabel('m_ll [GeV]')
+
+    fig.tight_layout()
+    base_name = os.path.join(args.outdir, f"compare_{label}_{component}")
+    fig.savefig(base_name + '.pdf')
+    fig.savefig(base_name + '.png', dpi=150)
+    plt.close(fig)
+    print(f"Saved plot: {base_name}.pdf / .png\n")
 
 
 if args.component == 'mixed':
