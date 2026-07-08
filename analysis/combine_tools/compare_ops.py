@@ -67,6 +67,24 @@ with open(args.prop_cache, 'rb') as f:
 with open(args.base_cache, 'rb') as f:
     base = pickle.load(f)
 
+# N_gen normalization fix, matching build_datacard_new.py exactly:
+# cache weights sum to sigma_sample * N_GEN_PER_SAMPLE, not sigma_sample.
+# Dividing by N_GEN_PER_SAMPLE puts everything in genuine pb-scale cross
+# section units -- required for --no-normalize to be physically meaningful
+# and for propcorr/baseline to be directly comparable regardless of any
+# difference in how many events survived cuts in each sample.
+N_GEN_PER_SAMPLE = 100_000
+
+def _apply_ngen_fix(cache):
+    cache['w_SM'] = cache['w_SM'] / N_GEN_PER_SAMPLE
+    cache['w_p1'] = {op: w / N_GEN_PER_SAMPLE for op, w in cache['w_p1'].items()}
+    cache['w_m1'] = {op: w / N_GEN_PER_SAMPLE for op, w in cache['w_m1'].items()}
+    cache['w_pp'] = {k: w / N_GEN_PER_SAMPLE for k, w in cache.get('w_pp', {}).items()}
+    return cache
+
+prop = _apply_ngen_fix(prop)
+base = _apply_ngen_fix(base)
+
 edges = np.arange(args.lo, args.hi + args.binwidth, args.binwidth)
 
 
@@ -119,7 +137,7 @@ def run_comparison(component, op1, op2):
     ndof = np.sum(np.isfinite(pull))
 
     label = op1 if component != 'mixed' else f'{op1}_{op2}'
-    norm_label = 'normalized (sum=1)' if not args.no_normalize else 'raw weighted sum'
+    norm_label = 'normalized (sum=1)' if not args.no_normalize else 'cross section [pb], N_gen-corrected'
     print(f"Component: {component}   Operator(s): {label}   [{norm_label}]")
     print(f"{'bin':>16} {'propcorr':>10} {'baseline':>10} {'ratio':>8} {'pull':>7} {'N_prop':>8} {'N_base':>8}")
     for i in range(len(edges) - 1):
@@ -145,7 +163,7 @@ def run_comparison(component, op1, op2):
         step="pre", alpha=0.3, color="steelblue", linewidth=0, zorder=0)
     ax_top.stairs(sp, edges=edges, color="crimson",   linewidth=2.0, label="propcorr", fill=False, zorder=3)
     ax_top.stairs(sb, edges=edges, color="steelblue", linewidth=2.0, label="baseline", fill=False, zorder=2)
-    ax_top.set_ylabel("Normalized shape" if not args.no_normalize else "Raw weighted sum")
+    ax_top.set_ylabel("Normalized shape" if not args.no_normalize else "Cross section [pb / bin]")
     ax_top.tick_params(labelbottom=False)
     ax_top.legend(loc="upper right", framealpha=0.8)
     ax_top.text(
