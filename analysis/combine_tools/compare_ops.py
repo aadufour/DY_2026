@@ -79,6 +79,13 @@ def shape_and_n(cache, component, op1, op2, C):
     return (h / total if total != 0 else h), n
 
 
+def ascii_bar(value, max_value, width=40, char='#'):
+    if max_value <= 0:
+        return ''
+    n = int(round(width * max(value, 0) / max_value))
+    return char * n
+
+
 def run_comparison(component, op1, op2):
     sp, n_prop = shape_and_n(prop, component, op1, op2, args.C)
     sb, n_base = shape_and_n(base, component, op1, op2, args.C)
@@ -99,6 +106,16 @@ def run_comparison(component, op1, op2):
         r = sp[i] / sb[i] if sb[i] != 0 else float('nan')
         print(f"{lo:6.1f}-{hi:<6.1f}   {sp[i]:10.5f} {sb[i]:10.5f} {r:8.4f} {pull[i]:7.2f} {n_prop[i]:8d} {n_base[i]:8d}")
     print(f"\nchi2/dof = {chi2/ndof:.2f} over {ndof} bins\n")
+
+    print(f"ASCII shape overlay ('P' = propcorr, 'B' = baseline):")
+    max_val = max(sp.max(), sb.max())
+    for i in range(len(edges) - 1):
+        lo, hi = edges[i], edges[i + 1]
+        bar_p = ascii_bar(sp[i], max_val, char='P')
+        bar_b = ascii_bar(sb[i], max_val, char='B')
+        print(f"{lo:6.1f}-{hi:<6.1f} P|{bar_p}")
+        print(f"{'':16} B|{bar_b}")
+    print()
 
 
 if args.component == 'mixed':
