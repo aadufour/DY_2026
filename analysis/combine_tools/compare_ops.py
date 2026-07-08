@@ -135,6 +135,14 @@ def run_comparison(component, op1, op2):
     fig.tight_layout(pad=-0.5)
     hep.cms.label("Preliminary", data=False, ax=ax_top)
 
+    edges_rep = np.repeat(edges, 2)[1:-1]   # doubled-edges trick for step-shaped fill_between
+
+    ax_top.fill_between(
+        edges_rep, np.repeat(sp - sig_p, 2), np.repeat(sp + sig_p, 2),
+        step="pre", alpha=0.3, color="crimson", linewidth=0, zorder=1)
+    ax_top.fill_between(
+        edges_rep, np.repeat(sb - sig_b, 2), np.repeat(sb + sig_b, 2),
+        step="pre", alpha=0.3, color="steelblue", linewidth=0, zorder=0)
     ax_top.stairs(sp, edges=edges, color="crimson",   linewidth=2.0, label="propcorr", fill=False, zorder=3)
     ax_top.stairs(sb, edges=edges, color="steelblue", linewidth=2.0, label="baseline", fill=False, zorder=2)
     ax_top.set_ylabel("Normalized shape" if not args.no_normalize else "Raw weighted sum")
@@ -146,6 +154,14 @@ def run_comparison(component, op1, op2):
     )
 
     ratio = np.divide(sp, sb, out=np.full_like(sp, np.nan), where=sb != 0)
+    # propagate independent Poisson uncertainties through the division
+    ratio_sigma = np.abs(ratio) * np.sqrt(
+        np.divide(sig_p, sp, out=np.zeros_like(sp), where=sp != 0)**2
+        + np.divide(sig_b, sb, out=np.zeros_like(sb), where=sb != 0)**2
+    )
+    ax_bot.fill_between(
+        edges_rep, np.repeat(ratio - ratio_sigma, 2), np.repeat(ratio + ratio_sigma, 2),
+        step="pre", alpha=0.3, color="gray", linewidth=0, zorder=0)
     ax_bot.stairs(ratio, edges=edges, color="black", linewidth=1.2)
     ax_bot.axhline(1.0, color="gray", linestyle="dashed", linewidth=1)
     finite = ratio[np.isfinite(ratio)]
