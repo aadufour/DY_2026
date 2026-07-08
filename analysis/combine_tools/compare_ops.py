@@ -128,7 +128,7 @@ def run_comparison(component, op1, op2):
         2, 1, sharex=True, dpi=FIG_DPI,
         gridspec_kw={"height_ratios": [3, 1]})
     fig.tight_layout(pad=-0.5)
-    hep.cms.label("Simulation", data=False, ax=ax_top)
+    hep.cms.label("Preliminary", data=False, ax=ax_top)
 
     ax_top.stairs(sp, edges=edges, color="crimson",   linewidth=2.0, label="propcorr", fill=False, zorder=3)
     ax_top.stairs(sb, edges=edges, color="steelblue", linewidth=2.0, label="baseline", fill=False, zorder=2)
