@@ -57,6 +57,8 @@ parser.add_argument('--C', type=float, default=1.0, help='Wilson coefficient val
 parser.add_argument('--prop-cache', default=PROP_CACHE)
 parser.add_argument('--base-cache', default=BASE_CACHE)
 parser.add_argument('--outdir', default='./compare_ops_plots', help='where to save the .pdf/.png')
+parser.add_argument('--no-normalize', action='store_true',
+                     help='plot raw weighted bin sums instead of normalizing each histogram to sum=1')
 args = parser.parse_args()
 os.makedirs(args.outdir, exist_ok=True)
 
@@ -98,6 +100,8 @@ def shape_and_n(cache, component, op1, op2, C):
     mll = cache['mll']
     h, _ = np.histogram(mll, bins=edges, weights=w)
     n, _ = np.histogram(mll, bins=edges)
+    if args.no_normalize:
+        return h, n
     total = h.sum()
     return (h / total if total != 0 else h), n
 
@@ -115,7 +119,8 @@ def run_comparison(component, op1, op2):
     ndof = np.sum(np.isfinite(pull))
 
     label = op1 if component != 'mixed' else f'{op1}_{op2}'
-    print(f"Component: {component}   Operator(s): {label}")
+    norm_label = 'normalized (sum=1)' if not args.no_normalize else 'raw weighted sum'
+    print(f"Component: {component}   Operator(s): {label}   [{norm_label}]")
     print(f"{'bin':>16} {'propcorr':>10} {'baseline':>10} {'ratio':>8} {'pull':>7} {'N_prop':>8} {'N_base':>8}")
     for i in range(len(edges) - 1):
         lo, hi = edges[i], edges[i + 1]
@@ -132,7 +137,7 @@ def run_comparison(component, op1, op2):
 
     ax_top.stairs(sp, edges=edges, color="crimson",   linewidth=2.0, label="propcorr", fill=False, zorder=3)
     ax_top.stairs(sb, edges=edges, color="steelblue", linewidth=2.0, label="baseline", fill=False, zorder=2)
-    ax_top.set_ylabel("Normalized shape")
+    ax_top.set_ylabel("Normalized shape" if not args.no_normalize else "Raw weighted sum")
     ax_top.tick_params(labelbottom=False)
     ax_top.legend(loc="upper right", framealpha=0.8)
     ax_top.text(
@@ -150,7 +155,8 @@ def run_comparison(component, op1, op2):
     ax_bot.set_xlabel(r"$m_{\ell\ell}$ [GeV]")
     ax_bot.set_xlim(edges[0], edges[-1])
 
-    base_name = os.path.join(args.outdir, f"compare_{label}_{component}")
+    suffix = "" if not args.no_normalize else "_raw"
+    base_name = os.path.join(args.outdir, f"compare_{label}_{component}{suffix}")
     for ext in ("png", "pdf"):
         fig.savefig(f"{base_name}.{ext}", facecolor="white", pad_inches=0.1, bbox_inches="tight")
     plt.close(fig)
