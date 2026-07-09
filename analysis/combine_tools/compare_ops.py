@@ -113,23 +113,29 @@ def get_weight(cache, component, op1, op2, C):
     raise ValueError(component)
 
 
-def shape_and_n(cache, component, op1, op2, C):
+def shape_and_sigma(cache, component, op1, op2, C):
+    """Bin content and its exact statistical uncertainty, sigma = sqrt(sum(w_i^2))
+    per bin (ROOT Sumw2 / boost_histogram Weight() convention). If normalizing,
+    both content and sigma are divided by the same total -- an approximation
+    that ignores the correlation between a bin and the total it's part of,
+    but with --no-normalize (the recommended mode) this is the exact result."""
     w = get_weight(cache, component, op1, op2, C)
     mll = cache['mll']
-    h, _ = np.histogram(mll, bins=edges, weights=w)
-    n, _ = np.histogram(mll, bins=edges)
+    h,  _ = np.histogram(mll, bins=edges, weights=w)
+    h2, _ = np.histogram(mll, bins=edges, weights=w**2)
+    sigma = np.sqrt(h2)
     if args.no_normalize:
-        return h, n
+        return h, sigma
     total = h.sum()
-    return (h / total if total != 0 else h), n
+    if total == 0:
+        return h, sigma
+    return h / total, sigma / total
 
 
 def run_comparison(component, op1, op2):
-    sp, n_prop = shape_and_n(prop, component, op1, op2, args.C)
-    sb, n_base = shape_and_n(base, component, op1, op2, args.C)
+    sp, sig_p = shape_and_sigma(prop, component, op1, op2, args.C)
+    sb, sig_b = shape_and_sigma(base, component, op1, op2, args.C)
 
-    sig_p = sp / np.sqrt(np.maximum(n_prop, 1))
-    sig_b = sb / np.sqrt(np.maximum(n_base, 1))
     sigma = np.sqrt(sig_p**2 + sig_b**2)
     sigma = np.where(sigma == 0, np.inf, sigma)
     pull = (sp - sb) / sigma
@@ -139,11 +145,11 @@ def run_comparison(component, op1, op2):
     label = op1 if component != 'mixed' else f'{op1}_{op2}'
     norm_label = 'normalized (sum=1)' if not args.no_normalize else 'cross section [pb], N_gen-corrected'
     print(f"Component: {component}   Operator(s): {label}   [{norm_label}]")
-    print(f"{'bin':>16} {'propcorr':>10} {'baseline':>10} {'ratio':>8} {'pull':>7} {'N_prop':>8} {'N_base':>8}")
+    print(f"{'bin':>16} {'propcorr':>12} {'+-sig_p':>10} {'baseline':>12} {'+-sig_b':>10} {'ratio':>8} {'pull':>7}")
     for i in range(len(edges) - 1):
         lo, hi = edges[i], edges[i + 1]
         r = sp[i] / sb[i] if sb[i] != 0 else float('nan')
-        print(f"{lo:6.1f}-{hi:<6.1f}   {sp[i]:10.5f} {sb[i]:10.5f} {r:8.4f} {pull[i]:7.2f} {n_prop[i]:8d} {n_base[i]:8d}")
+        print(f"{lo:6.1f}-{hi:<6.1f}   {sp[i]:12.5g} {sig_p[i]:10.3g} {sb[i]:12.5g} {sig_b[i]:10.3g} {r:8.4f} {pull[i]:7.2f}")
     print(f"\nchi2/dof = {chi2/ndof:.2f} over {ndof} bins\n")
 
     # --- plot: CMS/mplhep style, shape overlay on top, ratio panel below ---
