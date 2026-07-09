@@ -34,11 +34,13 @@ CHANNEL       = "triple_DY"
 PDF_LABEL     = "NNPDF31_nnlo_as_0118_mc_hessian_pdfas (325300, 5-flavour, 103 members)"
 PDF_KEY       = "pdf_325300"
 
-# RECO binning (matches spritz config_dy_smeftsim_v7/v8)
-MLL_EDGES = np.array([
-    *range(50, 121, 5),    # 50, 55, ..., 120 — uniform 5 GeV steps (14 bins)
-    150, 200, 250, 300, 400, 600, 800, 1000, 1500, 3000,
-], dtype=float)
+# Broader binning -- fine RECO binning is too statistics-limited for this sample.
+# Based on the triple_diff MLL_EDGES convention in analysis/spritz/plot_eft.py,
+# starting at 50 GeV (cache's actual lower bound) with extra high-mass bins
+# extending to the full 3000 GeV range.
+MLL_EDGES = np.array(
+    [50, 60, 80, 100, 120, 140, 180, 220, 270, 350, 500, 750, 1000, 3000], dtype=float
+)
 RAP_EDGES   = np.array([0.0, 0.5, 1.0, 2.5], dtype=float)
 CSTAR_EDGES = np.array([-1.0, -0.5, 0.0, 0.5, 1.0], dtype=float)
 
