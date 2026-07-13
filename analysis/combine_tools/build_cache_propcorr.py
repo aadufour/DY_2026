@@ -3,19 +3,21 @@
 build_cache_propcorr.py
 ========================
 Variant of build_cache_parallel.py for the propagator-corrected production,
-where each mll bin has 10 separate LHE files (from parallel condor jobs)
+where each mll bin has many separate LHE files (from parallel condor jobs)
 instead of one merged file.
 
-Each worker reads all of its bin's files in one pass and concatenates the
-events internally, rather than requiring a pre-merged unweighted_events.lhe.
-Header-derived weight IDs (scale/PDF) are parsed once from the first file
-per bin, since all files of a bin share the same run_card/reweight_card.
+Parallelism is at the FILE level, not the bin level: every LHE file across
+every bin is its own task, so a bin with 110 files (e.g. after a follow-up
+high-stats batch) gets spread across all requested workers instead of
+bottlenecking on a single core while other bins' workers sit idle.
+Checkpointing is per file for the same reason -- a killed/resumed run only
+has to redo the files it hadn't finished, not a whole bin.
 
 Usage:
     python3 build_cache_propcorr.py
     python3 build_cache_propcorr.py --eta-max 2.4 --pt-lead 25 --pt-sub 10
     python3 build_cache_propcorr.py --nodoubles --nevents 5000
-    python3 build_cache_propcorr.py --workers 4   # limit parallelism
+    python3 build_cache_propcorr.py --workers 10   # e.g. 10-way file-level parallelism
 """
 
 import argparse
@@ -25,6 +27,7 @@ import os
 import pickle
 import re
 import warnings
+from collections import defaultdict
 from itertools import combinations
 from multiprocessing import Pool
 
@@ -180,30 +183,29 @@ def _eta(p):
 def _pt(p):
     return np.sqrt(p[0]**2 + p[1]**2)
 
-# ---- Per-bin worker -----------------------------------------------------------
+# ---- Per-file worker -----------------------------------------------------------
 
-def process_bin(bin_spec):
+def process_one_file(task):
     """
-    Read all LHE files belonging to one mll bin, apply cuts, accumulate arrays.
-    Returns a dict of numpy arrays or loads from per-bin checkpoint if present.
+    Read one LHE file, apply cuts, accumulate arrays.
+    Returns (tag, result_dict) or (tag, None) on failure, or loads from a
+    per-file checkpoint if present. `tag` identifies which bin this file
+    belongs to, for grouping/merging afterward.
     """
-    tag, lhe_files = bin_spec
-    ckpt = os.path.join(PER_FILE_DIR, f"{tag}.pkl")
+    tag, lhe_file = task
+    fname = os.path.basename(lhe_file)
+    ckpt  = os.path.join(PER_FILE_DIR, f"{tag}__{fname}.pkl")
+    label = f"{tag}/{fname}"
 
     if os.path.exists(ckpt):
-        print(f"[{tag}] Loading from checkpoint")
+        print(f"[{label}] Loading from checkpoint")
         with open(ckpt, "rb") as f:
-            return pickle.load(f)
+            return tag, pickle.load(f)
 
-    print(f"[{tag}] Starting ({len(lhe_files)} files)")
-    if not lhe_files:
-        print(f"[{tag}] WARNING: no files found, skipping")
-        return None
+    print(f"[{label}] Starting")
 
-    # headers are identical across all files of a bin (same run_card/reweight_card)
-    scale_ids, pdf_325300_ids, central_id = parse_weight_ids(lhe_files[0])
+    scale_ids, pdf_325300_ids, central_id = parse_weight_ids(lhe_file)
     n_pdf = len(pdf_325300_ids)
-    print(f"[{tag}] scale IDs={scale_ids}  PDF members={n_pdf}  central={central_id}")
 
     buf_mll           = []
     buf_rap           = []
@@ -226,86 +228,82 @@ def process_bin(bin_spec):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", DeprecationWarning)
 
-        for lhe_file in lhe_files:
+        events = pylhe.read_lhe_with_attributes(lhe_file)
+
+        for event in events:
             if MAX_EVENTS is not None and n_read >= MAX_EVENTS:
                 break
+            n_read += 1
+            if n_read % 10000 == 0:
+                print(f"[{label}] {n_read} events read, {n_kept} kept")
 
-            events = pylhe.read_lhe_with_attributes(lhe_file)
+            leptons = [
+                p for p in event.particles
+                if int(p.status) == 1 and abs(int(p.id)) in {11, 13}
+            ]
+            if len(leptons) < 2:
+                continue
 
-            for event in events:
-                if MAX_EVENTS is not None and n_read >= MAX_EVENTS:
-                    break
-                n_read += 1
-                if n_read % 10000 == 0:
-                    print(f"[{tag}] {n_read} events read, {n_kept} kept")
+            lm = next((p for p in leptons if int(p.id) > 0), leptons[0])
+            lp = next((p for p in leptons if int(p.id) < 0), leptons[1])
+            v_lm = np.array([lm.px, lm.py, lm.pz, lm.e])
+            v_lp = np.array([lp.px, lp.py, lp.pz, lp.e])
 
-                leptons = [
-                    p for p in event.particles
-                    if int(p.status) == 1 and abs(int(p.id)) in {11, 13}
-                ]
-                if len(leptons) < 2:
-                    continue
+            m  = _mll(v_lm, v_lp)
+            if not (MLL_LO <= m <= MLL_HI):
+                continue
 
-                lm = next((p for p in leptons if int(p.id) > 0), leptons[0])
-                lp = next((p for p in leptons if int(p.id) < 0), leptons[1])
-                v_lm = np.array([lm.px, lm.py, lm.pz, lm.e])
-                v_lp = np.array([lp.px, lp.py, lp.pz, lp.e])
+            # Fiducial cuts
+            if do_fiducial:
+                if ETA_MAX is not None:
+                    if abs(_eta(v_lm)) > ETA_MAX or abs(_eta(v_lp)) > ETA_MAX:
+                        n_cut_eta += 1
+                        continue
+                if PT_LEAD is not None or PT_SUB is not None:
+                    pt_lm = _pt(v_lm); pt_lp = _pt(v_lp)
+                    pt_l  = max(pt_lm, pt_lp); pt_s = min(pt_lm, pt_lp)
+                    if PT_LEAD is not None and pt_l < PT_LEAD:
+                        n_cut_pt += 1
+                        continue
+                    if PT_SUB is not None and pt_s < PT_SUB:
+                        n_cut_pt += 1
+                        continue
 
-                m  = _mll(v_lm, v_lp)
-                if not (MLL_LO <= m <= MLL_HI):
-                    continue
+            y  = _rap(v_lm, v_lp)
+            cs = _cstar(v_lm, v_lp)
 
-                # Fiducial cuts
-                if do_fiducial:
-                    if ETA_MAX is not None:
-                        if abs(_eta(v_lm)) > ETA_MAX or abs(_eta(v_lp)) > ETA_MAX:
-                            n_cut_eta += 1
-                            continue
-                    if PT_LEAD is not None or PT_SUB is not None:
-                        pt_lm = _pt(v_lm); pt_lp = _pt(v_lp)
-                        pt_l  = max(pt_lm, pt_lp); pt_s = min(pt_lm, pt_lp)
-                        if PT_LEAD is not None and pt_l < PT_LEAD:
-                            n_cut_pt += 1
-                            continue
-                        if PT_SUB is not None and pt_s < PT_SUB:
-                            n_cut_pt += 1
-                            continue
+            wkeys = event.weights
 
-                y  = _rap(v_lm, v_lp)
-                cs = _cstar(v_lm, v_lp)
+            if not pp_keys and not SKIP_PAIRS:
+                for op1, op2 in OP_PAIRS:
+                    pp_keys[(op1, op2)] = (
+                        f'{op1}_{op2}' if f'{op1}_{op2}' in wkeys else f'{op2}_{op1}'
+                    )
 
-                wkeys = event.weights
+            buf_mll.append(m)
+            buf_rap.append(y)
+            buf_cstar.append(cs)
+            buf_w_SM.append(wkeys['SM'])
+            buf_xwgt.append(event.eventinfo.weight)
 
-                if not pp_keys and not SKIP_PAIRS:
-                    for op1, op2 in OP_PAIRS:
-                        pp_keys[(op1, op2)] = (
-                            f'{op1}_{op2}' if f'{op1}_{op2}' in wkeys else f'{op2}_{op1}'
-                        )
+            for op in OPERATORS:
+                buf_w_p1[op].append(wkeys[op])
+                buf_w_m1[op].append(wkeys[f'minus{op}'])
 
-                buf_mll.append(m)
-                buf_rap.append(y)
-                buf_cstar.append(cs)
-                buf_w_SM.append(wkeys['SM'])
-                buf_xwgt.append(event.eventinfo.weight)
+            if not SKIP_PAIRS:
+                for pair in OP_PAIRS:
+                    buf_w_pp[pair].append(wkeys[pp_keys[pair]])
 
-                for op in OPERATORS:
-                    buf_w_p1[op].append(wkeys[op])
-                    buf_w_m1[op].append(wkeys[f'minus{op}'])
+            for k in scale_ids:
+                buf_w_scale[k].append(wkeys.get(k, wkeys['SM']))
 
-                if not SKIP_PAIRS:
-                    for pair in OP_PAIRS:
-                        buf_w_pp[pair].append(wkeys[pp_keys[pair]])
+            if central_id is not None:
+                buf_w_pdf_central.append(wkeys.get(central_id, wkeys['SM']))
 
-                for k in scale_ids:
-                    buf_w_scale[k].append(wkeys.get(k, wkeys['SM']))
+            buf_pdf_325300.append([wkeys.get(k, wkeys['SM']) for k in pdf_325300_ids])
+            n_kept += 1
 
-                if central_id is not None:
-                    buf_w_pdf_central.append(wkeys.get(central_id, wkeys['SM']))
-
-                buf_pdf_325300.append([wkeys.get(k, wkeys['SM']) for k in pdf_325300_ids])
-                n_kept += 1
-
-    print(f"[{tag}] Done: {n_read} read, {n_kept} kept"
+    print(f"[{label}] Done: {n_read} read, {n_kept} kept"
           + (f", {n_cut_eta} cut by eta, {n_cut_pt} cut by pT" if do_fiducial else ""))
 
     result = {
@@ -326,9 +324,9 @@ def process_bin(bin_spec):
     with open(ckpt, "wb") as f:
         pickle.dump(result, f)
     size_mb = os.path.getsize(ckpt) / 1e6
-    print(f"[{tag}] Checkpoint saved ({size_mb:.1f} MB)")
+    print(f"[{label}] Checkpoint saved ({size_mb:.1f} MB)")
 
-    return result
+    return tag, result
 
 # ---- Main --------------------------------------------------------------------
 
@@ -345,16 +343,30 @@ if __name__ == "__main__":
         print("No fiducial cuts (parton-level inclusive)")
     print()
 
-    n_workers = args.workers or len(LHE_BINS)
-    with Pool(processes=n_workers) as pool:
-        results = pool.map(process_bin, LHE_BINS)
+    # flat file-level task list -- every LHE file across every bin is its own
+    # task, so a bin with many files (e.g. a high-stats follow-up batch)
+    # spreads across all workers instead of hogging one core alone
+    tasks = [(tag, f) for tag, files in LHE_BINS for f in files]
+    print(f"Processing {len(tasks)} files in parallel\n")
 
-    # Filter failed bins
-    results = [r for r in results if r is not None]
+    n_workers = args.workers or len(tasks)
+    with Pool(processes=n_workers) as pool:
+        file_results = pool.map(process_one_file, tasks)
+
+    # group per-file results back by bin, for the per-bin count summary below
+    by_tag = defaultdict(list)
+    for tag, r in file_results:
+        if r is not None:
+            by_tag[tag].append(r)
+    for tag, files in LHE_BINS:
+        n_ev = sum(len(r['mll']) for r in by_tag.get(tag, []))
+        print(f"  [{tag}] {len(by_tag.get(tag, []))}/{len(files)} files ok, {n_ev:,} events kept")
+
+    results = [r for r in (r for _, r in file_results) if r is not None]
     if not results:
         raise RuntimeError("No results — check LHE_BASE / bin directories.")
 
-    print(f"\nMerging {len(results)} bin results ...")
+    print(f"\nMerging {len(results)} file results ...")
 
     def concat(arrays):
         return np.concatenate(arrays)
