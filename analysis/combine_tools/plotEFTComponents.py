@@ -5,12 +5,17 @@ plotEFTComponents.py
 Plot the EFT decomposition (sm, lin, quad) nominal histograms for each operator.
 No nuisance variations — clean "components" plots suitable for presentations.
 
-RECO morphing mode  (flat keys, "histo_" prefix):
+Three separate figures are produced per operator:
+  sm_full_{op}  —  SM + full prediction at c=1 (and extra c values if given)
+  lin_{op}      —  linear term at c=1  (never log-scaled; can be negative)
+  quad_{op}     —  quadratic term at c=1
+
+RECO morphing mode (flat keys, "histo_" prefix):
     sm   = histo_sm
     lin  = 0.5 * (histo_w1_op  - histo_wm1_op)
     quad = 0.5 * (histo_w1_op  + histo_wm1_op) - histo_sm
 
-LHE mode  (nested under a channel directory):
+LHE mode (nested under a channel directory):
     sm   = {channel}/sm
     quad = {channel}/quad_op
     lin  = {channel}/sm_lin_quad_op - sm - quad
@@ -19,8 +24,8 @@ The pipeline is auto-detected from the file structure.
 
 Usage:
     plotEFTComponents.py --shapes shapes.root --outdir plots/eft_components
-    plotEFTComponents.py --shapes shapes.root --operators cHDD cHWB --logy
-    plotEFTComponents.py --shapes shapes.root --c-values 0.5 1.0 2.0 --full
+    plotEFTComponents.py --shapes shapes.root --operators cHDD cHWB
+    plotEFTComponents.py --shapes shapes.root --c-values 0.5 1.0 2.0 --logy
 """
 
 import argparse
@@ -43,7 +48,8 @@ OPERATORS = [
 SM_COLOR   = "#5790fc"
 LIN_COLOR  = "#f89c20"
 QUAD_COLOR = "#e42536"
-FULL_COLORS = ["#34a853", "#9467bd", "#8c564b"]  # for c-values overlay
+# colors for additional c values beyond c=1
+EXTRA_COLORS = ["#9467bd", "#8c564b", "#17becf"]
 
 VAR_XLABELS = {
     "mll":          r"$m_{\ell\ell}$ (GeV)",
@@ -52,6 +58,12 @@ VAR_XLABELS = {
     "triple_diff":  "Unrolled bin",
 }
 
+FIG_STYLE = {"figsize": (10, 7)}
+
+
+# ---------------------------------------------------------------------------
+# helpers shared with drawNuisancesEFT
+# ---------------------------------------------------------------------------
 
 def detect_mode(f):
     keys = [k.split(";")[0] for k in f.keys()]
@@ -91,7 +103,7 @@ def decompose(f, op, mode, channel):
 
 def autodetect_variable(f, mode, channel):
     sm_key = "histo_sm" if mode == "morphing" else f"{channel}/sm"
-    edges = get_edges(f, sm_key)
+    edges  = get_edges(f, sm_key)
     n = len(edges) - 1
     if n == 200:
         return "triple_diff"
@@ -102,6 +114,32 @@ def autodetect_variable(f, mode, channel):
     return "mll"
 
 
+def _save(fig, stem):
+    fig.savefig(f"{stem}.png", bbox_inches="tight", facecolor="white")
+    fig.savefig(f"{stem}.pdf", bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+
+
+def _stairs(ax, vals, edges, widths, color, label, ls="-", lw=2.0):
+    ax.stairs(vals / widths, edges=edges, color=color,
+              linewidth=lw, linestyle=ls, label=label, fill=False)
+
+
+def _decorate(ax, xlabel, title, logy=False):
+    ax.set_ylabel("Events / unit")
+    ax.set_xlabel(xlabel)
+    ax.text(0.97, 0.97, title, transform=ax.transAxes,
+            ha="right", va="top", fontsize=20, fontweight="bold")
+    ax.legend(loc="upper left", fontsize=16)
+    if logy:
+        ax.set_yscale("log")
+    hep.cms.label(loc=0, label="Preliminary", data=False, ax=ax)
+
+
+# ---------------------------------------------------------------------------
+# per-operator plotting
+# ---------------------------------------------------------------------------
+
 def plot_task(d):
     shapes_file = d["shapes"]
     op          = d["op"]
@@ -110,92 +148,61 @@ def plot_task(d):
     mode        = d["mode"]
     channel     = d["channel"]
     xlabel      = d["xlabel"]
-    c_values    = d["c_values"]
-    show_full   = d["show_full"]
+    c_values    = d["c_values"]   # list of floats; c=1 is always included first
 
     try:
-        f = uproot.open(shapes_file)
+        f      = uproot.open(shapes_file)
         sm_key = "histo_sm" if mode == "morphing" else f"{channel}/sm"
         edges  = get_edges(f, sm_key)
         widths = np.diff(edges)
-
         sm, lin, quad = decompose(f, op, mode, channel)
         f.close()
     except Exception as e:
         print(f"  [skip] {op}: {e}")
         return
 
-    centers = 0.5 * (edges[:-1] + edges[1:])
+    # ---- figure 1: SM + full prediction(s) --------------------------------
+    fig1, ax1 = plt.subplots(**FIG_STYLE)
+    _stairs(ax1, sm, edges, widths, SM_COLOR, "SM", lw=2.5)
+    for cv, col in zip(c_values, [LIN_COLOR] + EXTRA_COLORS):
+        full = sm + cv * lin + cv**2 * quad
+        label = fr"SM + EFT  ($c={cv}$)" if len(c_values) > 1 else r"SM + EFT  ($c=1$)"
+        _stairs(ax1, full, edges, widths, col, label, ls="--", lw=2.0)
+    _decorate(ax1, xlabel, op, logy=logy)
+    _save(fig1, os.path.join(outdir, f"sm_full_{op}"))
 
-    if show_full:
-        fig, (ax, rax) = plt.subplots(
-            2, 1, sharex=True,
-            figsize=(10, 10),
-            gridspec_kw={"height_ratios": (3, 1)},
-        )
-        fig.subplots_adjust(hspace=0.07)
-    else:
-        fig, ax = plt.subplots(figsize=(10, 7))
-        rax = None
+    # ---- figure 2: linear term at c=1 (no log scale — can be negative) ----
+    fig2, ax2 = plt.subplots(**FIG_STYLE)
+    _stairs(ax2, lin, edges, widths, LIN_COLOR, r"linear term  ($c=1$)", lw=2.5)
+    ax2.axhline(0, color="black", linewidth=0.8, linestyle="dashed")
+    _decorate(ax2, xlabel, op, logy=False)
+    _save(fig2, os.path.join(outdir, f"lin_{op}"))
 
-    def stairs(ax_, vals, color, label, ls="-", lw=2.0):
-        ax_.stairs(vals / widths, edges=edges, color=color,
-                   linewidth=lw, linestyle=ls, label=label, fill=False)
+    # ---- figure 3: quadratic term at c=1 ----------------------------------
+    fig3, ax3 = plt.subplots(**FIG_STYLE)
+    _stairs(ax3, quad, edges, widths, QUAD_COLOR, r"quadratic term  ($c=1$)", lw=2.5)
+    _decorate(ax3, xlabel, op, logy=logy)
+    _save(fig3, os.path.join(outdir, f"quad_{op}"))
 
-    stairs(ax, sm,   SM_COLOR,   "SM",   lw=2.5)
-    stairs(ax, lin,  LIN_COLOR,  "lin",  lw=2.0, ls="--")
-    stairs(ax, quad, QUAD_COLOR, "quad", lw=2.0, ls=":")
+    print(f"  {op:12s}  ->  sm_full / lin / quad  [{outdir}]")
 
-    if show_full:
-        for cv, col in zip(c_values, FULL_COLORS):
-            full = sm + cv * lin + cv**2 * quad
-            stairs(ax, full, col, fr"full  $c={cv}$", lw=1.5, ls="-.")
 
-    ax.set_ylabel("Events / unit")
-    ax.text(0.97, 0.97, op, transform=ax.transAxes,
-            ha="right", va="top", fontsize=22, fontweight="bold")
-    ax.legend(loc="upper left", fontsize=16)
-    if logy:
-        ax.set_yscale("log")
-
-    hep.cms.label(loc=0, label="Preliminary", data=False, ax=ax)
-
-    if show_full and rax is not None:
-        safe = np.where(np.abs(sm) > 0, sm, np.nan)
-        for cv, col in zip(c_values, FULL_COLORS):
-            full = sm + cv * lin + cv**2 * quad
-            rax.stairs(full / safe, edges=edges, color=col,
-                       linewidth=1.5, linestyle="-.", label=fr"$c={cv}$")
-        rax.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
-        rax.set_ylim(0.5, 1.5)
-        rax.set_ylabel("Full / SM")
-        rax.set_xlabel(xlabel)
-        rax.legend(loc="upper left", fontsize=14)
-        rax.autoscale(axis="x", tight=True)
-    elif rax is None:
-        ax.set_xlabel(xlabel)
-
-    stem = os.path.join(outdir, f"components_{op}")
-    fig.savefig(f"{stem}.png", bbox_inches="tight", facecolor="white")
-    fig.savefig(f"{stem}.pdf", bbox_inches="tight", facecolor="white")
-    plt.close(fig)
-    print(f"  {op:12s}  ->  {stem}.png")
-
+# ---------------------------------------------------------------------------
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--shapes",    required=True, help="Path to shapes.root or histograms.root")
+    parser.add_argument("--shapes",    required=True,
+                        help="Path to shapes.root or histograms.root")
     parser.add_argument("--outdir",    default="plots/eft_components")
     parser.add_argument("--variable",  default=None, choices=list(VAR_XLABELS.keys()),
                         help="x-axis label variable (auto-detected if not given)")
     parser.add_argument("--operators", nargs="+", default=OPERATORS)
-    parser.add_argument("--logy",      action="store_true")
-    parser.add_argument("--full",      action="store_true",
-                        help="Also overlay sm+c*lin+c²*quad for each --c-values")
+    parser.add_argument("--logy",      action="store_true",
+                        help="Log y-scale on sm_full and quad panels (never applied to lin)")
     parser.add_argument("--c-values",  nargs="+", type=float, default=[1.0],
-                        help="Wilson coefficient values to use for the full prediction overlay "
-                             "(only relevant with --full). Default: 1.0")
+                        help="Wilson coefficient values for the full-prediction overlay. "
+                             "Default: 1.0")
     parser.add_argument("--ncores",    type=int, default=4)
     args = parser.parse_args()
 
@@ -203,7 +210,6 @@ def main():
 
     f = uproot.open(args.shapes)
     mode, channel = detect_mode(f)
-
     variable = args.variable or autodetect_variable(f, mode, channel)
     xlabel   = VAR_XLABELS[variable]
     f.close()
@@ -212,19 +218,19 @@ def main():
     print(f"Pipeline    : {mode}" + (f"  (channel: {channel})" if mode == "lhe" else ""))
     print(f"Variable    : {variable}  →  {xlabel}")
     print(f"Operators   : {args.operators}")
+    print(f"c values    : {args.c_values}")
     print(f"Output      : {args.outdir}\n")
 
     tasks = [
         {
-            "shapes":    args.shapes,
-            "op":        op,
-            "outdir":    args.outdir,
-            "logy":      args.logy,
-            "mode":      mode,
-            "channel":   channel,
-            "xlabel":    xlabel,
-            "c_values":  args.c_values,
-            "show_full": args.full,
+            "shapes":   args.shapes,
+            "op":       op,
+            "outdir":   args.outdir,
+            "logy":     args.logy,
+            "mode":     mode,
+            "channel":  channel,
+            "xlabel":   xlabel,
+            "c_values": args.c_values,
         }
         for op in args.operators
     ]
