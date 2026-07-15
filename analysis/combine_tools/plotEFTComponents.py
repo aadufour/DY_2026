@@ -120,13 +120,13 @@ def _save(fig, stem):
     plt.close(fig)
 
 
-def _stairs(ax, vals, edges, widths, color, label, ls="-", lw=2.0):
-    ax.stairs(vals / widths, edges=edges, color=color,
+def _stairs(ax, vals, edges, color, label, ls="-", lw=2.0):
+    ax.stairs(vals, edges=edges, color=color,
               linewidth=lw, linestyle=ls, label=label, fill=False)
 
 
 def _decorate(ax, xlabel, title, logy=False):
-    ax.set_ylabel("Events / unit")
+    ax.set_ylabel("Events")
     ax.set_xlabel(xlabel)
     ax.text(0.97, 0.97, title, transform=ax.transAxes,
             ha="right", va="top", fontsize=20, fontweight="bold")
@@ -152,8 +152,7 @@ def plot_task(d):
     try:
         f      = uproot.open(shapes_file)
         sm_key = "histo_sm" if mode == "morphing" else f"{channel}/sm"
-        edges  = get_edges(f, sm_key)
-        widths = np.diff(edges)
+        edges = get_edges(f, sm_key)
         sm, lin, quad = decompose(f, op, mode, channel)
         f.close()
     except Exception as e:
@@ -162,24 +161,24 @@ def plot_task(d):
 
     # ---- figure 1: SM + full prediction(s) --------------------------------
     fig1, ax1 = plt.subplots(**FIG_STYLE)
-    _stairs(ax1, sm, edges, widths, SM_COLOR, "SM", lw=2.5)
+    _stairs(ax1, sm, edges,SM_COLOR, "SM", lw=2.5)
     for cv, col in zip(c_values, [LIN_COLOR] + EXTRA_COLORS):
         full = sm + cv * lin + cv**2 * quad
         label = fr"SM + EFT  ($c={cv}$)" if len(c_values) > 1 else r"SM + EFT  ($c=1$)"
-        _stairs(ax1, full, edges, widths, col, label, ls="--", lw=2.0)
+        _stairs(ax1, full, edges,col, label, ls="--", lw=2.0)
     _decorate(ax1, xlabel, op, logy=True)
     _save(fig1, os.path.join(outdir, f"sm_full_{op}"))
 
     # ---- figure 2: linear term at c=1 (always linear — can be negative) ---
     fig2, ax2 = plt.subplots(**FIG_STYLE)
-    _stairs(ax2, lin, edges, widths, LIN_COLOR, r"linear term  ($c=1$)", lw=2.5)
+    _stairs(ax2, lin, edges,LIN_COLOR, r"linear term  ($c=1$)", lw=2.5)
     ax2.axhline(0, color="black", linewidth=0.8, linestyle="dashed")
     _decorate(ax2, xlabel, op, logy=False)
     _save(fig2, os.path.join(outdir, f"lin_{op}"))
 
     # ---- figure 3: quadratic term at c=1 ----------------------------------
     fig3, ax3 = plt.subplots(**FIG_STYLE)
-    _stairs(ax3, quad, edges, widths, QUAD_COLOR, r"quadratic term  ($c=1$)", lw=2.5)
+    _stairs(ax3, quad, edges,QUAD_COLOR, r"quadratic term  ($c=1$)", lw=2.5)
     _decorate(ax3, xlabel, op, logy=True)
     _save(fig3, os.path.join(outdir, f"quad_{op}"))
 
