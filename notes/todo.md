@@ -1,5 +1,5 @@
 1. [ ] Propapagtor correction! especially important when you are on shell!
-    - [x] build gridpack with propagator correction
+    - [ ] build gridpack with propagator correction: I just updated restrict all massless so 1 1.000000e+00 # linearPropCorrections. actually we need to put it back in the tar.gz
     - [ ] validate the propagator correction: does not work with 10k events, produce 1M events for bin 50-120
     - [ ] make nanoaods
 
