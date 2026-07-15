@@ -144,7 +144,6 @@ def plot_task(d):
     shapes_file = d["shapes"]
     op          = d["op"]
     outdir      = d["outdir"]
-    logy        = d["logy"]
     mode        = d["mode"]
     channel     = d["channel"]
     xlabel      = d["xlabel"]
@@ -168,10 +167,10 @@ def plot_task(d):
         full = sm + cv * lin + cv**2 * quad
         label = fr"SM + EFT  ($c={cv}$)" if len(c_values) > 1 else r"SM + EFT  ($c=1$)"
         _stairs(ax1, full, edges, widths, col, label, ls="--", lw=2.0)
-    _decorate(ax1, xlabel, op, logy=logy)
+    _decorate(ax1, xlabel, op, logy=True)
     _save(fig1, os.path.join(outdir, f"sm_full_{op}"))
 
-    # ---- figure 2: linear term at c=1 (no log scale — can be negative) ----
+    # ---- figure 2: linear term at c=1 (always linear — can be negative) ---
     fig2, ax2 = plt.subplots(**FIG_STYLE)
     _stairs(ax2, lin, edges, widths, LIN_COLOR, r"linear term  ($c=1$)", lw=2.5)
     ax2.axhline(0, color="black", linewidth=0.8, linestyle="dashed")
@@ -181,7 +180,7 @@ def plot_task(d):
     # ---- figure 3: quadratic term at c=1 ----------------------------------
     fig3, ax3 = plt.subplots(**FIG_STYLE)
     _stairs(ax3, quad, edges, widths, QUAD_COLOR, r"quadratic term  ($c=1$)", lw=2.5)
-    _decorate(ax3, xlabel, op, logy=logy)
+    _decorate(ax3, xlabel, op, logy=True)
     _save(fig3, os.path.join(outdir, f"quad_{op}"))
 
     print(f"  {op:12s}  ->  sm_full / lin / quad  [{outdir}]")
@@ -199,7 +198,7 @@ def main():
                         help="x-axis label variable (auto-detected if not given)")
     parser.add_argument("--operators", nargs="+", default=OPERATORS)
     parser.add_argument("--logy",      action="store_true",
-                        help="Log y-scale on sm_full and quad panels (never applied to lin)")
+                        help="(ignored — sm_full and quad are always log; lin is always linear)")
     parser.add_argument("--c-values",  nargs="+", type=float, default=[1.0],
                         help="Wilson coefficient values for the full-prediction overlay. "
                              "Default: 1.0")
@@ -226,7 +225,6 @@ def main():
             "shapes":   args.shapes,
             "op":       op,
             "outdir":   args.outdir,
-            "logy":     args.logy,
             "mode":     mode,
             "channel":  channel,
             "xlabel":   xlabel,
