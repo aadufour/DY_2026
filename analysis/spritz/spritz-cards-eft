@@ -1,9 +1,9 @@
 #!/bin/bash
-# spritz-cards: build combine datacards and shapes.root from histos.root.
+# spritz-cards-eft: build combine datacards and shapes.root from histos.root.
 # Run from the config dir (where histos.root and config.py live),
 # inside the spritz apptainer shell.
 #
-# Usage: spritz-cards
+# Usage: spritz-cards-eft
 
 set -e
 
@@ -21,5 +21,5 @@ if [[ ! -f histos.root ]]; then
     exit 1
 fi
 
-echo "Running spritz-cards from $(pwd)"
+echo "Running spritz-cards-eft from $(pwd)"
 "${PYTHON}" "${MAKE_CARDS}"
