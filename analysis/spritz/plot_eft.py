@@ -339,9 +339,9 @@ def plot_one_variable(
         data_lbl = f"Data [{int(round(data.sum()))}]{blind_label if do_blind else ''}"
         if data_lbl in label_map:
             ordered.append((data_lbl, label_map[data_lbl]))
-        for lbl in [f"EFT {op} (c=+1)", f"EFT {op} (c=-1)"]:
+        for lbl, col in [(f"EFT {op} (c=+1)", "crimson"), (f"EFT {op} (c=-1)", "steelblue")]:
             if lbl in label_map:
-                ordered.append((lbl, Line2D([], [], color=label_map[lbl].get_color(),
+                ordered.append((lbl, Line2D([], [], color=col,
                                             linewidth=LINE_WIDTH_EFT, linestyle="-")))
         for lbl, h in label_map.items():
             if lbl not in dict(ordered):
@@ -691,6 +691,7 @@ def main():
     parser.add_argument("--datacards-dir", default=None,
                         help="Directory containing per-variable datacard subdirs "
                              "(e.g. datacards/inc_mm). Used to auto-find shapes.root per variable.")
+    parser.add_argument("--operators", nargs="+", default=None,       help="Subset of operators to plot (default: all found)")
     parser.add_argument("--region",   default="inc_mm",              help="Region key in histos.root")
     parser.add_argument("--variable", default="mll",
                         help="Variable key in histos.root, or 'all' to loop over every variable in the region")
@@ -755,6 +756,10 @@ def main():
             candidate = os.path.join(args.datacards_dir, variable, "shapes.root")
             if os.path.isfile(candidate):
                 shapes_path = candidate
+
+        if args.operators:
+            global OPERATORS
+            OPERATORS = args.operators
 
         print(f"\n=== {args.region} / {variable} ===")
         if variable == "triple_diff":
