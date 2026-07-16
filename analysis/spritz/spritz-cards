@@ -1,0 +1,25 @@
+#!/bin/bash
+# spritz-cards: build combine datacards and shapes.root from histos.root.
+# Run from the config dir (where histos.root and config.py live),
+# inside the spritz apptainer shell.
+#
+# Usage: spritz-cards
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MAKE_CARDS="${SCRIPT_DIR}/make_cards.py"
+PYTHON=/usr/local/envs/spritz/bin/python3
+
+if [[ ! -f config.py ]]; then
+    echo "ERROR: config.py not found. Run from the config directory."
+    exit 1
+fi
+
+if [[ ! -f histos.root ]]; then
+    echo "ERROR: histos.root not found. Run spritz-postproc-eft first."
+    exit 1
+fi
+
+echo "Running spritz-cards from $(pwd)"
+"${PYTHON}" "${MAKE_CARDS}"
