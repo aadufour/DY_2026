@@ -132,7 +132,6 @@ def plot_one_variable(
     f, region, variable, var_meta, outdir,
     colors, lumi, year_label,
     shapes_path, blind_above, no_blind,
-    ratio_ymin=None, ratio_ymax=None,
 ):
     """Produce one PNG+PDF per operator for a single (region, variable)."""
     directory = f[f"{region}/{variable}"]
@@ -329,26 +328,7 @@ def plot_one_variable(
         ax_top.set_ylim(ymin, ymax * 3e3)
         ax_top.set_ylabel("Events / GeV")
         ax_top.tick_params(labelbottom=False)
-
-        # Build legend manually: Data first, then EFT lines (line-only, no marker dot)
-        from matplotlib.lines import Line2D
-        from matplotlib.patches import Patch
-        handles_top, labels_top = ax_top.get_legend_handles_labels()
-        label_map = dict(zip(labels_top, handles_top))
-        ordered = []
-        data_lbl = f"Data [{int(round(data.sum()))}]{blind_label if do_blind else ''}"
-        if data_lbl in label_map:
-            ordered.append((data_lbl, label_map[data_lbl]))
-        for lbl, col in [(f"EFT {op} (c=+1)", "crimson"), (f"EFT {op} (c=-1)", "steelblue")]:
-            if lbl in label_map:
-                ordered.append((lbl, Line2D([], [], color=col,
-                                            linewidth=LINE_WIDTH_EFT, linestyle="-")))
-        for lbl, h in label_map.items():
-            if lbl not in dict(ordered):
-                ordered.append((lbl, h))
-        labels_ord, handles_ord = zip(*ordered) if ordered else ([], [])
-        ax_top.legend(handles_ord, labels_ord, loc=LEGEND_LOC_TOP,
-                      ncols=LEGEND_NCOLS_TOP, framealpha=0.8)
+        ax_top.legend(loc=LEGEND_LOC_TOP, ncols=LEGEND_NCOLS_TOP, framealpha=0.8)
 
         denom      = np.where(sm_total > 0, sm_total, 1e-30)
         ratio_eft  = eft_total  / denom
@@ -383,9 +363,7 @@ def plot_one_variable(
         range_mask = centers <= (var_meta.get("range_max") or np.inf)
         all_finite = np.concatenate([a[range_mask][np.isfinite(a[range_mask])] for a in candidates])
         half = max(np.max(np.abs(all_finite - 1.0)) * 1.2, 0.05) if all_finite.size else 0.3
-        ylo = ratio_ymin if ratio_ymin is not None else 1.0 - half
-        yhi = ratio_ymax if ratio_ymax is not None else 1.0 + half
-        ax_bot.set_ylim(ylo, yhi)
+        ax_bot.set_ylim(1.0 - half, 1.0 + half)
         ax_bot.set_xlabel(xlabel)
         if log_x:
             ax_bot.set_xscale("log")
@@ -691,7 +669,6 @@ def main():
     parser.add_argument("--datacards-dir", default=None,
                         help="Directory containing per-variable datacard subdirs "
                              "(e.g. datacards/inc_mm). Used to auto-find shapes.root per variable.")
-    parser.add_argument("--operators", nargs="+", default=None,       help="Subset of operators to plot (default: all found)")
     parser.add_argument("--region",   default="inc_mm",              help="Region key in histos.root")
     parser.add_argument("--variable", default="mll",
                         help="Variable key in histos.root, or 'all' to loop over every variable in the region")
@@ -700,10 +677,6 @@ def main():
                         help="Blind data above this value (only for variables with blinding enabled, default: 500 GeV for mll)")
     parser.add_argument("--no-blind", action="store_true",
                         help="Disable blinding for all variables")
-    parser.add_argument("--ratio-ymin", type=float, default=None,
-                        help="Fix ratio panel y-axis lower bound (default: auto)")
-    parser.add_argument("--ratio-ymax", type=float, default=None,
-                        help="Fix ratio panel y-axis upper bound (default: auto)")
     args = parser.parse_args()
 
     # -- try to get colours / lumi / variable labels from config.py ------------
@@ -757,10 +730,6 @@ def main():
             if os.path.isfile(candidate):
                 shapes_path = candidate
 
-        if args.operators:
-            global OPERATORS
-            OPERATORS = args.operators
-
         print(f"\n=== {args.region} / {variable} ===")
         if variable == "triple_diff":
             plot_triple_diff(f, args.region, outdir, colors, lumi, year_label, shapes_path)
@@ -769,7 +738,6 @@ def main():
                 f, args.region, variable, meta, outdir,
                 colors, lumi, year_label,
                 shapes_path, args.blind_above, args.no_blind,
-                ratio_ymin=args.ratio_ymin, ratio_ymax=args.ratio_ymax,
             )
 
     print("\nDone.")
