@@ -5,6 +5,7 @@
 # inside apptainer + analysis_venv:
 #
 #   spritz-plot-eft [--no-blind] [--blind-above 500] [--outdir plots]
+#                   [--ratio-ymin 0.5] [--ratio-ymax 1.5]
 #
 # For each datacards/{region}/{variable}/shapes.root it calls plot_eft.py
 # with the matching --shapes path, writing PNGs to {outdir}/{region}/{variable}/.
@@ -30,6 +31,8 @@ while [[ $# -gt 0 ]]; do
         --outdir)       OUTDIR="$2";       shift 2 ;;
         --blind-above)  BLIND_ABOVE="$2";  shift 2 ;;
         --no-blind)     EXTRA_ARGS="$EXTRA_ARGS --no-blind"; shift ;;
+        --ratio-ymin)   EXTRA_ARGS="$EXTRA_ARGS --ratio-ymin $2"; shift 2 ;;
+        --ratio-ymax)   EXTRA_ARGS="$EXTRA_ARGS --ratio-ymax $2"; shift 2 ;;
         --shapes-only)  SHAPES_ONLY=1;     shift ;;
         *)  echo "Unknown option: $1"; exit 1 ;;
     esac

@@ -3,6 +3,7 @@
 plotEFTComponents.py
 ====================
 Plot the EFT decomposition (sm, lin, quad) nominal histograms for each operator.
+MC statistical uncertainty band shown as a shaded region.
 No nuisance variations — clean "components" plots suitable for presentations.
 
 Three separate figures are produced per operator:
@@ -25,7 +26,7 @@ The pipeline is auto-detected from the file structure.
 Usage:
     plotEFTComponents.py --shapes shapes.root --outdir plots/eft_components
     plotEFTComponents.py --shapes shapes.root --operators cHDD cHWB
-    plotEFTComponents.py --shapes shapes.root --c-values 0.5 1.0 2.0 --logy
+    plotEFTComponents.py --shapes shapes.root --c-values 0.5 1.0 2.0
 """
 
 import argparse
@@ -48,7 +49,6 @@ OPERATORS = [
 SM_COLOR   = "#5790fc"
 LIN_COLOR  = "#f89c20"
 QUAD_COLOR = "#e42536"
-# colors for additional c values beyond c=1
 EXTRA_COLORS = ["#9467bd", "#8c564b", "#17becf"]
 
 VAR_XLABELS = {
@@ -58,11 +58,21 @@ VAR_XLABELS = {
     "triple_diff":  "Unrolled bin",
 }
 
-FIG_STYLE = {"figsize": (10, 7)}
+VAR_LOGX = {
+    "mll":          True,
+    "costhetastar": False,
+    "rapll_abs":    False,
+    "triple_diff":  False,
+}
+
+FIG_STYLE = {
+    "figsize": (10, 10),
+    "gridspec_kw": {"height_ratios": (3, 1)},
+}
 
 
 # ---------------------------------------------------------------------------
-# helpers shared with drawNuisancesEFT
+# helpers
 # ---------------------------------------------------------------------------
 
 def detect_mode(f):
@@ -82,23 +92,38 @@ def get_vals(f, key):
     return f[key].values().copy()
 
 
+def get_variances(f, key):
+    return f[key].variances().copy()
+
+
 def get_edges(f, key):
     return f[key].axes[0].edges()
 
 
 def decompose(f, op, mode, channel):
+    """Return (sm, lin, quad) values and their MC stat variances."""
     if mode == "morphing":
-        sm   = get_vals(f, "histo_sm")
-        w1   = get_vals(f, f"histo_w1_{op}")
-        wm1  = get_vals(f, f"histo_wm1_{op}")
+        sm_key  = "histo_sm"
+        w1_key  = f"histo_w1_{op}"
+        wm1_key = f"histo_wm1_{op}"
+        sm   = get_vals(f, sm_key);   var_sm  = get_variances(f, sm_key)
+        w1   = get_vals(f, w1_key);   var_w1  = get_variances(f, w1_key)
+        wm1  = get_vals(f, wm1_key);  var_wm1 = get_variances(f, wm1_key)
         lin  = 0.5 * (w1 - wm1)
         quad = 0.5 * (w1 + wm1) - sm
+        # error propagation (independent MC samples)
+        var_lin  = 0.25 * (var_w1 + var_wm1)
+        var_quad = 0.25 * (var_w1 + var_wm1) + var_sm
     else:
-        sm   = get_vals(f, f"{channel}/sm")
-        quad = get_vals(f, f"{channel}/quad_{op}")
-        slq  = get_vals(f, f"{channel}/sm_lin_quad_{op}")
+        sm_key   = f"{channel}/sm"
+        quad_key = f"{channel}/quad_{op}"
+        slq_key  = f"{channel}/sm_lin_quad_{op}"
+        sm   = get_vals(f, sm_key);   var_sm   = get_variances(f, sm_key)
+        quad = get_vals(f, quad_key); var_quad = get_variances(f, quad_key)
+        slq  = get_vals(f, slq_key);  var_slq  = get_variances(f, slq_key)
         lin  = slq - sm - quad
-    return sm, lin, quad
+        var_lin = var_slq + var_sm + var_quad
+    return sm, lin, quad, var_sm, var_lin, var_quad
 
 
 def autodetect_variable(f, mode, channel):
@@ -125,14 +150,47 @@ def _stairs(ax, vals, edges, color, label, ls="-", lw=2.0):
               linewidth=lw, linestyle=ls, label=label, fill=False)
 
 
-def _decorate(ax, xlabel, title, logy=False):
+def _band(ax, vals, variances, edges, color):
+    """Draw a MC stat uncertainty band (±1σ) as a shaded step region."""
+    sigma = np.sqrt(np.abs(variances))
+    lo = vals - sigma
+    hi = vals + sigma
+    x    = np.repeat(edges, 2)[1:-1]
+    ax.fill_between(x, np.repeat(lo, 2), np.repeat(hi, 2),
+                    color=color, alpha=0.25, linewidth=0, label="MC stat. unc.")
+
+
+def _ratio_band(rax, vals, variances, edges, color):
+    """Bottom panel: draw 1 ± sigma/|nominal| band."""
+    sigma = np.sqrt(np.abs(variances))
+    safe  = np.where(np.abs(vals) > 0, np.abs(vals), np.nan)
+    rel   = sigma / safe
+    x     = np.repeat(edges, 2)[1:-1]
+    rax.fill_between(x, np.repeat(1 - rel, 2), np.repeat(1 + rel, 2),
+                     color=color, alpha=0.35, linewidth=0)
+    rax.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
+    rax.set_ylabel("Stat. unc.")
+    rax.set_ylim(0.5, 1.5)
+
+
+def _make_fig(logx):
+    fig, (ax, rax) = plt.subplots(2, 1, sharex=True, **FIG_STYLE)
+    fig.subplots_adjust(hspace=0.07)
+    if logx:
+        ax.set_xscale("log")
+        rax.set_xscale("log")
+    return fig, ax, rax
+
+
+def _decorate(ax, rax, xlabel, title, logy=False):
     ax.set_ylabel("Events")
-    ax.set_xlabel(xlabel)
     ax.text(0.97, 0.97, title, transform=ax.transAxes,
             ha="right", va="top", fontsize=20, fontweight="bold")
     ax.legend(loc="upper left", fontsize=16)
     if logy:
         ax.set_yscale("log")
+    rax.set_xlabel(xlabel)
+    rax.autoscale(axis="x", tight=True)
     hep.cms.label(loc=0, label="Preliminary", data=False, ax=ax)
 
 
@@ -147,39 +205,49 @@ def plot_task(d):
     mode        = d["mode"]
     channel     = d["channel"]
     xlabel      = d["xlabel"]
-    c_values    = d["c_values"]   # list of floats; c=1 is always included first
+    logx        = d["logx"]
+    c_values    = d["c_values"]
 
     try:
         f      = uproot.open(shapes_file)
         sm_key = "histo_sm" if mode == "morphing" else f"{channel}/sm"
-        edges = get_edges(f, sm_key)
-        sm, lin, quad = decompose(f, op, mode, channel)
+        edges  = get_edges(f, sm_key)
+        sm, lin, quad, var_sm, var_lin, var_quad = decompose(f, op, mode, channel)
         f.close()
     except Exception as e:
         print(f"  [skip] {op}: {e}")
         return
 
     # ---- figure 1: SM + full prediction(s) --------------------------------
-    fig1, ax1 = plt.subplots(**FIG_STYLE)
-    _stairs(ax1, sm, edges,SM_COLOR, "SM", lw=2.5)
+    fig1, ax1, rax1 = _make_fig(logx)
+    _stairs(ax1, sm, edges, SM_COLOR, "SM", lw=2.5)
+    _band(ax1, sm, var_sm, edges, SM_COLOR)
+    _ratio_band(rax1, sm, var_sm, edges, SM_COLOR)
     for cv, col in zip(c_values, [LIN_COLOR] + EXTRA_COLORS):
         full = sm + cv * lin + cv**2 * quad
+        var_full = var_sm * (1 - cv**2)**2 + var_lin * (2*cv)**2 + var_quad * (2*cv**2)**2
         label = fr"SM + EFT  ($c={cv}$)" if len(c_values) > 1 else r"SM + EFT  ($c=1$)"
-        _stairs(ax1, full, edges,col, label, ls="--", lw=2.0)
-    _decorate(ax1, xlabel, op, logy=True)
+        _stairs(ax1, full, edges, col, label, ls="--", lw=2.0)
+        _band(ax1, full, var_full, edges, col)
+        _ratio_band(rax1, full, var_full, edges, col)
+    _decorate(ax1, rax1, xlabel, op, logy=True)
     _save(fig1, os.path.join(outdir, f"sm_full_{op}"))
 
-    # ---- figure 2: linear term at c=1 (always linear — can be negative) ---
-    fig2, ax2 = plt.subplots(**FIG_STYLE)
-    _stairs(ax2, lin, edges,LIN_COLOR, r"linear term  ($c=1$)", lw=2.5)
+    # ---- figure 2: linear term (always linear scale — can be negative) -----
+    fig2, ax2, rax2 = _make_fig(logx)
+    _stairs(ax2, lin, edges, LIN_COLOR, r"linear term  ($c=1$)", lw=2.5)
+    _band(ax2, lin, var_lin, edges, LIN_COLOR)
+    _ratio_band(rax2, lin, var_lin, edges, LIN_COLOR)
     ax2.axhline(0, color="black", linewidth=0.8, linestyle="dashed")
-    _decorate(ax2, xlabel, op, logy=False)
+    _decorate(ax2, rax2, xlabel, op, logy=False)
     _save(fig2, os.path.join(outdir, f"lin_{op}"))
 
-    # ---- figure 3: quadratic term at c=1 ----------------------------------
-    fig3, ax3 = plt.subplots(**FIG_STYLE)
-    _stairs(ax3, quad, edges,QUAD_COLOR, r"quadratic term  ($c=1$)", lw=2.5)
-    _decorate(ax3, xlabel, op, logy=True)
+    # ---- figure 3: quadratic term ------------------------------------------
+    fig3, ax3, rax3 = _make_fig(logx)
+    _stairs(ax3, quad, edges, QUAD_COLOR, r"quadratic term  ($c=1$)", lw=2.5)
+    _band(ax3, quad, var_quad, edges, QUAD_COLOR)
+    _ratio_band(rax3, quad, var_quad, edges, QUAD_COLOR)
+    _decorate(ax3, rax3, xlabel, op, logy=True)
     _save(fig3, os.path.join(outdir, f"quad_{op}"))
 
     print(f"  {op:12s}  ->  sm_full / lin / quad  [{outdir}]")
@@ -196,8 +264,6 @@ def main():
     parser.add_argument("--variable",  default=None, choices=list(VAR_XLABELS.keys()),
                         help="x-axis label variable (auto-detected if not given)")
     parser.add_argument("--operators", nargs="+", default=OPERATORS)
-    parser.add_argument("--logy",      action="store_true",
-                        help="(ignored — sm_full and quad are always log; lin is always linear)")
     parser.add_argument("--c-values",  nargs="+", type=float, default=[1.0],
                         help="Wilson coefficient values for the full-prediction overlay. "
                              "Default: 1.0")
@@ -210,11 +276,12 @@ def main():
     mode, channel = detect_mode(f)
     variable = args.variable or autodetect_variable(f, mode, channel)
     xlabel   = VAR_XLABELS[variable]
+    logx     = VAR_LOGX[variable]
     f.close()
 
     print(f"Shapes file : {args.shapes}")
     print(f"Pipeline    : {mode}" + (f"  (channel: {channel})" if mode == "lhe" else ""))
-    print(f"Variable    : {variable}  →  {xlabel}")
+    print(f"Variable    : {variable}  →  {xlabel}  (log x: {logx})")
     print(f"Operators   : {args.operators}")
     print(f"c values    : {args.c_values}")
     print(f"Output      : {args.outdir}\n")
@@ -227,6 +294,7 @@ def main():
             "mode":     mode,
             "channel":  channel,
             "xlabel":   xlabel,
+            "logx":     logx,
             "c_values": args.c_values,
         }
         for op in args.operators
