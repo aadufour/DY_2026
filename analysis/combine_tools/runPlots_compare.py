@@ -19,6 +19,7 @@ The _stat suffix in filenames is produced automatically by runScans.py --stat.
 """
 
 from itertools import combinations
+from concurrent.futures import ThreadPoolExecutor
 import sys
 import os
 import json
@@ -155,6 +156,16 @@ if __name__ == "__main__":
              "Use --compare-stat / --compare-syst for the common stat vs syst case.",
     )
 
+    parser.add_option(
+        "-j", "--cores",
+        type="int",
+        dest="cores",
+        default=0,
+        help="Number of parallel worker processes (one per operator combination by default). "
+             "Capped at half the machine's CPU count as a safety measure; 0 (default) means "
+             "'as many as needed, up to that cap'.",
+    )
+
     (options, args) = parser.parse_args()
 
     if options.compare_stat and options.compare_syst:
@@ -261,5 +272,24 @@ if __name__ == "__main__":
         cmds.append(cmd)
 
     print(cmds)
-    for command in cmds:
-        os.system(command)
+
+    total_cores = os.cpu_count() or 1
+    max_safe_cores = max(1, total_cores // 2)
+
+    if options.cores <= 0:
+        n_workers = min(len(cmds), max_safe_cores) if cmds else 1
+    else:
+        n_workers = options.cores
+        if n_workers > max_safe_cores:
+            print(
+                f"WARNING: requested --cores {n_workers} exceeds half of the "
+                f"{total_cores} available cores; capping at {max_safe_cores} to "
+                f"avoid overloading the machine."
+            )
+            n_workers = max_safe_cores
+
+    print(f"Running {len(cmds)} plot job(s) with {n_workers} parallel worker(s) "
+          f"(machine has {total_cores} cores, safety cap {max_safe_cores}).")
+
+    with ThreadPoolExecutor(max_workers=n_workers) as executor:
+        list(executor.map(os.system, cmds))
