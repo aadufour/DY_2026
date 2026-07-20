@@ -210,7 +210,7 @@ else:
     fig, (ax, ax2) = plt.subplots(
         ncols=2,
         figsize=(12, max(6, 0.6 * n_ops)),
-        gridspec_kw={"width_ratios": [2.5, 1], "wspace": 0.5},
+        gridspec_kw={"width_ratios": [2.5, 1]},
         sharey=True,
     )
 
@@ -273,7 +273,7 @@ else:
     ax.set_yticklabels(operators)
     ax.axvline(0, color="black", linestyle="--", linewidth=1)
     ax.set_ylim(-1.0, n_ops + 0.5)
-    ax.set_xlabel("Wilson coefficient")
+    ax.set_xlabel("Wilson coefficient", loc="left")
     if args.logscale:
         ax.set_xscale("symlog", linthresh=linthresh)
 
@@ -312,7 +312,7 @@ hep.cms.label(ax=ax, data=True, label="Preliminary")
 plt.tight_layout()
 top_margin = 0.84 if args.horizontal else 0.90
 fig.subplots_adjust(top=top_margin)
-legend_y = top_margin + (1 - top_margin) * 0.55
+legend_y = top_margin + 0.02
 fig.legend(
     handles=interval_handles,
     loc="lower center",
