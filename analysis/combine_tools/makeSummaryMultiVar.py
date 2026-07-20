@@ -28,9 +28,9 @@ ROOT.gROOT.SetBatch(True)
 # ============================================================
 
 FONT_SIZE       = 34
-LABEL_SIZE      = 26
+LABEL_SIZE      = 24
 TICK_LABELSIZE  = 25
-LEGEND_FONTSIZE = 20
+LEGEND_FONTSIZE = 19
 
 FIG_HEIGHT      = 10
 WIDTH_PER_OP    = 0.9
@@ -210,7 +210,7 @@ else:
     fig, (ax, ax2) = plt.subplots(
         ncols=2,
         figsize=(12, max(6, 0.6 * n_ops)),
-        gridspec_kw={"width_ratios": [2.5, 1]},
+        gridspec_kw={"width_ratios": [2.5, 1], "wspace": 0.5},
         sharey=True,
     )
 
@@ -272,7 +272,7 @@ else:
     ax.set_yticks(pos)
     ax.set_yticklabels(operators)
     ax.axvline(0, color="black", linestyle="--", linewidth=1)
-    ax.set_ylim(-1.0, n_ops + 2)
+    ax.set_ylim(-1.0, n_ops + 0.5)
     ax.set_xlabel("Wilson coefficient")
     if args.logscale:
         ax.set_xscale("symlog", linthresh=linthresh)
@@ -297,8 +297,6 @@ interval_handles = [
     Line2D([], [], color="grey", lw=3,            label="68% CL"),
     Line2D([], [], color="grey", lw=1.5, ls="--", label="95% CL"),
 ]
-ax.legend(handles=interval_handles, ncol=min(n_vars + 2, 4), frameon=False,
-          loc="upper right", columnspacing=2.0)
 
 lambda_handles = [
     Patch(facecolor="grey", alpha=0.9, label=r"$c=1$"),
@@ -309,8 +307,25 @@ ax2.legend(handles=lambda_handles, ncol=1, frameon=False,
 
 hep.cms.label(ax=ax, data=True, label="Preliminary")
 
-suffix = "_horizontal" if args.horizontal else ""
+# Reserve whitespace above the panels for the variable/CL legend so it sits
+# in its own row above the CMS label instead of competing with the data.
 plt.tight_layout()
+top_margin = 0.84 if args.horizontal else 0.90
+fig.subplots_adjust(top=top_margin)
+legend_y = top_margin + (1 - top_margin) * 0.55
+fig.legend(
+    handles=interval_handles,
+    loc="lower center",
+    bbox_to_anchor=(0.5, legend_y),
+    ncol=len(interval_handles),
+    frameon=False,
+    fontsize=LEGEND_FONTSIZE,
+    columnspacing=1.4,
+    handlelength=1.6,
+    handletextpad=0.5,
+)
+
+suffix = "_horizontal" if args.horizontal else ""
 plt.savefig(f"eft_summary_multivar{suffix}.pdf", bbox_inches="tight")
 plt.savefig(f"eft_summary_multivar{suffix}.png", dpi=150, bbox_inches="tight")
 print(f"Saved: eft_summary_multivar{suffix}.pdf / .png")
