@@ -273,14 +273,17 @@ else:
     ax.set_yticklabels(operators)
     ax.axvline(0, color="black", linestyle="--", linewidth=1)
     ax.set_ylim(-1.0, n_ops + 0.5)
-    ax.set_xlabel("Wilson coefficient", loc="left")
+    ax.set_xlabel("Wilson coefficient")
     if args.logscale:
         ax.set_xscale("symlog", linthresh=linthresh)
 
     ax2.set_yticks(pos)
     ax2.set_yticklabels(operators)
     ax2.tick_params(axis="y", left=False, labelleft=False)
-    ax2.set_xlabel(r"$\Lambda$ at 95% CL [TeV]")
+    # Two lines instead of one long string: ax2 is a narrow panel, and a
+    # single-line label at this font size overflows sideways into ax's
+    # territory, overlapping "Wilson coefficient".
+    ax2.set_xlabel(r"$\Lambda$ at 95% CL" + "\n[TeV]")
     ax2.set_xscale("log")
 
 # -------------------------
