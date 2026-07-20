@@ -14,7 +14,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUTDIR="./compare_ops_plots"
-PROP_CACHE="/grid_mnt/data__data.polcms/cms/adufour/LHE/propcorr/CACHE/lhe_cache_propcorr.pkl"
+PROP_CACHE="/grid_mnt/data__data.polcms/cms/adufour/LHE/propcorr/CACHE/lhe_cache_propcorr_parallel.pkl"
 BASE_CACHE="/grid_mnt/data__data.polcms/cms/adufour/LHE/baseline/CACHE/lhe_cache_baseline_highstats.pkl"
 EXTRA_ARGS=()
 

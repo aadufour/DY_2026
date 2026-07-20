@@ -29,7 +29,7 @@ matplotlib.use('Agg')   # no display on the cluster -- write straight to file
 import matplotlib.pyplot as plt
 import mplhep as hep
 
-PROP_CACHE = '/grid_mnt/data__data.polcms/cms/adufour/LHE/propcorr/CACHE/lhe_cache_propcorr.pkl'
+PROP_CACHE = '/grid_mnt/data__data.polcms/cms/adufour/LHE/propcorr/CACHE/lhe_cache_propcorr_parallel.pkl'
 BASE_CACHE = '/grid_mnt/data__data.polcms/cms/adufour/LHE/SYST_slc7/CACHE/lhe_cache_parallel.pkl'
 
 FONT_SIZE       = 22

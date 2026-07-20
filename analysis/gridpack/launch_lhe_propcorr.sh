@@ -1,6 +1,6 @@
 #! /bin/bash
 
-export X509_USER_PROXY=/grid_mnt/data__data.polcms/cms/adufour/.t3/proxy.cert
+export X509_USER_PROXY=/home/llr/cms/adufour/.t3/proxy.cert
 
 source /cvmfs/cms.cern.ch/cmsset_default.sh
 

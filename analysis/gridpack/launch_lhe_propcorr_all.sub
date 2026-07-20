@@ -1,0 +1,101 @@
+BasePath = /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/gridpack
+OutputBase = /grid_mnt/data__data.polcms/cms/adufour/LHE/propcorr
+GridpackBase = /grid_mnt/data__data.polcms/cms/adufour/genproductions/bin/MadGraph5_aMCatNLO
+
+ProcName = DYSMEFTMll$(bin)_propcorr
+TARBALL = $(ProcName)_slc7_amd64_gcc700_CMSSW_10_6_19_tarball.tar.xz
+GridPath = $(OutputBase)/$(ProcName)
+
+executable = $(BasePath)/launch_lhe_propcorr.sh
+transfer_input_files = $(GridpackBase)/$(TARBALL)
+environment = "SEEDID=$(seed) SAVEFILE=$(GridPath) TARBALL=$(TARBALL)"
+transfer_output_files = ""
+
+universe = vanilla
+output = $(GridPath)/logs/$(seed).out
+error = $(GridPath)/logs/$(seed).err
+log = $(GridPath)/logs/$(seed).log
+
+request_memory = 20G
+request_cpus = 8
+
+T3Queue = long
+WNTag = el9
+include : /opt/exp_soft/cms/t3/t3queue |
+requirements = regexp("llrgrwnvm[0-9]+.in2p3.fr", Machine) == FALSE
+
+priority=-50
+max_retries = 1
+
+queue bin, seed from (
+    50_120, 1001
+    50_120, 1002
+    50_120, 1003
+    50_120, 1004
+    50_120, 1005
+    50_120, 1006
+    50_120, 1007
+    50_120, 1008
+    50_120, 1009
+    50_120, 1010
+    120_200, 1001
+    120_200, 1002
+    120_200, 1003
+    120_200, 1004
+    120_200, 1005
+    120_200, 1006
+    120_200, 1007
+    120_200, 1008
+    120_200, 1009
+    120_200, 1010
+    200_400, 1001
+    200_400, 1002
+    200_400, 1003
+    200_400, 1004
+    200_400, 1005
+    200_400, 1006
+    200_400, 1007
+    200_400, 1008
+    200_400, 1009
+    200_400, 1010
+    400_600, 1001
+    400_600, 1002
+    400_600, 1003
+    400_600, 1004
+    400_600, 1005
+    400_600, 1006
+    400_600, 1007
+    400_600, 1008
+    400_600, 1009
+    400_600, 1010
+    600_800, 1001
+    600_800, 1002
+    600_800, 1003
+    600_800, 1004
+    600_800, 1005
+    600_800, 1006
+    600_800, 1007
+    600_800, 1008
+    600_800, 1009
+    600_800, 1010
+    800_1000, 1001
+    800_1000, 1002
+    800_1000, 1003
+    800_1000, 1004
+    800_1000, 1005
+    800_1000, 1006
+    800_1000, 1007
+    800_1000, 1008
+    800_1000, 1009
+    800_1000, 1010
+    1000_3000, 1001
+    1000_3000, 1002
+    1000_3000, 1003
+    1000_3000, 1004
+    1000_3000, 1005
+    1000_3000, 1006
+    1000_3000, 1007
+    1000_3000, 1008
+    1000_3000, 1009
+    1000_3000, 1010
+)

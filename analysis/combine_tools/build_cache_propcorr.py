@@ -88,8 +88,8 @@ OPERATORS = [
 OP_PAIRS = [] if SKIP_PAIRS else list(combinations(OPERATORS, 2))
 
 CACHE_DIR       = "/grid_mnt/data__data.polcms/cms/adufour/LHE/propcorr/CACHE"
-CACHE_FILE      = os.path.join(CACHE_DIR, "lhe_cache_propcorr.pkl")
-PER_FILE_DIR    = os.path.join(CACHE_DIR, "per_file")
+CACHE_FILE      = os.path.join(CACHE_DIR, "lhe_cache_propcorr_parallel.pkl")
+PER_FILE_DIR    = os.path.join(CACHE_DIR, "per_file_parallel")
 
 CENTRAL_PDF = 325300
 
