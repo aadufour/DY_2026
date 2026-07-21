@@ -8,7 +8,12 @@
 # with --prop-cache/--base-cache if you want the originals.
 #
 # Usage:
-#   ./run_compare_all_ops.sh [--outdir DIR] [--no-normalize] [--prop-cache PATH] [--base-cache PATH]
+#   ./run_compare_all_ops.sh [--outdir DIR] [--no-normalize] [--prop-cache PATH] [--base-cache PATH] [--lims VAL]
+#
+# Operators that actually enter the W/Z/H propagator-width corrections
+# (SMEFTsim_practical_guide.pdf, Appendix A, eqs. A.10/A.12/A.19 -- cHQ1/cHQ3
+# only via the Z width, since W can't decay to t+b) get their plots routed
+# into $OUTDIR/propcorr_relevant/ instead of $OUTDIR/ directly.
 
 set -e
 
@@ -36,6 +41,10 @@ while [[ $# -gt 0 ]]; do
             BASE_CACHE="$2"
             shift 2
             ;;
+        --lims)
+            EXTRA_ARGS+=("--lims" "$2")
+            shift 2
+            ;;
         *)
             echo "Unknown argument: $1"
             exit 1
@@ -51,12 +60,22 @@ OPERATORS=(
     clu  cld  cbl
 )
 
+# enters delta-Gamma_W and/or delta-Gamma_Z per Appendix A
+PROPCORR_OPS=(cHDD cHWB cHl1 cHl3 cll1 cHj1 cHj3 cHQ1 cHQ3)
+
 for op in "${OPERATORS[@]}"; do
+    op_outdir="$OUTDIR"
+    for pc_op in "${PROPCORR_OPS[@]}"; do
+        if [[ "$op" == "$pc_op" ]]; then
+            op_outdir="$OUTDIR/propcorr_relevant"
+            break
+        fi
+    done
     for component in lin quad; do
-        echo "=== $op ($component) ==="
-        python3 "$SCRIPT_DIR/compare_ops.py" --op1 "$op" --component "$component" --outdir "$OUTDIR" \
+        echo "=== $op ($component) -> $op_outdir ==="
+        python3 "$SCRIPT_DIR/compare_ops.py" --op1 "$op" --component "$component" --outdir "$op_outdir" \
             --prop-cache "$PROP_CACHE" --base-cache "$BASE_CACHE" "${EXTRA_ARGS[@]}"
     done
 done
 
-echo "Done. Plots in $OUTDIR"
+echo "Done. Plots in $OUTDIR (propcorr-relevant operators in $OUTDIR/propcorr_relevant)"

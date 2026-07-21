@@ -59,6 +59,11 @@ parser.add_argument('--base-cache', default=BASE_CACHE)
 parser.add_argument('--outdir', default='./compare_ops_plots', help='where to save the .pdf/.png')
 parser.add_argument('--no-normalize', action='store_true',
                      help='plot raw weighted bin sums instead of normalizing each histogram to sum=1')
+parser.add_argument('--print-stats', action='store_true',
+                     help='print the per-bin propcorr/baseline/pull table and chi2/dof summary (off by default)')
+parser.add_argument('--lims', type=float, default=None,
+                     help='fix the ratio-panel y-axis to (1-LIMS, 1+LIMS) for every plot, instead of '
+                          'auto-scaling per operator -- use to get a common scale across a batch run')
 args = parser.parse_args()
 os.makedirs(args.outdir, exist_ok=True)
 
@@ -144,13 +149,14 @@ def run_comparison(component, op1, op2):
 
     label = op1 if component != 'mixed' else f'{op1}_{op2}'
     norm_label = 'normalized (sum=1)' if not args.no_normalize else 'cross section [pb], N_gen-corrected'
-    print(f"Component: {component}   Operator(s): {label}   [{norm_label}]")
-    print(f"{'bin':>16} {'propcorr':>12} {'+-sig_p':>10} {'baseline':>12} {'+-sig_b':>10} {'ratio':>8} {'pull':>7}")
-    for i in range(len(edges) - 1):
-        lo, hi = edges[i], edges[i + 1]
-        r = sp[i] / sb[i] if sb[i] != 0 else float('nan')
-        print(f"{lo:6.1f}-{hi:<6.1f}   {sp[i]:12.5g} {sig_p[i]:10.3g} {sb[i]:12.5g} {sig_b[i]:10.3g} {r:8.4f} {pull[i]:7.2f}")
-    print(f"\nchi2/dof = {chi2/ndof:.2f} over {ndof} bins\n")
+    if args.print_stats:
+        print(f"Component: {component}   Operator(s): {label}   [{norm_label}]")
+        print(f"{'bin':>16} {'propcorr':>12} {'+-sig_p':>10} {'baseline':>12} {'+-sig_b':>10} {'ratio':>8} {'pull':>7}")
+        for i in range(len(edges) - 1):
+            lo, hi = edges[i], edges[i + 1]
+            r = sp[i] / sb[i] if sb[i] != 0 else float('nan')
+            print(f"{lo:6.1f}-{hi:<6.1f}   {sp[i]:12.5g} {sig_p[i]:10.3g} {sb[i]:12.5g} {sig_b[i]:10.3g} {r:8.4f} {pull[i]:7.2f}")
+        print(f"\nchi2/dof = {chi2/ndof:.2f} over {ndof} bins\n")
 
     # --- plot: CMS/mplhep style, shape overlay on top, ratio panel below ---
     fig, (ax_top, ax_bot) = plt.subplots(
@@ -188,8 +194,11 @@ def run_comparison(component, op1, op2):
         step="pre", alpha=0.3, color="gray", linewidth=0, zorder=0)
     ax_bot.stairs(ratio, edges=edges, color="black", linewidth=1.2)
     ax_bot.axhline(1.0, color="gray", linestyle="dashed", linewidth=1)
-    finite = ratio[np.isfinite(ratio)]
-    half = max(np.max(np.abs(finite - 1.0)) * 1.2, 0.05) if finite.size else 0.3
+    if args.lims is not None:
+        half = args.lims
+    else:
+        finite = ratio[np.isfinite(ratio)]
+        half = max(np.max(np.abs(finite - 1.0)) * 1.2, 0.05) if finite.size else 0.3
     ax_bot.set_ylim(1.0 - half, 1.0 + half)
     ax_bot.set_ylabel("propcorr / baseline")
     ax_bot.set_xlabel(r"$m_{\ell\ell}$ [GeV]")
