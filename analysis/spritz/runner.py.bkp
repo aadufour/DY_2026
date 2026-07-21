@@ -390,8 +390,6 @@ def process(events, **kwargs):
 
         for region in regions:
             regions[region]["mask"] = regions[region]["func"](events)
-            if isData and regions[region].get("data_mll_max") is not None:
-                regions[region]["mask"] = regions[region]["mask"] & (events.mll < regions[region]["data_mll_max"])
 
         # Fill histograms
         for dataset_name in results:
