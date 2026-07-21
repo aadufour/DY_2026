@@ -241,12 +241,12 @@ variables = {
     },
     "costhetastar": {
         "func": lambda events: cos_theta_star(events.Lepton[:, 0], events.Lepton[:, 1]),
-        "axis": hist.axis.Regular(50, -1, 1, name="costhetastar"),
+        "axis": hist.axis.Variable([-1.0,-0.6,-0.2,0.2,0.6,1.0], name="costhetastar"),
         "label": "$\\cos\\theta^*$",
     },
     "rapll_abs": {
         "func": lambda events: abs((events.Lepton[:, 0] + events.Lepton[:, 1]).rapidity),
-        "axis": hist.axis.Regular(50, 0, 2.5, name="rapll_abs"),
+        "axis": hist.axis.Variable([0.0,0.48,0.96,1.44,2.4], name="rapll_abs"),
         "label": "$|y_{\\ell\\ell}|$",
     },
     "triple_diff": {
