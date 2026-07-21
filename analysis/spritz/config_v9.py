@@ -1,6 +1,6 @@
 # ruff: noqa: E501
 """
-config_v8.py  —  v8: coarse mll binning extended to 3000 GeV
+config_v9.py  —  v9: coarse mll binning extended to 3000 GeV, data blinded at mll < 500 GeV at fill time
 =============================================================
 Same as config_same_bins (v6), but the 1D mll variable extends beyond
 500 GeV to recover high-mll EFT sensitivity. Binning above 500 GeV
