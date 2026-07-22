@@ -5,14 +5,16 @@
 
 ---
 
+2. [ ] cHQ1 and cHQ3 are the same???
 
 
-2. [ ] Plots with SAME BINNING FOR EACH VARIABLE! 
+
+3. [ ] Plots with SAME BINNING FOR EACH VARIABLE! 
 
 ---
 
 
-3. [ ] Scan with ONLY LINEAR/QUADRATIC (maybe very close to c=0) -> check giacomos model on mattermost
+4. [ ] Scan with ONLY LINEAR/QUADRATIC (maybe very close to c=0) -> check giacomos model on mattermost
 ---
 
-4. [ ] 2D operator scan
+5. [ ] 2D operator scan

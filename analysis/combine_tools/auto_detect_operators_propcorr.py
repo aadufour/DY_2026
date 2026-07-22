@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 From Andrew Gilbert:
 https://github.com/ajgilbert/EFT2Obs/blob/master/scripts/auto_detect_operators.py
