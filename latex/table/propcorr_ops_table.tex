@@ -1,0 +1,32 @@
+\documentclass[border=8pt]{standalone}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+
+\newcommand{\hd}[1]{H^\dagger i\overset{\leftrightarrow}{D}_\mu H \,(\bar{#1}\gamma^\mu #1)}
+
+\begin{document}
+\renewcommand{\arraystretch}{1.8}
+\begin{tabular}{@{} l l l @{}}
+\toprule
+\textbf{SMEFTsim ID} & \textbf{Coefficient} & \textbf{Operator} \\
+\midrule
+\texttt{cHDD}  & $C_{HD}$              & $(D^\mu H)^\dagger H \; H^\dagger D_\mu H$ \\
+\texttt{cHWB}  & $C_{HWB}$             & $H^\dagger \sigma^i H \; W^i_{\mu\nu} B^{\mu\nu}$ \\
+\texttt{cHl1}  & $C_{Hl}^{(1)}$        & $(H^\dagger i\overset{\leftrightarrow}{D}_\mu H)(\bar{l}_p\gamma^\mu l_r)$ \\
+\texttt{cHl3}  & $C_{Hl}^{(3)}$        & $(H^\dagger i\overset{\leftrightarrow}{D}{}^i_\mu H)(\bar{l}_p\sigma^i\gamma^\mu l_r)$ \\
+\texttt{cHj1}  & $C_{Hq}^{(1)}$ \small{(light gen)} & $(H^\dagger i\overset{\leftrightarrow}{D}_\mu H)(\bar{q}\gamma^\mu q)$ \\
+\texttt{cHj3}  & $C_{Hq}^{(3)}$ \small{(light gen)} & $(H^\dagger i\overset{\leftrightarrow}{D}{}^i_\mu H)(\bar{q}\sigma^i\gamma^\mu q)$ \\
+\texttt{cHQ1}  & $C_{HQ}^{(1)}$ \small{(3rd gen)} & $(H^\dagger i\overset{\leftrightarrow}{D}_\mu H)(\bar{Q}\gamma^\mu Q)$ \\
+\texttt{cHQ3}  & $C_{HQ}^{(3)}$ \small{(3rd gen)} & $(H^\dagger i\overset{\leftrightarrow}{D}{}^i_\mu H)(\bar{Q}\sigma^i\gamma^\mu Q)$ \\
+\texttt{cHu}   & $C_{Hu}$              & $(H^\dagger i\overset{\leftrightarrow}{D}_\mu H)(\bar{u}\gamma^\mu u)$ \\
+\texttt{cHd}   & $C_{Hd}$              & $(H^\dagger i\overset{\leftrightarrow}{D}_\mu H)(\bar{d}\gamma^\mu d)$ \\
+\texttt{cHe}   & $C_{He}$              & $(H^\dagger i\overset{\leftrightarrow}{D}_\mu H)(\bar{e}_p\gamma^\mu e_r)$ \\
+\texttt{cHbq}  & $C_{Hb}$ \small{(3rd gen)} & $(H^\dagger i\overset{\leftrightarrow}{D}_\mu H)(\bar{b}\gamma^\mu b)$ \\
+\texttt{cbWRe} & $\mathrm{Re}(C_{bW})$ & $(\bar{Q}\sigma^{\mu\nu} b)\sigma^i H\, W^i_{\mu\nu}$ \\
+\texttt{cbBRe} & $\mathrm{Re}(C_{bB})$ & $(\bar{Q}\sigma^{\mu\nu} b)H\, B_{\mu\nu}$ \\
+\texttt{cll1}  & $C_{ll}'$             & $(\bar{l}_p\gamma_\mu l_r)(\bar{l}_s\gamma^\mu l_t)$ \\
+\bottomrule
+\end{tabular}
+\end{document}

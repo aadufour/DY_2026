@@ -64,16 +64,16 @@ LINE_WIDTH_BKG   = 0.8
 # Physical bin edges for the triple_diff unrolled histogram.
 # Unrolling order: rapll_abs slowest, costhetastar middle, mll fastest (.T.flatten())
 # Flat index for (irapll, icos): irapll * N_COSTH * N_MLL + icos * N_MLL
-MLL_EDGES   = np.array([40, 60, 80, 100, 120, 140, 180, 220, 270, 350, 500], dtype=float)
+MLL_EDGES   = np.array([40, 60, 80, 100, 120, 140, 180, 220, 270, 350, 500, 700, 1000, 1500, 3000], dtype=float)
 COSTH_EDGES = np.array([-1, -0.6, -0.2, 0.2, 0.6, 1], dtype=float)
 RAPLL_EDGES = np.array([0, 0.48, 0.96, 1.44, 2.4], dtype=float)
-N_MLL   = len(MLL_EDGES)   - 1   # 10
+N_MLL   = len(MLL_EDGES)   - 1   # 14
 N_COSTH = len(COSTH_EDGES) - 1   # 5
 N_RAPLL = len(RAPLL_EDGES) - 1   # 4
 
 
 def _td_slice(irapll, icos):
-    """Return the slice into the 200-bin triple_diff array for panel (irapll, icos)."""
+    """Return the slice into the 280-bin triple_diff array for panel (irapll, icos)."""
     start = irapll * N_COSTH * N_MLL + icos * N_MLL
     return slice(start, start + N_MLL)
 
@@ -412,13 +412,14 @@ def plot_triple_diff(f, region, outdir, colors, lumi, year_label, shapes_path):
         except Exception:
             pass
     present  = [s for s in BKG_STACK if s in bkg_vals]
-    stack    = np.array([bkg_vals[s] for s in present])   # (n_bkg, 200)
-    cumsum   = np.cumsum(stack, axis=0)                    # (n_bkg, 200)
-    bkg_total = cumsum[-1]                                 # (200,)
+    n_td = N_MLL * N_COSTH * N_RAPLL
+    stack    = np.array([bkg_vals[s] for s in present])   # (n_bkg, n_td)
+    cumsum   = np.cumsum(stack, axis=0)                    # (n_bkg, n_td)
+    bkg_total = cumsum[-1]                                 # (n_td,)
 
-    # --- systematic band from shapes.root (200-bin) ---
-    syst_up   = np.zeros(200)
-    syst_down = np.zeros(200)
+    # --- systematic band from shapes.root ---
+    syst_up   = np.zeros(n_td)
+    syst_down = np.zeros(n_td)
     if shapes_path is not None:
         try:
             fs = uproot.open(shapes_path)
@@ -442,7 +443,7 @@ def plot_triple_diff(f, region, outdir, colors, lumi, year_label, shapes_path):
                 ("lumi",          ["Single_Top", "TT", "WW", "WZ", "ZZ", "DYtt", "DYll", "GGToLL"]),
             ]
             sm_samples_shapes = list(bkg_vals.keys()) + ["DYll"]
-            nom_total = np.zeros(200)
+            nom_total = np.zeros(n_td)
             for s in sm_samples_shapes:
                 try:
                     nom_total += _sget(s.replace(" ", "_"))

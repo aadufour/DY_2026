@@ -130,7 +130,7 @@ def autodetect_variable(f, mode, channel):
     sm_key = "histo_sm" if mode == "morphing" else f"{channel}/sm"
     edges  = get_edges(f, sm_key)
     n = len(edges) - 1
-    if n == 200:
+    if n in (200, 280):
         return "triple_diff"
     elif n == 50 and edges[-1] > 2.0:
         return "rapll_abs"

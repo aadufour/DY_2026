@@ -221,7 +221,9 @@ zero, not silently falling back to old behavior).
   needed): compare diagram counts for `NPprop^2==0` vs `NPprop^2==2` in an
   interactive `mg5_aMC` session — would give an unambiguous count of
   exactly how many diagrams involve the propagator correction, cleaner
-  than the statistical shape test.
+  than the statistical shape test. **Update 2026-07-21:** the local MG5
+  install prerequisite is now done (see §9) — this specific diagram-count
+  comparison itself still hasn't been run, but nothing blocks it anymore.
 - Run `build_datacard_new.py --cache .../lhe_cache_propcorr.pkl` to get
   actual histograms/datacard for the propcorr sample.
 - If a real shape effect needs to be resolved cleanly, current statistics
@@ -230,3 +232,150 @@ zero, not silently falling back to old behavior).
 - The 2h44m-per-job / ~1-core-effective-usage event generation timing is
   unexplained and unoptimized — fine for one production run, might matter
   if this needs to be repeated often.
+
+## 9. Auto-detecting propagator-correction-relevant operators (2026-07-21)
+
+Rather than keep deriving by hand which operators actually enter the
+propagator correction (error-prone — see below), there's an existing tool
+for this: `analysis/combine_tools/auto_detect_operators_propcorr.py`,
+adapted from Andrew Gilbert's EFT2Obs
+(`https://github.com/ajgilbert/EFT2Obs/blob/master/scripts/auto_detect_operators.py`).
+For SMEFTsim v3 models (this one is: `top`/`topU3l` flavor schemes are new
+in v3.0), it inspects the generated process's diagrams for the dummy
+propagator-correction particles (`h1`, `w1`, `z1`, `t1`), finds the
+correction parameter each implies (e.g. `dWH`), and recursively traces
+which Wilson coefficients feed into it — a code-derived answer instead of
+a manual literature derivation.
+
+**Getting it to actually run required fixing three things:**
+1. The script had no shebang line at all (`#!/usr/bin/env python3` added)
+   and wasn't executable — running it bare made bash try to interpret the
+   Python source as a shell script.
+2. `loadModel()` only read the *first* line of `cards/<process>/proc_card.dat`
+   and assumed it was directly an `import model X-restriction` line. Real
+   proc cards have several `set` commands first, then `import model sm`,
+   then later the actual `import model SMEFTsim_topU3l_MwScheme_UFO-all_massless`
+   — fixed to scan all lines and take the last `import model` match.
+3. `MG_DIR` needs to point at a **complete, working MG5 installation**
+   (needs `MG_DIR/models/check_param_card.py` and its full dependency
+   chain — `madgraph`/`internal` packages etc.). The genproductions
+   `MadGraph5_aMCatNLO/models/` dir built earlier in this session doesn't
+   work for this — it was hand-assembled to hold only the one patched
+   SMEFTsim model, not a full MG5 codebase. Used the separate standalone
+   install at `/grid_mnt/data__data.polcms/cms/adufour/MG5/mg5amcnlo/`
+   instead (this is the "third copy" mentioned in §2 — patched with the
+   corrected model tarball from genproductions the same day). The script
+   also needs an actual **generated** process directory sitting directly
+   under `MG_DIR` (not just cards) — generated fresh via
+   `./bin/mg5_aMC cards/DYSMEFTMll50_120_propcorr/proc_card.dat` run
+   interactively from the standalone MG5 root (using the same proc card
+   already verified all session, just placed at
+   `cards/DYSMEFTMll50_120_propcorr/proc_card.dat` per the script's
+   required convention).
+
+**Result** — the actual propagator-correction-relevant operator set for
+this process:
+```
+cHDD, cHQ1, cHQ3, cHWB, cHbq, cHd, cHe, cHj1, cHj3, cHl1, cHl3, cHu, cbBRe, cbWRe, cll1
+```
+15 operators. This is **larger** than the 9-operator set derived earlier
+the same day by hand from `SMEFTsim_practical_guide.pdf` Appendix A
+(`cHDD, cHWB, cHl1, cHl3, cll1, cHj1, cHj3, cHQ1, cHQ3`) — the manual
+derivation only worked through the **left-handed** coupling shifts
+(`Δ_u^L`, `Δ_d^L`, driven by `C_Hq^(1)`/`C_Hq^(3)`) and missed:
+- The **right-handed** analogues: `Δ_u^R = C_Hu`, `Δ_d^R = C_Hd` (giving
+  `cHu`, `cHd`), plus the lepton right-handed piece (`cHe`).
+- `cHbq`: a b-quark-specific right-handed-type operator.
+- The b-quark **dipole** operators `cbWRe`/`cbBRe`, which appear
+  explicitly in the guide's Z→b̄b special-case formula (eq. A.12:
+  `cθ̂(C̄dW)₃₃ + sθ̂(C̄dB)₃₃`) — easy to miss since that term is a
+  qualitatively different (dipole, not current) contribution.
+
+**Lesson:** prefer running this tool over manual derivation from the guide
+when the relevant-operator set matters for something (e.g. routing
+comparison plots into a subdirectory, as in
+`analysis/combine_tools/run_compare_all_ops.sh`'s `PROPCORR_OPS` list) —
+manual derivation from the width-correction appendix alone is easy to
+under-count.
+
+## 10. Full physics derivation of the 15-operator set (2026-07-22)
+
+Re-derived the §9 operator list from first principles, from
+`SMEFTsim_practical_guide.pdf` §6, Appendix A, and §4.2 — to understand
+*why* each operator is there, not just confirm the count.
+
+### 10.1 δm_Z ≡ 0 and δm_W ≡ 0 in the MwScheme
+
+On-shell, the propagator correction is (Eq. 6.10):
+```
+ΔP_V |_{q²=m_V²} ∝ − δΓ_V/Γ_V^SM − (1 + 2i m_V/Γ_V^SM)·δm_V/m_V^SM
+```
+`m_Z, m_h` are always input parameters (Eq. 6.14: `δm_Z ≡ 0, δm_h ≡ 0,
+δm_t ≡ 0`), so their `δm` term vanishes identically, by construction, not
+approximation. Our production model uses the `{m_W, m_Z, G_F}` scheme
+(`...MwScheme_UFO`, §4.2.2 of the guide) — so `m_W` is *also* an input in
+our case: the guide states the `δm_W` correction is non-vanishing "only in
+the `{α_em, m_Z, G_F}` scheme" (Eq. 4.34), implying `δm_W ≡ 0` here too.
+**Consequence: both the Z and W propagator corrections in our gridpack are
+purely `∝ δΓ_V`, no mass-shift piece at all.**
+
+`G_F` is fixed as an input *number*, but that does **not** make its
+correction term `ΔG_F` vanish — `ΔG_F` is the fractional mismatch between
+what pure-SM muon decay would predict for `G_F` given the hatted couplings,
+and what the actual SMEFT-corrected muon-decay amplitude (with `cll1`,
+`cHl3` insertions) predicts for those same couplings. Since `G_F` is held
+at its measured value, that mismatch gets absorbed into the couplings
+`ĝ_1, ĝ_W` instead — so `ΔG_F` still appears, nonzero, in their defining
+equations (Eqs. 4.39–4.40, MW scheme):
+```
+δg_1/ĝ_1 = −[ΔG_F + Δm²_Z/s²θ̂] / 2      (Δm²_Z ← cHDD, cHWB via Table 4)
+δg_W/ĝ_W = −ΔG_F / 2                     (ΔG_F  ← cHl3, cll1 via Table 4, topU3l row)
+```
+(Note: this supersedes the `{α_em,m_Z,G_F}`-scheme formulas, Eqs. 4.28–4.29,
+that were used in an earlier draft of this derivation — wrong scheme for
+our model. `δg_W` here depends only on `ΔG_F`, not on `Δm²_Z`/`Δα_em` at
+all; `δg_1` depends on both.)
+
+### 10.2 δΓ_Z per-fermion breakdown (Eq. A.10, A.12, A.13)
+
+`δΓ_Z/Γ_Z^SM = Σ_f (δΓ_{Z→f̄f}/Γ_{Z→f̄f}^SM)·Br^SM_{Z→f}`, and each partial
+width correction splits into exactly 3 physically distinct channels:
+
+1. **Universal** (same shift for every fermion, driven by `δg_1/ĝ_1`,
+   `δg_W/ĝ_W`, and a direct `C̄_HWB` term in `δg_Z`, Eq. A.9) — this is the
+   channel `cHDD`, `cHWB`, `cHl3`, `cll1` act through. **None of these four
+   are vertex operators** — they never appear as a `Zf̄f` current. `cHDD`
+   in particular only ever shows up here, via `Δm²_Z` → `δg_1`; it has no
+   fermion-species dependence at all, it shifts the overall EW coupling
+   normalization used in *every* `Zf̄f` vertex identically.
+2. **Direct current** (Eqs. A.2–A.5): `Δ^L_ψ, Δ^R_ψ` insertions specific to
+   each fermion species — these are genuine new/shifted `Zf̄f` vertices.
+3. **Dipole** (Eq. A.12, `Z→b̄b` only): chirality-flip term `∝ m_b`,
+   vanishes for massless light quarks.
+
+### 10.3 Which operator touches which Z coupling
+
+topU3l splits quarks into light-gen `(q,u,d)` = first two generations
+(U(2)³-symmetric, so u/c share one coefficient, d/s share another) and
+3rd-gen `(Q,t,b)` (§3.4, Eq. 3.39–3.40, 3.47):
+
+| Z coupling to | Warsaw op. | topU3l name | Channel |
+|---|---|---|---|
+| **light quarks** (u,c doublet+RH, d,s doublet+RH) | `C_Hq^(1)`,`C_Hq^(3)` | `cHj1`,`cHj3` | current (LH) |
+| | `C_Hu`,`C_Hd` | `cHu`,`cHd` | current (RH) |
+| **b-quark** (via 3rd-gen doublet + RH) | `C_HQ^(1)`,`C_HQ^(3)` | `cHQ1`,`cHQ3` | current (LH) |
+| | `C_Hb` | `cHbq` (renamed to avoid clash with `cHB`=`C_HB`) | current (RH) |
+| | `(C_dW)_33`,`(C_dB)_33` | `cbWRe`,`cbBRe` | dipole, `∝m_b` |
+| **leptons** (e,μ,τ doublet+RH) | `C_Hl^(1)`,`C_Hl^(3)` | `cHl1`,`cHl3` | current (LH) — `cHl3` *also* feeds `ΔG_F` (universal) |
+| | `C_He` | `cHe` | current (RH) |
+| **all fermions equally** (universal, no vertex) | `C_HD` | `cHDD` | universal, via `Δm²_Z`→`δg_1` |
+| | `C_HWB` | `cHWB` | universal (via `Δm²_Z,Δα_em`) **+** direct term in `δg_Z` |
+| | `C_ll0` | `cll1` | universal, via `ΔG_F` only — no vertex of its own |
+
+**Not in the list, correctly absent:** `cHt` (top RH — no external top in
+`Z→f̄f`), `cHtbRe/Im` (top-bottom mixing, same reason), light-quark dipoles
+`cuWRe/cuBRe/cdWRe/cdBRe` (same dipole structure as `cbWRe/cbBRe` but
+∝ light-quark mass ≈ 0, dropped). This closes the set — no operators
+beyond these 15 can contribute to `q q̄ → μ+ μ-` propagator corrections
+given `V_CKM=1` and massless light fermions (the model's own
+approximations, §3.4).
