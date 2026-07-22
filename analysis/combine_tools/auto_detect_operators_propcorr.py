@@ -52,9 +52,13 @@ import check_param_card as param_card_mod
 
 
 def loadModel(process):
+  model_name = None
   with open(os.path.join("cards", process, "proc_card.dat"), "r") as f:
-    model_name = f.readline().strip("\n").split("import model")[1].split("-")[0].strip(" ")
-  
+    for line in f:
+      line = line.strip("\n")
+      if "import model" in line:
+        model_name = line.split("import model")[1].split("-")[0].strip(" ")
+
   print(">> Loading model: %s"%model_name)  
   sys.path.append(os.path.join(MG_DIR, "models", model_name))
   model = importlib.import_module(model_name)
