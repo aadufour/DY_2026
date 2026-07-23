@@ -656,7 +656,7 @@ def plot_triple_diff(f, region, outdir, colors, lumi, year_label, shapes_path):
                 if icos == 0:
                     ax_bot.set_ylabel("Ratio", fontsize=5)
 
-        fig.suptitle(f"EFT {op} (c=±1)", fontsize=11, y=0.7)
+        fig.suptitle(f"EFT {op} (c=±1)", fontsize=11, y=0.93)
 
         # Common legend across all panels
         legend_handles = (
@@ -671,7 +671,7 @@ def plot_triple_diff(f, region, outdir, colors, lumi, year_label, shapes_path):
         fig.legend(
             handles=legend_handles,
             fontsize=7, ncols=4, framealpha=0.7,
-            loc="lower center", bbox_to_anchor=(0.5, 0.67),
+            loc="lower center", bbox_to_anchor=(0.7, 0.9),
             handlelength=1.2, handletextpad=0.4, columnspacing=0.8,
         )
 
