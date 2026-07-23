@@ -264,7 +264,7 @@ def plot_one_variable(
             dpi=FIG_DPI,
         )
         fig.tight_layout(pad=-0.5)
-        hep.cms.label("", data=False, lumi=round(lumi, 2), ax=ax_top, year=year_label)
+        hep.cms.label("Simulation Preliminary", data=False, lumi=round(lumi, 2), ax=ax_top, year=year_label)
 
         for i, name in enumerate(present):
             base = cumsum[i - 1] if i > 0 else np.zeros_like(bkg_total)
@@ -606,7 +606,7 @@ def plot_triple_diff(f, region, outdir, colors, lumi, year_label, shapes_path):
 
                 if is_first:
                     hep.cms.label(
-                        "", data=True, lumi=round(lumi, 2),
+                        "Simulation Preliminary", data=False, lumi=round(lumi, 2),
                         ax=ax_top, year=year_label, fontsize=6,
                     )
 
@@ -656,7 +656,7 @@ def plot_triple_diff(f, region, outdir, colors, lumi, year_label, shapes_path):
                 if icos == 0:
                     ax_bot.set_ylabel("Ratio", fontsize=5)
 
-        fig.suptitle(f"EFT {op} (c=±1)  —  triple-diff", fontsize=9, y=0.995)
+        fig.suptitle(f"EFT {op} (c=±1)", fontsize=11, y=0.97)
 
         # Common legend across all panels
         legend_handles = (
