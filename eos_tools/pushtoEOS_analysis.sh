@@ -18,6 +18,8 @@ mkdir -p "$STAGE"
 cp "$BASE"/eft_summary_multivar* "$STAGE"/
 
 for obs in mll rapll_abs costhetastar triple_diff; do
+  mkdir -p "$STAGE/$obs"
+  cp "$BASE/datacards/inc_mm/$obs"/eft_summary_two_panel* "$STAGE/$obs/"
   for sub in scans nuis_combine nuis_lin_quad; do
     mkdir -p "$STAGE/$obs/$sub"
     cp -r "$BASE/datacards/inc_mm/$obs/$sub/." "$STAGE/$obs/$sub/"
