@@ -253,7 +253,7 @@ variables = {
     "triple_diff": {
         # mll, costhetastar, rapll_abs are already computed above — runner fills by axis name
         "axis": [
-            hist.axis.Variable([40,60,80,100,120,140,180,220,270,350,500], name="mll"),
+            hist.axis.Variable([40, 60, 80, 100, 120, 140, 180, 220, 270, 350, 500, 700, 1000, 1500, 3000], name="mll"),
             hist.axis.Variable([-1.0,-0.6,-0.2,0.2,0.6,1.0], name="costhetastar"),
             hist.axis.Variable([0.0,0.48,0.96,1.44,2.4], name="rapll_abs"),
         ],
