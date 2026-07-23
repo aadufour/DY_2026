@@ -40,7 +40,7 @@ import uproot
 # ============================================================
 
 FONT_SIZE        = 22
-LEGEND_FONTSIZE  = 16
+LEGEND_FONTSIZE  = 12
 TICK_LABELSIZE   = 18
 LABEL_SIZE       = 20
 
