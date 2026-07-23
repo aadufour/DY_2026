@@ -24,6 +24,8 @@ for obs in mll rapll_abs costhetastar triple_diff; do
     mkdir -p "$STAGE/$obs/$sub"
     cp -r "$BASE/datacards/inc_mm/$obs/$sub/." "$STAGE/$obs/$sub/"
   done
+  mkdir -p "$STAGE/$obs/eft"
+  cp -r "$BASE/plots/inc_mm/$obs/." "$STAGE/$obs/eft/"
 done
 
 echo "Pushing to EOS as ${EOS_DEST} (workers=${WORKERS}) ..."
