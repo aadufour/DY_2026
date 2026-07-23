@@ -305,7 +305,12 @@ def plot_one_variable(
 
         data_plot     = np.where(blind_mask, np.nan, data)
         data_unc_plot = np.where(blind_mask, np.nan, data_unc)
-        blind_label = f" [blind > {int(blind_above)} GeV]" if do_blind else ""
+        if do_blind:
+            blind_label = f" [blind > {int(blind_above)} GeV]"
+        elif variable in ("costhetastar", "rapll_abs"):
+            blind_label = " [mll < 500 GeV]"
+        else:
+            blind_label = ""
         ax_top.errorbar(
             centers, data_plot / widths,
             yerr=data_unc_plot / widths,
@@ -326,7 +331,7 @@ def plot_one_variable(
 
         ax_top.set_yscale("log")
         ax_top.set_ylim(ymin, ymax * 3e3)
-        ax_top.set_ylabel("Events / GeV")
+        ax_top.set_ylabel("Events / GeV" if var_meta.get("unit") else "Events")
         ax_top.tick_params(labelbottom=False)
         ax_top.legend(loc=LEGEND_LOC_TOP, ncols=LEGEND_NCOLS_TOP, framealpha=0.8)
 
@@ -341,7 +346,7 @@ def plot_one_variable(
             centers,
             np.where(blind_mask, np.nan, ratio_data),
             yerr=np.where(blind_mask, np.nan, data_unc / denom),
-            fmt="o", markersize=MARKER_SIZE_RATIO, color="black", label="Data/SM",
+            fmt="o", markersize=MARKER_SIZE_RATIO, color="black", label="_nolegend_",
             zorder=4,
         )
         ax_bot.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
@@ -576,7 +581,7 @@ def plot_triple_diff(f, region, outdir, colors, lumi, year_label, shapes_path):
                     np.where(_data_blind, np.nan, data_sl / mll_widths),
                     yerr=np.where(_data_blind, np.nan, data_unc_sl / mll_widths),
                     fmt="o", markersize=2, color="black", linewidth=0.6,
-                    label=f"Data [{int(data_sl.sum())}]" if is_first else "_nolegend_",
+                    label=f"Data [{int(data_sl.sum())}] [mll < 500 GeV]" if is_first else "_nolegend_",
                     zorder=4,
                 )
 
@@ -701,7 +706,7 @@ def main():
             unit  = vdict.get("unit", "")
             if unit:
                 label = f"{label} ({unit})"
-            var_meta_config[vname] = {"label": label}
+            var_meta_config[vname] = {"label": label, "unit": unit}
     except Exception:
         pass
 
@@ -722,6 +727,7 @@ def main():
         meta = dict(VAR_META_DEFAULT.get(variable, {"label": variable, "log_x": False, "blind": False, "blind_all": False}))
         if variable in var_meta_config:
             meta["label"] = var_meta_config[variable]["label"]
+            meta["unit"]  = var_meta_config[variable].get("unit", "")
 
         if args.variable == "all":
             outdir = os.path.join(args.outdir, variable)

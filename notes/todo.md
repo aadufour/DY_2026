@@ -5,6 +5,17 @@
     - [ ] analysis and fits
 
 ---
+- [ ] WRITE ON THE NOTE?? For sure this part on propcorr ("never done by anyone before")
+
+----
+
+- [ ] introduce syst one  by one: we can work out why the lines wiggle
+
+
+- [ ] check SM of this plot against by SMEFTsim SM (reweighting weight)
+
+
+---
 - [ ] ```spritz-eft-plot```:
     - [ ] bottom panel for 3D (why is there data points fixed at 0 in the unblind region, screws up everything. This could be solved just by changing the range but I first want to check wether its just a plotting bug or actual selection bug);
     - [ ] rapll/costheta are NOT events/GeV (just Events)
