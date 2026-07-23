@@ -570,9 +570,11 @@ def plot_triple_diff(f, region, outdir, colors, lumi, year_label, shapes_path):
                     fill=False, zorder=3,
                 )
 
+                _data_blind = mll_centers > 500
                 ax_top.errorbar(
-                    mll_centers, data_sl / mll_widths,
-                    yerr=data_unc_sl / mll_widths,
+                    mll_centers,
+                    np.where(_data_blind, np.nan, data_sl / mll_widths),
+                    yerr=np.where(_data_blind, np.nan, data_unc_sl / mll_widths),
                     fmt="o", markersize=2, color="black", linewidth=0.6,
                     label=f"Data [{int(data_sl.sum())}]" if is_first else "_nolegend_",
                     zorder=4,
@@ -614,12 +616,15 @@ def plot_triple_diff(f, region, outdir, colors, lumi, year_label, shapes_path):
                 ratio_p    = eft_tot_sl  / denom
                 ratio_m    = eftm_tot_sl / denom
                 ratio_data = data_sl / denom
+                data_blind_mask = mll_centers > 500
+                ratio_data_plot = np.where(data_blind_mask, np.nan, ratio_data)
+                data_unc_plot   = np.where(data_blind_mask, np.nan, data_unc_sl / denom)
 
                 ax_bot.stairs(ratio_p, edges=MLL_EDGES, color="crimson",   linewidth=0.8)
                 ax_bot.stairs(ratio_m, edges=MLL_EDGES, color="steelblue", linewidth=0.8)
                 ax_bot.errorbar(
-                    mll_centers, ratio_data,
-                    yerr=data_unc_sl / denom,
+                    mll_centers, ratio_data_plot,
+                    yerr=data_unc_plot,
                     fmt="o", markersize=2, color="black", linewidth=0.6, zorder=4,
                 )
                 ax_bot.axhline(1.0, color="black", linewidth=0.6, linestyle="dashed")
@@ -633,7 +638,7 @@ def plot_triple_diff(f, region, outdir, colors, lumi, year_label, shapes_path):
                         hatch="///", linewidth=0, zorder=0,
                     )
 
-                candidates = [ratio_p, ratio_m, ratio_data]
+                candidates = [ratio_p, ratio_m, ratio_data_plot]
                 if has_syst:
                     candidates += [
                         (sm_total_sl + syst_up_sl) / denom,
