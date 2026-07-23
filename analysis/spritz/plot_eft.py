@@ -27,6 +27,8 @@ import os
 from copy import deepcopy
 
 import matplotlib as mpl
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 mpl.use("Agg")
 import matplotlib.pyplot as plt
 import mplhep as hep
@@ -589,25 +591,20 @@ def plot_triple_diff(f, region, outdir, colors, lumi, year_label, shapes_path):
                 ax_top.set_xscale("log")
                 ax_top.tick_params(labelbottom=False)
 
-                # Per-panel bin range label
+                # Per-panel bin range label — top right to avoid covering the peak
                 cos_lo = COSTH_EDGES[icos]
                 cos_hi = COSTH_EDGES[icos + 1]
                 rap_lo = RAPLL_EDGES[irapll]
                 rap_hi = RAPLL_EDGES[irapll + 1]
                 ax_top.text(
-                    0.03, 0.97,
+                    0.97, 0.97,
                     (f"$\\cos\\theta^* \\in [{cos_lo:.1f},{cos_hi:.1f}]$\n"
                      f"$|y_{{\\ell\\ell}}| \\in [{rap_lo:.2f},{rap_hi:.2f}]$"),
                     transform=ax_top.transAxes,
-                    va="top", ha="left", fontsize=5, linespacing=1.4,
+                    va="top", ha="right", fontsize=5, linespacing=1.4,
                 )
 
                 if is_first:
-                    ax_top.legend(
-                        fontsize=5, ncols=2, framealpha=0.7,
-                        loc="upper right",
-                        handlelength=1.2, handletextpad=0.4, columnspacing=0.8,
-                    )
                     hep.cms.label(
                         "", data=True, lumi=round(lumi, 2),
                         ax=ax_top, year=year_label, fontsize=6,
@@ -659,7 +656,24 @@ def plot_triple_diff(f, region, outdir, colors, lumi, year_label, shapes_path):
                 if icos == 0:
                     ax_bot.set_ylabel("Ratio", fontsize=5)
 
-        fig.suptitle(f"EFT {op} (c=±1)  —  triple-diff", fontsize=9, y=1.002)
+        fig.suptitle(f"EFT {op} (c=±1)  —  triple-diff", fontsize=9, y=0.995)
+
+        # Common legend across all panels
+        legend_handles = (
+            [Patch(color=colors.get(s, "grey"), label=s) for s in present]
+            + [
+                Line2D([0], [0], color=colors.get("DYll", DEFAULT_COLORS["DYll"]), linestyle="dashed", linewidth=0.8, label="SM (MiNNLO)"),
+                Line2D([0], [0], color="crimson",   linewidth=0.8, label=f"{op} c=+1"),
+                Line2D([0], [0], color="steelblue", linewidth=0.8, label=f"{op} c=-1"),
+                Line2D([0], [0], color="black", marker="o", markersize=2, linewidth=0.6, label=f"Data [mll < 500 GeV]"),
+            ]
+        )
+        fig.legend(
+            handles=legend_handles,
+            fontsize=5, ncols=4, framealpha=0.7,
+            loc="lower center", bbox_to_anchor=(0.5, -0.02),
+            handlelength=1.2, handletextpad=0.4, columnspacing=0.8,
+        )
 
         stem = os.path.join(outdir, f"eft_triple_diff_{op}")
         for ext in ("png", "pdf"):
