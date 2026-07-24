@@ -347,7 +347,7 @@ def build_plot(var):
         handlelength=1.6,
         handletextpad=0.5,
     )
-    fig.suptitle(VARS[var]["label"], x=0.15, ha="left", y=top_margin + 0.09)
+    fig.suptitle(VARS[var]["label"], x=0.25, ha="left", y=top_margin + 0.09)
 
     suffix = "_horizontal" if args.horizontal else ""
     outname = f"{args.outname}_{var}{suffix}"

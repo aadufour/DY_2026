@@ -46,3 +46,9 @@
 ---
 
 5. [ ] 2D operator scan
+
+
+---
+roberto
+- [ ] ceu vs clu (fattore 3?)
+- [ ] cosa sto plottando nella uncertainty band?
