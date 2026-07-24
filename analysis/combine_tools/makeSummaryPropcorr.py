@@ -154,9 +154,10 @@ parser.add_argument("--label-bl", default="baseline", help="Legend label for --b
 parser.add_argument("--label-pc", default="propcorr", help="Legend label for --pc-dir")
 parser.add_argument("--ops",        nargs="+", default=None)
 parser.add_argument("--sort-by",    default="mll",
-                    help="Variable used to order operators consistently across "
-                         "all plots, ranked by baseline 95%% CL sensitivity "
-                         "(default: mll)")
+                    help="Variable used only to discover the master operator "
+                         "list when --ops is not given (default: mll). Each "
+                         "plot is independently ordered by its own propcorr "
+                         "95%% CL sensitivity.")
 parser.add_argument("--horizontal", action="store_true")
 parser.add_argument("--logscale",   action="store_true")
 parser.add_argument("--linthresh",  type=float, default=1e-2)
@@ -216,18 +217,6 @@ for var in active_vars:
         for op in base_operators if op in bl_res and op in pc_res
     }
 
-# global operator order, ranked by baseline 95% CL sensitivity of --sort-by
-sort_results = all_results[args.sort_by]
-operators = [op for op in base_operators if op in sort_results]
-operators.sort(key=lambda op: max(
-    abs(sort_results[op]["bl"]["2sigma"][0]),
-    abs(sort_results[op]["bl"]["2sigma"][1])
-))
-print(f"Ordering by: {args.sort_by} ({args.label_bl})")
-
-n_ops = len(operators)
-pos   = np.arange(n_ops)
-
 # -------------------------
 # Plot (one figure per variable)
 # -------------------------
@@ -238,7 +227,10 @@ from matplotlib.patches import Patch
 
 def build_plot(var):
     results = all_results[var]
-    ops     = [op for op in operators if op in results]
+    ops = sorted(results.keys(), key=lambda op: max(
+        abs(results[op]["pc"]["2sigma"][0]),
+        abs(results[op]["pc"]["2sigma"][1])
+    ))
     n       = len(ops)
     p_all   = np.arange(n)
 
@@ -347,7 +339,7 @@ def build_plot(var):
     fig.legend(
         handles=interval_handles,
         loc="lower center",
-        bbox_to_anchor=(0.5, legend_y),
+        bbox_to_anchor=(0.65, legend_y),
         ncol=len(interval_handles),
         frameon=False,
         fontsize=LEGEND_FONTSIZE,
@@ -355,7 +347,7 @@ def build_plot(var):
         handlelength=1.6,
         handletextpad=0.5,
     )
-    fig.suptitle(VARS[var]["label"], y=top_margin + 0.09)
+    fig.suptitle(VARS[var]["label"], x=0.15, ha="left", y=top_margin + 0.09)
 
     suffix = "_horizontal" if args.horizontal else ""
     outname = f"{args.outname}_{var}{suffix}"
