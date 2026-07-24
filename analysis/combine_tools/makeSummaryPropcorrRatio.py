@@ -1,22 +1,24 @@
 #!/usr/bin/env python3
 """
-makeSummaryPropcorr.py
+makeSummaryPropcorrRatio.py
 
-Same as makeSummaryMultiVar.py, but instead of overlaying all variables on
-one panel, it produces one summary plot per variable (mll, rapll_abs,
-costhetastar, triple_diff), each comparing two fits -- baseline and
-propagator-corrected (propcorr) -- for every operator. Only stat+syst scans
-are used.
+Companion to makeSummaryPropcorr.py: for each variable (mll, rapll_abs,
+costhetastar, triple_diff) and each operator, computes the ratio of the 68%
+CL interval width between the propagator-corrected (propcorr) and baseline
+fits, i.e. how much (in %) the propagator correction widens or narrows the
+1-sigma interval. Only stat+syst scans are used.
+
+    ratio = width_pc / width_bl
+    pct   = (ratio - 1) * 100
 
 Both configs are expected to have the same layout:
     <root>/<datacards-subpath>/<mll|rapll_abs|costhetastar|triple_diff>/
         higgsCombine.<op>.individual.MultiDimFit.mH125.root
 
 Usage:
-    makeSummaryPropcorr.py --bl-dir /path/to/eft_bkg_fullsyst_v9 \\
-                            --pc-dir /path/to/propcorr_v1 \\
-                            [--sort-by triple_diff] [--horizontal] \\
-                            [--logscale] [--verbose]
+    makeSummaryPropcorrRatio.py --bl-dir /path/to/eft_bkg_fullsyst_v9 \\
+                                 --pc-dir /path/to/propcorr_v1 \\
+                                 [--horizontal] [--verbose]
 """
 
 import os
@@ -41,8 +43,8 @@ LEGEND_FONTSIZE = 19
 FIG_HEIGHT      = 10
 WIDTH_PER_OP    = 0.9
 
-BL_COLOR = "#2166ac"
-PC_COLOR = "#d6604d"
+WIDEN_COLOR   = "#d6604d"   # propcorr widens the interval (pct > 0)
+NARROW_COLOR  = "#2166ac"   # propcorr narrows the interval (pct < 0)
 
 VARS = {
     "mll":          {"dirname": "mll",          "label": r"$m_{\ell\ell}$"},
@@ -55,15 +57,14 @@ DISPLAY_ORDER = ["triple_diff", "mll", "costhetastar", "rapll"]
 # Operators that actually enter the propagator correction for this process,
 # per notes/propagator_correction.md section 9/10 (code-derived via
 # auto_detect_operators_propcorr.py, cross-checked against the SMEFTsim
-# practical guide). Everything else is unaffected by construction.
+# practical guide). Everything else is unaffected by construction and would
+# just show ~0% change, so it's excluded from the default operator set.
 PROPCORR_OPS = [
     "cHDD", "cHWB",
     "cHj1", "cHj3", "cHQ1", "cHQ3", "cHu", "cHd", "cHbq", "cbWRe", "cbBRe",
     "cHl1", "cHl3", "cHe",
     "cll1",
 ]
-
-HEIGHT_RATIOS = [2.5, 1.8]
 
 # ============================================================
 
@@ -161,8 +162,6 @@ parser.add_argument("--pc-dir", dest="pc_dir", required=True,
 parser.add_argument("--datacards-subpath", default="datacards/inc_mm",
                     help="Subpath from each root dir to the per-variable scan "
                          "folders (default: datacards/inc_mm)")
-parser.add_argument("--label-bl", default="baseline", help="Legend label for --bl-dir")
-parser.add_argument("--label-pc", default="propcorr", help="Legend label for --pc-dir")
 parser.add_argument("--ops",        nargs="+", default=None,
                     help="Explicit operator list, overrides the default "
                          "propcorr-relevant filter")
@@ -171,20 +170,12 @@ parser.add_argument("--all-ops",    action="store_true",
                          "use every operator discovered in the scan dir")
 parser.add_argument("--sort-by",    default="mll",
                     help="Variable used only to discover the master operator "
-                         "list when --ops is not given (default: mll). Each "
-                         "plot is independently ordered by its own propcorr "
-                         "95%% CL sensitivity.")
+                         "list when --ops is not given (default: mll).")
 parser.add_argument("--horizontal", action="store_true")
-parser.add_argument("--logscale",   action="store_true")
-parser.add_argument("--linthresh",  type=float, default=1e-2)
 parser.add_argument("--verbose",    action="store_true")
-parser.add_argument("-o", "--outname", default="eft_summary_propcorr",
+parser.add_argument("-o", "--outname", default="eft_widthratio_propcorr",
                     help="Output file base name prefix (variable name is appended)")
 args = parser.parse_args()
-
-if args.logscale:
-    linthresh = args.linthresh
-    print(f"symlog linthresh = {linthresh:.2e}")
 
 # -------------------------
 # Resolve per-variable directories, keep only variables present in both configs
@@ -212,7 +203,7 @@ if args.sort_by not in active_vars:
 print(f"Variables: {active_vars}")
 
 # -------------------------
-# Load results per variable/dataset
+# Load results and compute 68% CL width ratios per variable
 # -------------------------
 
 if args.ops:
@@ -228,18 +219,28 @@ else:
             print(f"  [note] propcorr-relevant ops not found in discovery dir: {missing}")
 print(f"Operators: {base_operators}")
 
-all_results = {}
+all_ratios = {}
 for var in active_vars:
     if args.verbose:
-        print(f"\n--- {var} ({args.label_bl}) ---")
+        print(f"\n--- {var} (baseline) ---")
     bl_res = load_results(var_dirs[var]["bl"], base_operators, verbose=args.verbose)
     if args.verbose:
-        print(f"\n--- {var} ({args.label_pc}) ---")
+        print(f"\n--- {var} (propcorr) ---")
     pc_res = load_results(var_dirs[var]["pc"], base_operators, verbose=args.verbose)
-    all_results[var] = {
-        op: {"bl": bl_res[op], "pc": pc_res[op]}
-        for op in base_operators if op in bl_res and op in pc_res
-    }
+
+    ratios = {}
+    for op in base_operators:
+        if op not in bl_res or op not in pc_res:
+            continue
+        w_bl = bl_res[op]["1sigma"][1] - bl_res[op]["1sigma"][0]
+        w_pc = pc_res[op]["1sigma"][1] - pc_res[op]["1sigma"][0]
+        if w_bl <= 0:
+            continue
+        pct = (w_pc / w_bl - 1.0) * 100.0
+        ratios[op] = pct
+        if args.verbose:
+            print(f"  {op}: width_bl={w_bl:.4f}  width_pc={w_pc:.4f}  change={pct:+.1f}%")
+    all_ratios[var] = ratios
 
 # -------------------------
 # Plot (one figure per variable)
@@ -250,128 +251,51 @@ from matplotlib.patches import Patch
 
 
 def build_plot(var):
-    results = all_results[var]
-    ops = sorted(results.keys(), key=lambda op: max(
-        abs(results[op]["pc"]["2sigma"][0]),
-        abs(results[op]["pc"]["2sigma"][1])
-    ))
-    n       = len(ops)
-    p_all   = np.arange(n)
+    ratios = all_ratios[var]
+    ops = sorted(ratios.keys(), key=lambda op: abs(ratios[op]), reverse=True)
+    n   = len(ops)
+    pos = np.arange(n)
+    vals = [ratios[op] for op in ops]
+    colors = [WIDEN_COLOR if v >= 0 else NARROW_COLOR for v in vals]
 
     if args.horizontal:
         fig_width = max(10, WIDTH_PER_OP * n)
-        fig, (ax, ax2) = plt.subplots(
-            nrows=2,
-            figsize=(fig_width, FIG_HEIGHT),
-            gridspec_kw={"height_ratios": HEIGHT_RATIOS},
-            sharex=True,
-        )
-    else:
-        fig, (ax, ax2) = plt.subplots(
-            ncols=2,
-            figsize=(12, max(6, 0.6 * n)),
-            gridspec_kw={"width_ratios": [2.5, 1]},
-            sharey=True,
-        )
-
-    for i, op in enumerate(ops):
-        for shift, key, color in [(+0.18, "bl", BL_COLOR), (-0.18, "pc", PC_COLOR)]:
-            r   = results[op][key]
-            p   = i + shift
-            x_b = r["best"]
-            x1  = r["1sigma"]
-            x2s = r["2sigma"]
-
-            if args.horizontal:
-                ax.vlines(p, x2s[0], x2s[1], colors=color, linestyles="dashed", linewidth=1.5)
-                ax.vlines(p, x1[0],  x1[1],  colors=color, linestyles="solid",  linewidth=3)
-                ax.plot(p, x_b, "o", color=color, markersize=5)
-            else:
-                ax.hlines(p, x2s[0], x2s[1], colors=color, linestyles="dashed", linewidth=1.5)
-                ax.hlines(p, x1[0],  x1[1],  colors=color, linestyles="solid",  linewidth=3)
-                ax.plot(x_b, p, "o", color=color, markersize=5)
-
-            a = abs(x2s[0]) + abs(x2s[1])
-            if a <= 0:
-                continue
-            lam1   = np.sqrt(1.0 / a)
-            lam4pi = np.sqrt((4 * np.pi)**2 / a)
-
-            if args.horizontal:
-                ax2.bar(p, lam1,          width=0.18, color=color, alpha=0.9)
-                ax2.bar(p, lam4pi - lam1, width=0.18, bottom=lam1, color=color, alpha=0.3)
-            else:
-                ax2.barh(p, lam1,          height=0.18, color=color, alpha=0.9)
-                ax2.barh(p, lam4pi - lam1, height=0.18, left=lam1,  color=color, alpha=0.3)
-
-    # -------------------------
-    # Formatting
-    # -------------------------
-
-    if args.horizontal:
-        ax.set_xticks(p_all)
-        ax.tick_params(axis="x", labelbottom=False)
+        fig, ax = plt.subplots(figsize=(fig_width, FIG_HEIGHT))
+        ax.bar(pos, vals, width=0.6, color=colors)
         ax.axhline(0, color="black", linestyle="--", linewidth=1)
-        ax.set_xlim(-1.0, n + 0.5)
-        ax.set_ylabel("Wilson coefficient")
-        if args.logscale:
-            ax.set_yscale("symlog", linthresh=linthresh)
-
-        ax2.set_xticks(p_all)
-        ax2.set_xticklabels(ops, rotation=45, ha="right", rotation_mode="anchor")
-        ax2.set_ylabel(r"$\Lambda$ at 95% CL [TeV]")
-        ax2.set_yscale("log")
+        ax.set_xticks(pos)
+        ax.set_xticklabels(ops, rotation=45, ha="right", rotation_mode="anchor")
+        ax.set_ylabel("68% CL width change [%]")
+        for p, v in zip(pos, vals):
+            ax.text(p, v + (1.5 if v >= 0 else -1.5), f"{v:+.1f}%",
+                     ha="center", va="bottom" if v >= 0 else "top",
+                     fontsize=LEGEND_FONTSIZE, rotation=90)
     else:
-        ax.set_yticks(p_all)
-        ax.set_yticklabels(ops)
+        fig, ax = plt.subplots(figsize=(12, max(6, 0.6 * n)))
+        ax.barh(pos, vals, height=0.6, color=colors)
         ax.axvline(0, color="black", linestyle="--", linewidth=1)
-        ax.set_ylim(-1.0, n + 0.5)
-        ax.set_xlabel("Wilson coefficient")
-        if args.logscale:
-            ax.set_xscale("symlog", linthresh=linthresh)
+        ax.set_yticks(pos)
+        ax.set_yticklabels(ops)
+        ax.set_xlabel("68% CL width change [%]")
+        for p, v in zip(pos, vals):
+            ax.text(v + (1.0 if v >= 0 else -1.0), p, f"{v:+.1f}%",
+                     ha="left" if v >= 0 else "right", va="center",
+                     fontsize=LEGEND_FONTSIZE)
 
-        ax2.set_yticks(p_all)
-        ax2.set_yticklabels(ops)
-        ax2.tick_params(axis="y", left=False, labelleft=False)
-        ax2.set_xlabel(r"$\Lambda$ at 95% CL" + "\n[TeV]")
-        ax2.set_xscale("log")
-
-    # -------------------------
-    # Legends
-    # -------------------------
-
-    interval_handles = [
-        Line2D([], [], color=BL_COLOR, lw=3, label=args.label_bl),
-        Line2D([], [], color=PC_COLOR, lw=3, label=args.label_pc),
-        Line2D([], [], color="grey", lw=3,            label="68% CL"),
-        Line2D([], [], color="grey", lw=1.5, ls="--", label="95% CL"),
+    handles = [
+        Patch(facecolor=WIDEN_COLOR,  label="propcorr widens"),
+        Patch(facecolor=NARROW_COLOR, label="propcorr narrows"),
     ]
-
-    lambda_handles = [
-        Patch(facecolor="grey", alpha=0.9, label=r"$c=1$"),
-        Patch(facecolor="grey", alpha=0.3, label=r"$c=(4\pi)^2$"),
-    ]
-    ax2.legend(handles=lambda_handles, ncol=1, frameon=False,
-               loc="upper right" if args.horizontal else "upper center")
+    ax.legend(handles=handles, ncol=2, frameon=False,
+              loc="upper right" if args.horizontal else "lower right")
 
     hep.cms.label(ax=ax, data=True, label="Preliminary")
 
     plt.tight_layout()
     top_margin = 0.84 if args.horizontal else 0.90
     fig.subplots_adjust(top=top_margin)
-    legend_y = top_margin + 0.02
-    fig.legend(
-        handles=interval_handles,
-        loc="lower center",
-        bbox_to_anchor=(0.65, legend_y),
-        ncol=len(interval_handles),
-        frameon=False,
-        fontsize=LEGEND_FONTSIZE,
-        columnspacing=1.4,
-        handlelength=1.6,
-        handletextpad=0.5,
-    )
-    fig.suptitle(VARS[var]["label"], x=0.25, ha="left", y=top_margin + 0.09)
+    fig.suptitle(f"{VARS[var]['label']}: propcorr / baseline 68% CL width",
+                 x=0.25, ha="left", y=top_margin + 0.05)
 
     suffix = "_horizontal" if args.horizontal else ""
     outname = f"{args.outname}_{var}{suffix}"
