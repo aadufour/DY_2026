@@ -5,11 +5,12 @@ makeSummaryPropcorrRatio.py
 Companion to makeSummaryPropcorr.py: for each variable (mll, rapll_abs,
 costhetastar, triple_diff) and each operator, computes the ratio of the 68%
 CL interval width between the propagator-corrected (propcorr) and baseline
-fits, i.e. how much (in %) the propagator correction widens or narrows the
-1-sigma interval. Only stat+syst scans are used.
+fits. Only stat+syst scans are used.
 
     ratio = width_pc / width_bl
-    pct   = (ratio - 1) * 100
+
+ratio == 1: no change. ratio < 1: propcorr narrows the interval.
+ratio > 1: propcorr widens it.
 
 Both configs are expected to have the same layout:
     <root>/<datacards-subpath>/<mll|rapll_abs|costhetastar|triple_diff>/
@@ -43,8 +44,7 @@ LEGEND_FONTSIZE = 19
 FIG_HEIGHT      = 10
 WIDTH_PER_OP    = 0.9
 
-WIDEN_COLOR   = "#d6604d"   # propcorr widens the interval (pct > 0)
-NARROW_COLOR  = "#2166ac"   # propcorr narrows the interval (pct < 0)
+BAR_COLOR = "#2166ac"
 
 VARS = {
     "mll":          {"dirname": "mll",          "label": r"$m_{\ell\ell}$"},
@@ -236,66 +236,45 @@ for var in active_vars:
         w_pc = pc_res[op]["1sigma"][1] - pc_res[op]["1sigma"][0]
         if w_bl <= 0:
             continue
-        pct = (w_pc / w_bl - 1.0) * 100.0
-        ratios[op] = pct
+        ratio = w_pc / w_bl
+        ratios[op] = ratio
         if args.verbose:
-            print(f"  {op}: width_bl={w_bl:.4f}  width_pc={w_pc:.4f}  change={pct:+.1f}%")
+            print(f"  {op}: width_bl={w_bl:.4f}  width_pc={w_pc:.4f}  ratio={ratio:.3f}")
     all_ratios[var] = ratios
 
 # -------------------------
 # Plot (one figure per variable)
 # -------------------------
 
-from matplotlib.lines import Line2D
-from matplotlib.patches import Patch
-
-
 def build_plot(var):
     ratios = all_ratios[var]
-    ops = sorted(ratios.keys(), key=lambda op: abs(ratios[op]), reverse=True)
+    ops = sorted(ratios.keys(), key=lambda op: abs(ratios[op] - 1.0), reverse=True)
     n   = len(ops)
     pos = np.arange(n)
     vals = [ratios[op] for op in ops]
-    colors = [WIDEN_COLOR if v >= 0 else NARROW_COLOR for v in vals]
 
     if args.horizontal:
         fig_width = max(10, WIDTH_PER_OP * n)
         fig, ax = plt.subplots(figsize=(fig_width, FIG_HEIGHT))
-        ax.bar(pos, vals, width=0.6, color=colors)
-        ax.axhline(0, color="black", linestyle="--", linewidth=1)
+        ax.bar(pos, vals, width=0.6, color=BAR_COLOR)
+        ax.axhline(1, color="black", linestyle="--", linewidth=1)
         ax.set_xticks(pos)
         ax.set_xticklabels(ops, rotation=45, ha="right", rotation_mode="anchor")
-        ax.set_ylabel("68% CL width change [%]")
-        for p, v in zip(pos, vals):
-            ax.text(p, v + (1.5 if v >= 0 else -1.5), f"{v:+.1f}%",
-                     ha="center", va="bottom" if v >= 0 else "top",
-                     fontsize=LEGEND_FONTSIZE, rotation=90)
+        ax.set_ylabel("68% CL width ratio\n(propcorr / baseline)")
     else:
         fig, ax = plt.subplots(figsize=(12, max(6, 0.6 * n)))
-        ax.barh(pos, vals, height=0.6, color=colors)
-        ax.axvline(0, color="black", linestyle="--", linewidth=1)
+        ax.barh(pos, vals, height=0.6, color=BAR_COLOR)
+        ax.axvline(1, color="black", linestyle="--", linewidth=1)
         ax.set_yticks(pos)
         ax.set_yticklabels(ops)
-        ax.set_xlabel("68% CL width change [%]")
-        for p, v in zip(pos, vals):
-            ax.text(v + (1.0 if v >= 0 else -1.0), p, f"{v:+.1f}%",
-                     ha="left" if v >= 0 else "right", va="center",
-                     fontsize=LEGEND_FONTSIZE)
-
-    handles = [
-        Patch(facecolor=WIDEN_COLOR,  label="propcorr widens"),
-        Patch(facecolor=NARROW_COLOR, label="propcorr narrows"),
-    ]
-    ax.legend(handles=handles, ncol=2, frameon=False,
-              loc="upper right" if args.horizontal else "lower right")
+        ax.set_xlabel("68% CL width ratio (propcorr / baseline)")
 
     hep.cms.label(ax=ax, data=True, label="Preliminary")
 
     plt.tight_layout()
     top_margin = 0.84 if args.horizontal else 0.90
     fig.subplots_adjust(top=top_margin)
-    fig.suptitle(f"{VARS[var]['label']}: propcorr / baseline 68% CL width",
-                 x=0.25, ha="left", y=top_margin + 0.05)
+    fig.suptitle(VARS[var]["label"], x=0.25, ha="left", y=top_margin + 0.05)
 
     suffix = "_horizontal" if args.horizontal else ""
     outname = f"{args.outname}_{var}{suffix}"
