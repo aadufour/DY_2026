@@ -4,6 +4,9 @@
     - [x] make nanoaods
     - [ ] analysis and fits
 
+--
+- [ ] combine fits still says 138 fb^-1 -> to change (just visual!)
+
 ---
 - [ ] WRITE ON THE NOTE?? For sure this part on propcorr ("never done by anyone before")
 
