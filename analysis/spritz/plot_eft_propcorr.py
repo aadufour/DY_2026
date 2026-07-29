@@ -373,7 +373,7 @@ def plot_one_variable(
         candidates = [ratio_p1_bl, ratio_m1_bl, ratio_p1_pc, ratio_m1_pc]
         range_mask = centers <= (var_meta.get("range_max") or np.inf)
         all_finite = np.concatenate([a[range_mask][np.isfinite(a[range_mask])] for a in candidates])
-        half = max(np.max(np.abs(all_finite - 1.0)) * 1.2, 0.05) if all_finite.size else 0.3
+        half = np.max(np.abs(all_finite - 1.0)) * 1.2 if all_finite.size else 0.3
         ax_bot.set_ylim(1.0 - half, 1.0 + half)
         ax_bot.set_xlabel(xlabel)
         if log_x:
@@ -592,7 +592,7 @@ def plot_triple_diff(f_bl, f_pc, region, outdir, colors, lumi, year_label, shape
 
                 candidates = [ratio_p1_bl, ratio_m1_bl, ratio_p1_pc, ratio_m1_pc]
                 finite_r = np.concatenate([a[np.isfinite(a)] for a in candidates])
-                half = max(np.max(np.abs(finite_r - 1.0)) * 1.2, 0.05) if finite_r.size else 0.3
+                half = np.max(np.abs(finite_r - 1.0)) * 1.2 if finite_r.size else 0.3
                 ax_bot.set_ylim(1.0 - half, 1.0 + half)
                 ax_bot.set_xlim(MLL_EDGES[0], MLL_EDGES[-1])
 
