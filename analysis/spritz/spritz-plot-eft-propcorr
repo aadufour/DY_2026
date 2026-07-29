@@ -1,0 +1,95 @@
+#!/bin/bash
+# spritz-plot-eft-propcorr: same as spritz-plot-eft, but overlays the
+# propagator-corrected (propcorr) EFT signal on top of the baseline one,
+# for every region/variable found in the baseline config's datacards/.
+#
+# Run inside apptainer + analysis_venv:
+#
+#   spritz-plot-eft-propcorr --bl-dir /path/to/eft_bkg_fullsyst_v9 \
+#                             --pc-dir /path/to/propcorr_v1 \
+#                             [--no-blind] [--blind-above 500] [--outdir plots_propcorr]
+#
+# Both dirs are expected to contain histos.root and datacards/ (backgrounds,
+# data, nuisances, binning must match -- only the EFT signal differs, see
+# notes/propagator_correction.md). For each
+# datacards/{region}/{variable}/shapes.root under --bl-dir it calls
+# plot_eft_propcorr.py with the matching --bl-input/--pc-input histos.root
+# and shapes path, writing PNGs to {outdir}/{region}/{variable}/.
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PLOT_SCRIPT="${SCRIPT_DIR}/plot_eft_propcorr.py"
+VENV=/grid_mnt/data__data.polcms/cms/adufour/analysis_venv
+
+# shellcheck disable=SC1091
+source "${VENV}/bin/activate"
+
+# -- defaults ------------------------------------------------------------------
+OUTDIR="plots_propcorr"
+BLIND_ABOVE="500"
+EXTRA_ARGS=""
+
+# -- parse args ----------------------------------------------------------------
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --bl-dir)       BL_DIR="$2";        shift 2 ;;
+        --pc-dir)       PC_DIR="$2";        shift 2 ;;
+        --outdir)       OUTDIR="$2";        shift 2 ;;
+        --blind-above)  BLIND_ABOVE="$2";   shift 2 ;;
+        --no-blind)     EXTRA_ARGS="$EXTRA_ARGS --no-blind"; shift ;;
+        *)  echo "Unknown option: $1"; exit 1 ;;
+    esac
+done
+
+# -- sanity checks -------------------------------------------------------------
+if [[ -z "$BL_DIR" || -z "$PC_DIR" ]]; then
+    echo "ERROR: --bl-dir and --pc-dir are required."
+    exit 1
+fi
+
+if [[ ! -f "$BL_DIR/histos.root" ]]; then
+    echo "ERROR: histos.root not found in $BL_DIR."
+    exit 1
+fi
+if [[ ! -f "$PC_DIR/histos.root" ]]; then
+    echo "ERROR: histos.root not found in $PC_DIR."
+    exit 1
+fi
+if [[ ! -d "$BL_DIR/datacards" ]]; then
+    echo "ERROR: datacards/ not found in $BL_DIR. Run spritz-cards first."
+    exit 1
+fi
+
+# -- loop over region / variable (from the baseline config) --------------------
+n_plots=0
+for region_dir in "$BL_DIR"/datacards/*/; do
+    region=$(basename "$region_dir")
+    for variable_dir in "$region_dir"*/; do
+        variable=$(basename "$variable_dir")
+        shapes="${variable_dir}shapes.root"
+
+        if [[ ! -f "$shapes" ]]; then
+            echo "  [skip] $region/$variable — shapes.root not found"
+            continue
+        fi
+
+        outdir="${OUTDIR}/${region}/${variable}"
+        echo ""
+        echo "=== ${region} / ${variable} ==="
+        python3 "$PLOT_SCRIPT" \
+            --bl-input "$BL_DIR/histos.root" \
+            --pc-input "$PC_DIR/histos.root" \
+            --shapes   "$shapes" \
+            --region   "$region" \
+            --variable "$variable" \
+            --outdir   "$outdir" \
+            --blind-above "$BLIND_ABOVE" \
+            $EXTRA_ARGS
+
+        n_plots=$((n_plots + 27))
+    done
+done
+
+echo ""
+echo "Done. ~${n_plots} plots written under ${OUTDIR}/"
