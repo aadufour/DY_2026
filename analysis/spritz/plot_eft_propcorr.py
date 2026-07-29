@@ -330,7 +330,6 @@ def plot_one_variable(
             np.nanmax(sm_total / widths),
             np.nanmax(eft_p1_bl / widths), np.nanmax(eft_m1_bl / widths),
             np.nanmax(eft_p1_pc / widths), np.nanmax(eft_m1_pc / widths),
-            np.nanmax(data / widths),
         )
         pos_vals_list = [v[v > 0] / widths[v > 0] for v in stack if np.any(v > 0)]
         pos_vals = np.concatenate(pos_vals_list) if pos_vals_list else np.array([1e-4])
@@ -371,10 +370,7 @@ def plot_one_variable(
             )
 
         ax_bot.set_ylabel("Ratio")
-        ratio_data_visible = np.where(blind_mask, np.nan, ratio_data)
-        candidates = [ratio_p1_bl, ratio_m1_bl, ratio_p1_pc, ratio_m1_pc, ratio_data_visible]
-        if shapes_path is not None and np.any(syst_up_sm > 0):
-            candidates += [(sm_total + syst_up_sm) / denom, (sm_total - syst_down_sm) / denom]
+        candidates = [ratio_p1_bl, ratio_m1_bl, ratio_p1_pc, ratio_m1_pc]
         range_mask = centers <= (var_meta.get("range_max") or np.inf)
         all_finite = np.concatenate([a[range_mask][np.isfinite(a[range_mask])] for a in candidates])
         half = max(np.max(np.abs(all_finite - 1.0)) * 1.2, 0.05) if all_finite.size else 0.3
@@ -594,12 +590,7 @@ def plot_triple_diff(f_bl, f_pc, region, outdir, colors, lumi, year_label, shape
                         hatch="///", linewidth=0, zorder=0,
                     )
 
-                candidates = [ratio_p1_bl, ratio_m1_bl, ratio_p1_pc, ratio_m1_pc, ratio_data_plot]
-                if has_syst:
-                    candidates += [
-                        (sm_total_sl + syst_up_sl) / denom,
-                        (sm_total_sl - syst_dn_sl) / denom,
-                    ]
+                candidates = [ratio_p1_bl, ratio_m1_bl, ratio_p1_pc, ratio_m1_pc]
                 finite_r = np.concatenate([a[np.isfinite(a)] for a in candidates])
                 half = max(np.max(np.abs(finite_r - 1.0)) * 1.2, 0.05) if finite_r.size else 0.3
                 ax_bot.set_ylim(1.0 - half, 1.0 + half)
