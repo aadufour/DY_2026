@@ -274,7 +274,7 @@ def build_plot(var):
     plt.tight_layout()
     top_margin = 0.84 if args.horizontal else 0.90
     fig.subplots_adjust(top=top_margin)
-    fig.suptitle(VARS[var]["label"], x=0.4, ha="left", y=top_margin + 0.06)
+    fig.suptitle(VARS[var]["label"], x=0.5, ha="left", y=top_margin + 0.06)
 
     suffix = "_horizontal" if args.horizontal else ""
     outname = f"{args.outname}_{var}{suffix}"
