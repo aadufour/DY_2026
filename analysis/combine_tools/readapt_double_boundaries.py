@@ -10,12 +10,18 @@ grid, this:
      same chi2(2 dof) thresholds combine's own mkEFTScan.py uses:
      2*deltaNLL = 2.30 (68%), 5.99 (95%).
   3. If the 95% contour is closed and stays away from the scanned box edges,
-     measures its actual reach and proposes a box of margin * reach.
-     If the grid never reaches 95% CL (or the contour is clipped by the box
-     edge), fits a local quadratic surface to extrapolate where 95% CL would
-     be reached, and proposes margin * that estimate (flagged "extrapolated").
+     measures its actual reach (fill fraction = reach / current half-width).
+     An operator is "good as is" only if this fill fraction is >= --min-fill
+     (default 0.30) for every pair it appears in; otherwise a new box is
+     proposed so the 95% CL fills --target-fill of it (default 0.5, i.e. box
+     half-width = 2x the reach). If the grid never reaches 95% CL (or the
+     contour is clipped by the box edge), a local quadratic surface is fit to
+     extrapolate where 95% CL would be reached, and the same --target-fill
+     sizing is applied to that estimate (flagged "extrapolated").
   4. Aggregates per operator by taking, on each side, the most demanding
-     requirement across all 26 pairs that operator appears in.
+     requirement across all 26 pairs that operator appears in. Operators
+     that are already "good as is" keep their current boundary untouched in
+     the output, so already-fine pairs don't drift run to run.
 
 Run this on LLR where the higgsCombine*.root files live (needs pyROOT).
 
@@ -131,15 +137,36 @@ def is_closed_interior(px, py, box, tol_frac=0.02):
     return closed and not touches_edge
 
 
-def extrapolate_reach(x, y, z, x0, y0, level):
+def extrapolate_reach(x, y, z, x0, y0, box, level, zcap=50.0):
     """Fit a local quadratic surface around the best-fit point and use it to
     estimate how far out the `level` contour would sit, for pairs where the
     scanned grid never gets there. Approximate (symmetric about x0,y0) —
     meant to unstick a too-small box, not to be the final answer. Re-run this
-    script after regenerating the scan with the enlarged range to refine."""
-    dx, dy = x - x0, y - y0
+    script after regenerating the scan with the enlarged range to refine.
+
+    x,y are rescaled by the current box half-widths before fitting: the two
+    operators in a pair can have wildly different natural scales (e.g. a
+    range of 0.8 vs 40), and fitting the raw coordinates leaves the
+    least-squares design matrix badly conditioned, which is what was causing
+    the fit to swing wildly between re-runs. Points with z above `zcap` are
+    dropped too — those are usually saturated/non-converged grid points far
+    from the minimum and can dominate an unweighted fit without reflecting
+    the actual local curvature.
+    """
+    xlo, xhi, ylo, yhi = box
+    sx = max(xhi - x0, x0 - xlo, 1e-12)
+    sy = max(yhi - y0, y0 - ylo, 1e-12)
+
+    mask = z <= zcap
+    if mask.sum() < 6:
+        mask = np.ones_like(z, dtype=bool)
+
+    dx = (x[mask] - x0) / sx
+    dy = (y[mask] - y0) / sy
+    zz = z[mask]
+
     A = np.column_stack([dx**2, dx * dy, dy**2, dx, dy, np.ones_like(dx)])
-    coeffs, *_ = np.linalg.lstsq(A, z, rcond=None)
+    coeffs, *_ = np.linalg.lstsq(A, zz, rcond=None)
     a, b, c = coeffs[0], coeffs[1], coeffs[2]
     H = np.array([[2 * a, b], [b, 2 * c]])
     try:
@@ -148,12 +175,12 @@ def extrapolate_reach(x, y, z, x0, y0, level):
         return None
     if Hinv[0, 0] <= 0 or Hinv[1, 1] <= 0:
         return None  # not a well-behaved bowl (e.g. a flat/degenerate direction) - can't extrapolate safely
-    reach_x = float(np.sqrt(level * Hinv[0, 0]))
-    reach_y = float(np.sqrt(level * Hinv[1, 1]))
+    reach_x = float(np.sqrt(level * Hinv[0, 0])) * sx
+    reach_y = float(np.sqrt(level * Hinv[1, 1])) * sy
     return reach_x, reach_x, reach_y, reach_y
 
 
-def analyze_pair(x, y, z, op1, op2, margin, fallback_factor):
+def analyze_pair(x, y, z, op1, op2, margin, fallback_factor, zcap):
     x0, y0 = float(x[np.argmin(z)]), float(y[np.argmin(z)])
     contours, box = get_contours(x, y, z)
     xlo, xhi, ylo, yhi = box
@@ -162,13 +189,24 @@ def analyze_pair(x, y, z, op1, op2, margin, fallback_factor):
     good68 = any(is_closed_interior(px, py, box) for px, py in c68)
     good95 = any(is_closed_interior(px, py, box) for px, py in c95)
 
+    fill_op1 = fill_op2 = (None, None)
+
     if good95:
         method = "measured"
         allx = np.concatenate([px for px, py in c95])
         ally = np.concatenate([py for px, py in c95])
         reach = (x0 - allx.min(), allx.max() - x0, y0 - ally.min(), ally.max() - y0)
+        reach_x_lo, reach_x_hi, reach_y_lo, reach_y_hi = reach
+        fill_op1 = (
+            reach_x_lo / (x0 - xlo) if (x0 - xlo) > 0 else 1.0,
+            reach_x_hi / (xhi - x0) if (xhi - x0) > 0 else 1.0,
+        )
+        fill_op2 = (
+            reach_y_lo / (y0 - ylo) if (y0 - ylo) > 0 else 1.0,
+            reach_y_hi / (yhi - y0) if (yhi - y0) > 0 else 1.0,
+        )
     else:
-        est = extrapolate_reach(x, y, z, x0, y0, CL_LEVELS[1])
+        est = extrapolate_reach(x, y, z, x0, y0, box, CL_LEVELS[1], zcap=zcap)
         if est is None:
             method = "degenerate_fallback"
             reach = (
@@ -191,6 +229,7 @@ def analyze_pair(x, y, z, op1, op2, margin, fallback_factor):
         "box": box,
         "good68": bool(good68), "good95": bool(good95),
         "method": method,
+        "fill_op1": fill_op1, "fill_op2": fill_op2,
         "new_range_op1": (new_x_lo, new_x_hi),
         "new_range_op2": (new_y_lo, new_y_hi),
     }
@@ -222,10 +261,14 @@ def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--metadata", default="metadata_double.json", help="Used only for the list of operator names")
     p.add_argument("--scan-dir", default=".", help="Directory containing higgsCombine.*.individual.MultiDimFit.mH125.root")
-    p.add_argument("--margin", type=float, default=1.5, help="Box half-width = margin * measured/estimated 95%% CL reach")
+    p.add_argument("--target-fill", type=float, default=0.5,
+                    help="When a redo is needed, size the new box so the measured/estimated 95%% CL reach fills this fraction of the box (default 0.5, i.e. box half-width = 2x the reach)")
+    p.add_argument("--min-fill", type=float, default=0.30,
+                    help="An operator is 'good as is' only if, for every pair it appears in, the 95%% CL is closed well inside the box AND fills at least this fraction of it (default 0.30). Below this the box is considered too big and gets resized toward --target-fill.")
     p.add_argument("--fallback-factor", type=float, default=10.0,
                     help="Multiplier applied to the current scanned half-width when even a quadratic extrapolation fails (degenerate direction / completely flat likelihood)")
-    p.add_argument("--tolerance", type=float, default=0.10, help="Relative tolerance vs the current scanned box to call an operator 'good as is'")
+    p.add_argument("--fit-zcap", type=float, default=50.0,
+                    help="Grid points with 2*deltaNLL above this are excluded from the local quadratic extrapolation fit (keeps saturated/non-converged points from skewing it)")
     p.add_argument("--out-metadata", default="metadata_double_new.json")
     p.add_argument("--report", default="boundary_report.json")
     p.add_argument("--pairs", default="", help="Comma separated op1_op2 pairs to restrict to (for quick testing)")
@@ -248,30 +291,48 @@ def main():
             continue
         try:
             x, y, z = load_grid(fp, a, b)
-            res = analyze_pair(x, y, z, a, b, args.margin, args.fallback_factor)
+            margin = 1.0 / args.target_fill
+            res = analyze_pair(x, y, z, a, b, margin, args.fallback_factor, args.fit_zcap)
             results.append(res)
+            fill_str = ""
+            if res["method"] == "measured":
+                f1lo, f1hi = res["fill_op1"]
+                f2lo, f2hi = res["fill_op2"]
+                fill_str = f" fill[{a}]=({f1lo:.2f},{f1hi:.2f}) fill[{b}]=({f2lo:.2f},{f2hi:.2f})"
             print(f"{a}_{b}: 68%={'ok' if res['good68'] else 'MISSING':7s} "
                   f"95%={'ok' if res['good95'] else 'MISSING':7s} "
                   f"method={res['method']:18s} "
                   f"new[{a}]=({res['new_range_op1'][0]:+.4g},{res['new_range_op1'][1]:+.4g}) "
-                  f"new[{b}]=({res['new_range_op2'][0]:+.4g},{res['new_range_op2'][1]:+.4g})")
+                  f"new[{b}]=({res['new_range_op2'][0]:+.4g},{res['new_range_op2'][1]:+.4g})"
+                  f"{fill_str}")
         except Exception as e:
             print(f"[ERROR] {op1}_{op2}: {e}")
             missing.append(f"{op1}_{op2} (error: {e})")
 
     new_bounds, drivers = aggregate(results, ops)
 
-    good_ops, redo_ops = [], []
-    for op in ops:
-        if op not in new_bounds:
+    # An operator is only "good as is" if EVERY pair it appears in has a
+    # closed 95% CL contour that fills at least --min-fill of the current
+    # box. A single unsatisfied pair (not converged, or box too big for that
+    # pair) marks the whole operator for redo.
+    satisfied = {op: True for op in ops}
+    seen = {op: False for op in ops}
+    for res in results:
+        op1, op2 = res["op1"], res["op2"]
+        seen[op1] = seen[op2] = True
+        if not res["good95"]:
+            satisfied[op1] = False
+            satisfied[op2] = False
             continue
-        old_lo, old_hi = metadata["operators"][op]
-        new_lo, new_hi = new_bounds[op]
-        span = old_hi - old_lo
-        if abs(new_lo - old_lo) <= args.tolerance * span and abs(new_hi - old_hi) <= args.tolerance * span:
-            good_ops.append(op)
-        else:
-            redo_ops.append(op)
+        f1lo, f1hi = res["fill_op1"]
+        f2lo, f2hi = res["fill_op2"]
+        if f1lo < args.min_fill or f1hi < args.min_fill:
+            satisfied[op1] = False
+        if f2lo < args.min_fill or f2hi < args.min_fill:
+            satisfied[op2] = False
+
+    good_ops = [op for op in ops if seen[op] and satisfied[op]]
+    redo_ops = [op for op in ops if seen[op] and not satisfied[op]]
 
     print("\n=== GOOD AS IS ===")
     for op in good_ops:
@@ -288,8 +349,12 @@ def main():
         for m in missing:
             print(" ", m)
 
+    # Only operators flagged for redo get their boundary rewritten - "good as
+    # is" operators keep whatever is already in --metadata untouched, so
+    # already-fine pairs don't drift/oscillate run to run.
     new_metadata = json.loads(json.dumps(metadata))
-    for op, (lo, hi) in new_bounds.items():
+    for op in redo_ops:
+        lo, hi = new_bounds[op]
         new_metadata["operators"][op] = [round(lo, 6), round(hi, 6)]
     with open(args.out_metadata, "w") as fh:
         json.dump(new_metadata, fh, indent=4)
@@ -300,8 +365,8 @@ def main():
         "missing": missing,
         "good_ops": good_ops,
         "redo_ops": redo_ops,
-        "new_bounds": {op: list(v) for op, v in new_bounds.items()},
-        "drivers": drivers,
+        "new_bounds": {op: list(new_bounds[op]) for op in redo_ops},
+        "drivers": {op: drivers[op] for op in redo_ops},
     }
     with open(args.report, "w") as fh:
         json.dump(report, fh, indent=2, default=float)
