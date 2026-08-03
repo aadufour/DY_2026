@@ -66,18 +66,32 @@ def load_grid(filepath, op1, op2):
         f.Close()
         raise IOError(f"no 'limit' tree in {filepath}")
 
-    xs, ys, ds = [], [], []
+    # Grids produced with --doSplitPoints get hadd'd back together from N
+    # sub-jobs, and each sub-job re-writes its own copy of the best-fit
+    # reference point - so the true minimum ends up duplicated N times on
+    # top of itself. Left in, that cluster of coincident points sits right
+    # at the most important spot (the minimum) and degrades both the
+    # Delaunay triangulation used for contour extraction and the local
+    # quadratic fit used for extrapolation. Dedupe on (x,y), keeping the
+    # lowest deltaNLL seen for each coordinate.
+    best = {}
     for ev in t:
         d = ev.deltaNLL
         if not np.isfinite(d) or d > 1e4 or d < -1.0:
             continue
-        xs.append(getattr(ev, f"k_{op1}"))
-        ys.append(getattr(ev, f"k_{op2}"))
-        ds.append(d)
+        x = getattr(ev, f"k_{op1}")
+        y = getattr(ev, f"k_{op2}")
+        key = (round(x, 8), round(y, 8))
+        if key not in best or d < best[key][2]:
+            best[key] = (x, y, d)
     f.Close()
 
-    if len(xs) < 10:
-        raise ValueError(f"too few valid grid points ({len(xs)})")
+    if len(best) < 10:
+        raise ValueError(f"too few valid grid points ({len(best)})")
+
+    xs = [v[0] for v in best.values()]
+    ys = [v[1] for v in best.values()]
+    ds = [v[2] for v in best.values()]
 
     x = np.array(xs, dtype="d")
     y = np.array(ys, dtype="d")
