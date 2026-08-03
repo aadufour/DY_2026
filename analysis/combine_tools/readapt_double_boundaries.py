@@ -263,8 +263,10 @@ def main():
     p.add_argument("--scan-dir", default=".", help="Directory containing higgsCombine.*.individual.MultiDimFit.mH125.root")
     p.add_argument("--target-fill", type=float, default=0.5,
                     help="When a redo is needed, size the new box so the measured/estimated 95%% CL reach fills this fraction of the box (default 0.5, i.e. box half-width = 2x the reach)")
-    p.add_argument("--min-fill", type=float, default=0.30,
-                    help="An operator is 'good as is' only if, for every pair it appears in, the 95%% CL is closed well inside the box AND fills at least this fraction of it (default 0.30). Below this the box is considered too big and gets resized toward --target-fill.")
+    p.add_argument("--min-fill", type=float, default=0.25,
+                    help="An operator is 'good as is' only if, for every pair it appears in, the 95%% CL fills at least this fraction of the box (default 0.25, i.e. box at most 4x the reach). Below this the box is considered too big and gets resized toward --target-fill.")
+    p.add_argument("--max-fill", type=float, default=0.90,
+                    help="Upper bound on the fill fraction for 'good as is' (default 0.90, i.e. at least 10%% margin between the 95%% CL and the box edge). Above this the box is considered too tight and gets resized toward --target-fill even though the contour still technically closes.")
     p.add_argument("--fallback-factor", type=float, default=10.0,
                     help="Multiplier applied to the current scanned half-width when even a quadratic extrapolation fails (degenerate direction / completely flat likelihood)")
     p.add_argument("--fit-zcap", type=float, default=50.0,
@@ -312,9 +314,12 @@ def main():
     new_bounds, drivers = aggregate(results, ops)
 
     # An operator is only "good as is" if EVERY pair it appears in has a
-    # closed 95% CL contour that fills at least --min-fill of the current
-    # box. A single unsatisfied pair (not converged, or box too big for that
-    # pair) marks the whole operator for redo.
+    # closed 95% CL contour whose fill fraction (reach / box half-width) is
+    # between --min-fill and --max-fill on both sides. Too low -> box is way
+    # bigger than it needs to be; too high -> CL is too close to the edge for
+    # comfort even though it technically still closes. A single unsatisfied
+    # pair (not converged, or fill fraction out of band) marks the whole
+    # operator for redo.
     satisfied = {op: True for op in ops}
     seen = {op: False for op in ops}
     for res in results:
@@ -326,9 +331,9 @@ def main():
             continue
         f1lo, f1hi = res["fill_op1"]
         f2lo, f2hi = res["fill_op2"]
-        if f1lo < args.min_fill or f1hi < args.min_fill:
+        if not (args.min_fill <= f1lo <= args.max_fill and args.min_fill <= f1hi <= args.max_fill):
             satisfied[op1] = False
-        if f2lo < args.min_fill or f2hi < args.min_fill:
+        if not (args.min_fill <= f2lo <= args.max_fill and args.min_fill <= f2hi <= args.max_fill):
             satisfied[op2] = False
 
     good_ops = [op for op in ops if seen[op] and satisfied[op]]
