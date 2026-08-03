@@ -223,8 +223,8 @@ def main():
     p.add_argument("--metadata", default="metadata_double.json", help="Used only for the list of operator names")
     p.add_argument("--scan-dir", default=".", help="Directory containing higgsCombine.*.individual.MultiDimFit.mH125.root")
     p.add_argument("--margin", type=float, default=1.5, help="Box half-width = margin * measured/estimated 95%% CL reach")
-    p.add_argument("--fallback-factor", type=float, default=3.0,
-                    help="Multiplier applied to the current scanned half-width when even a quadratic extrapolation fails (degenerate direction)")
+    p.add_argument("--fallback-factor", type=float, default=10.0,
+                    help="Multiplier applied to the current scanned half-width when even a quadratic extrapolation fails (degenerate direction / completely flat likelihood)")
     p.add_argument("--tolerance", type=float, default=0.10, help="Relative tolerance vs the current scanned box to call an operator 'good as is'")
     p.add_argument("--out-metadata", default="metadata_double_new.json")
     p.add_argument("--report", default="boundary_report.json")
