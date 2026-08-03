@@ -231,6 +231,17 @@ def analyze_pair(x, y, z, op1, op2, margin, fallback_factor, zcap):
             method = "extrapolated"
             reach = est
 
+        # If the scan already went out to the current box edge and STILL
+        # didn't find a closed 95% contour, the true reach can't be smaller
+        # than that edge - clamp so a not-converged pair never proposes
+        # shrinking. Without this, a quadratic fit that underestimates (e.g.
+        # because the true curve steepens faster than parabolic further out)
+        # can silently shrink a box that just needs to grow.
+        reach = (
+            max(reach[0], x0 - xlo), max(reach[1], xhi - x0),
+            max(reach[2], y0 - ylo), max(reach[3], yhi - y0),
+        )
+
     reach_x_lo, reach_x_hi, reach_y_lo, reach_y_hi = reach
     new_x_lo = x0 - margin * reach_x_lo
     new_x_hi = x0 + margin * reach_x_hi
