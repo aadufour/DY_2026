@@ -148,13 +148,81 @@ if __name__ == "__main__":
         help="Metadata file to use e.g. if you want to change ranges. By default metadata.json",
     )
 
-    parser.add_option(                           
-        "--debug",                               
-        dest="debug",                            
-        default=False,                           
-        action="store_true",                     
-        help="Debug mode: print commands only",  
-    )       
+    parser.add_option(
+        "--debug",
+        dest="debug",
+        default=False,
+        action="store_true",
+        help="Debug mode: print commands only",
+    )
+
+    parser.add_option(
+        "--condor",
+        dest="condor",
+        default=False,
+        action="store_true",
+        help="Instead of running commands locally, write per-job LLR T3 HTCondor scripts + a .sub file "
+             "under --condor-dir and print the condor_submit command - does NOT submit automatically. "
+             "After the condor jobs finish, rerun with --hadd-only to combine the results.",
+    )
+
+    parser.add_option(
+        "--condor-dir",
+        type="str",
+        dest="condordir",
+        default="condor_jobs",
+        help="Directory to write generated condor job scripts / .sub / joblist into (default: condor_jobs)",
+    )
+
+    parser.add_option(
+        "--cmssw-base",
+        type="str",
+        dest="cmsswbase",
+        default="/grid_mnt/data__data.polcms/cms/adufour/CMSSW_spritz/CMSSW_14_1_0_pre4",
+        help="CMSSW release area to cmsenv into on the worker node (must be visible from LLR worker nodes)",
+    )
+
+    parser.add_option(
+        "--proxy",
+        type="str",
+        dest="proxy",
+        default="/home/llr/cms/adufour/.t3/proxy.cert",
+        help="X509_USER_PROXY path to export in each condor job, mirroring analysis/gridpack conventions",
+    )
+
+    parser.add_option(
+        "--condor-queue",
+        type="str",
+        dest="condorqueue",
+        default="long",
+        help="LLR T3Queue value (default: long, matching analysis/gridpack/launch_lhe_propcorr_all.sub)",
+    )
+
+    parser.add_option(
+        "--request-memory",
+        type="str",
+        dest="reqmemory",
+        default="2G",
+        help="Condor request_memory per job (default: 2G - a combine grid-point fit is much lighter than gridpack generation)",
+    )
+
+    parser.add_option(
+        "--request-cpus",
+        type="int",
+        dest="reqcpus",
+        default=1,
+        help="Condor request_cpus per job (default: 1)",
+    )
+
+    parser.add_option(
+        "--hadd-only",
+        dest="haddonly",
+        default=False,
+        action="store_true",
+        help="Skip building/running scan commands entirely and just hadd whatever "
+             "higgsCombine.<name>.individual.POINTS.*.root files are already on disk - "
+             "use this after your --condor jobs have finished.",
+    )
 
     (options, args) = parser.parse_args()
 
@@ -221,8 +289,8 @@ if __name__ == "__main__":
     combos = list(combinations(ops, mode__))
 
     cmds = []
-    
-    for c in combos:
+
+    for c in ([] if options.haddonly else combos):
         print(c)
         operators = ",".join(c)
         name = "_".join(c) + suffix__
@@ -309,26 +377,88 @@ if __name__ == "__main__":
 
     print("Need to launch ", len(cmds), "commands")
 
+    if options.condor:
+        import stat as stat_module
+
+        condordir = os.path.abspath(options.condordir)
+        scripts_dir = os.path.join(condordir, "scripts")
+        logs_dir = os.path.join(condordir, "logs")
+        os.makedirs(scripts_dir, exist_ok=True)
+        os.makedirs(logs_dir, exist_ok=True)
+        workdir = os.getcwd()
+
+        joblist_path = os.path.join(condordir, "joblist.txt")
+        with open(joblist_path, "w") as jf:
+            for i, cmd in enumerate(cmds):
+                script_path = os.path.join(scripts_dir, f"job_{i}.sh")
+                with open(script_path, "w") as sf:
+                    sf.write("#!/bin/bash\n")
+                    sf.write("set -e\n")
+                    sf.write(f"export X509_USER_PROXY={options.proxy}\n")
+                    sf.write("source /cvmfs/cms.cern.ch/cmsset_default.sh\n")
+                    sf.write(f"cd {options.cmsswbase}/src\n")
+                    sf.write("eval `scramv1 runtime -sh`\n")
+                    sf.write(f"cd {workdir}\n")
+                    sf.write(cmd + "\n")
+                os.chmod(script_path, os.stat(script_path).st_mode | stat_module.S_IEXEC)
+                jf.write(script_path + "\n")
+
+        sub_path = os.path.join(condordir, "scan.sub")
+        with open(sub_path, "w") as subf:
+            subf.write(f"""executable = $(script)
+universe = vanilla
+output = {logs_dir}/$(Process).out
+error = {logs_dir}/$(Process).err
+log = {logs_dir}/$(Process).log
+
+request_memory = {options.reqmemory}
+request_cpus = {options.reqcpus}
+
+T3Queue = {options.condorqueue}
+WNTag = el9
+include : /opt/exp_soft/cms/t3/t3queue |
+requirements = regexp("llrgrwnvm[0-9]+.in2p3.fr", Machine) == FALSE
+
+priority = -50
+max_retries = 1
+
+queue script from {joblist_path}
+""")
+
+        print(f"\nWrote {len(cmds)} job scripts to {scripts_dir}/")
+        print(f"Wrote joblist to {joblist_path}")
+        print(f"Wrote condor submit file to {sub_path}")
+        print("\nNOTHING WAS SUBMITTED - review the files above first, especially one of the")
+        print("generated job_*.sh scripts (confirm --cmssw-base and --proxy are right for you),")
+        print("then test with a small slice (e.g. --doOnly one operator pair) before the full batch.")
+        print(f"\nWhen ready:  condor_submit {sub_path}")
+        print("Once all jobs finish, rerun this exact command with --hadd-only (instead of --condor) to combine the results.")
+        sys.exit(0)
+
     ## Get the number of cores available and run the commands in parallel
     multicore_run.debug = options.debug
-    import multiprocessing 
-    from multiprocessing import Pool
-    
-    cpu_count = multiprocessing.cpu_count()
-    num_cores_each_job = min(cpu_count - int(cpu_count/3), len(cmds))
 
-    if options.debug:                                                
-            print("DEBUG mode: printing commands, not executing them")   
-            for cmd in cmds:                                             
-                multicore_run(cmd)                                       
-    else:                                                            
-        pool = Pool(processes=num_cores_each_job) 
-        print(("Running the processes in multiprocessing mode: {} cores used".format(num_cores_each_job)))
-        pool.map(multicore_run, cmds)
-        pool.close()
-        pool.join()
+    if options.haddonly:
+        print("--hadd-only: skipping local execution, jumping to hadd")
+    else:
+        import multiprocessing
+        from multiprocessing import Pool
 
-    print("All subprocesses finished")
+        cpu_count = multiprocessing.cpu_count()
+        num_cores_each_job = min(cpu_count - int(cpu_count/3), len(cmds))
+
+        if options.debug:
+                print("DEBUG mode: printing commands, not executing them")
+                for cmd in cmds:
+                    multicore_run(cmd)
+        else:
+            pool = Pool(processes=num_cores_each_job)
+            print(("Running the processes in multiprocessing mode: {} cores used".format(num_cores_each_job)))
+            pool.map(multicore_run, cmds)
+            pool.close()
+            pool.join()
+
+        print("All subprocesses finished")
           
     if not options.debug and options.splitPoints != 0 and action__ == "scan":
         # Execute the hadd command
