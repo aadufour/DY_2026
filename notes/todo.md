@@ -47,6 +47,9 @@
 ---
 
 5. [ ] 2D operator scan
+ - [x] mll
+ - [ ] other vars
+
 
 
 ---

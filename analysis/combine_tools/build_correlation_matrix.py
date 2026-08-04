@@ -110,6 +110,18 @@ def fit_correlation(x, y, z, zcap):
     return float(np.clip(rho, -1.0, 1.0))
 
 
+# Physical grouping from latex/table/propcorr_ops_table.tex + non_propcorr_ops_table.tex
+# (the \midrule divisions in those tables): bosonic/Higgs-current, Higgs-quark
+# current + dipole, Higgs-lepton current, four-lepton, four-fermion semileptonic.
+PHYSICS_ORDER = [
+    "cHDD", "cHWB",
+    "cHj1", "cHj3", "cHQ1", "cHQ3", "cHu", "cHd", "cHbq", "cbWRe", "cbBRe",
+    "cHl1", "cHl3", "cHe",
+    "cll1",
+    "clj1", "clj3", "cQl1", "cQl3", "ceu", "ced", "cbe", "cje", "cQe", "clu", "cld", "cbl",
+]
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--metadata", default="metadata.json", help="Used only for the list of operator names")
@@ -117,9 +129,10 @@ def main():
     p.add_argument("--zcap", type=float, default=10.0, help="2*deltaNLL cap on points used for the local quadratic fit (default 10)")
     p.add_argument("--out-matrix", default="correlation_matrix.csv")
     p.add_argument("--out-plot", default="correlation_matrix.pdf")
-    p.add_argument("--order", choices=["metadata", "correlation"], default="correlation",
-                    help="'correlation' (default) sorts operators by their mean correlation with all "
-                         "other operators, most anticorrelated first. 'metadata' keeps metadata.json's own order.")
+    p.add_argument("--order", choices=["metadata", "correlation", "type"], default="type",
+                    help="'type' (default) groups operators by physical type, matching "
+                         "latex/table/{propcorr,non_propcorr}_ops_table.tex. 'correlation' sorts by mean "
+                         "correlation with all other operators. 'metadata' keeps metadata.json's own order.")
     args = p.parse_args()
 
     with open(args.metadata) as fh:
@@ -150,7 +163,15 @@ def main():
         except Exception as e:
             missing.append(f"{op1}_{op2} (error: {e})")
 
-    if args.order == "correlation":
+    if args.order == "type":
+        missing_from_grouping = [op for op in ops if op not in PHYSICS_ORDER]
+        order_names = [op for op in PHYSICS_ORDER if op in ops] + missing_from_grouping
+        if missing_from_grouping:
+            print(f"\n[WARN] not in PHYSICS_ORDER, appended at the end: {missing_from_grouping}")
+        order = [ops.index(op) for op in order_names]
+        ops = order_names
+        corr = corr[np.ix_(order, order)]
+    elif args.order == "correlation":
         means = []
         for i in range(n):
             row = np.delete(corr[i], i)  # exclude self-correlation (always 1.0)
@@ -189,9 +210,9 @@ def main():
     masked = np.ma.masked_invalid(corr)
     im = ax.imshow(masked, cmap="RdBu_r", vmin=-1, vmax=1)
     ax.set_xticks(range(n))
-    ax.set_xticklabels(ops, rotation=90, fontsize=8)
+    ax.set_xticklabels(ops, rotation=90, fontsize=12)
     ax.set_yticks(range(n))
-    ax.set_yticklabels(ops, fontsize=8)
+    ax.set_yticklabels(ops, fontsize=12)
     ax.set_xticks(np.arange(-0.5, n, 1), minor=True)
     ax.set_yticks(np.arange(-0.5, n, 1), minor=True)
     ax.grid(which="minor", color="white", linewidth=0.5)
