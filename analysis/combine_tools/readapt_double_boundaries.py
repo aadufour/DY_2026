@@ -182,7 +182,9 @@ def extrapolate_reach(x, y, z, x0, y0, box, level, zcap=50.0):
     A = np.column_stack([dx**2, dx * dy, dy**2, dx, dy, np.ones_like(dx)])
     coeffs, *_ = np.linalg.lstsq(A, zz, rcond=None)
     a, b, c = coeffs[0], coeffs[1], coeffs[2]
-    H = np.array([[2 * a, b], [b, 2 * c]])
+    # For z = a*dx^2 + b*dx*dy + c*dy^2 = (dv)^T H (dv), H is [[a, b/2], [b/2, c]]
+    # (off-diagonal is b/2, not b - matching dv^T H dv = a*dx^2 + 2*(b/2)*dx*dy + c*dy^2).
+    H = np.array([[a, b / 2], [b / 2, c]])
     try:
         Hinv = np.linalg.inv(H)
     except np.linalg.LinAlgError:
