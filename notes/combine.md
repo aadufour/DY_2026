@@ -91,6 +91,8 @@ dy_combine
 | `rank_operators.py` | both | Ranked sensitivity plot from scan ROOT files |
 | `env_llr_morphing.sh` | RECO | Morphing combine env setup |
 | `env_llr.sh` | LHE | Old combine env setup |
+| `readapt_double_boundaries.py` | both | 2D scan boundary sizing from likelihood grids — see [2D (Double) EFT Scans](#2d-double-eft-scans) |
+| `check_condor_scan_failures.py` | both | Flags condor scan jobs that hit the EFT negative-yield failure — see below |
 
 ---
 
@@ -356,3 +358,105 @@ rank_operators.py --indir . --outdir ranking --stat --wide \
 | Scan output format | TGraph in `scan_{op}.root` | TTree in `higgsCombine.{op}.*.root` |
 | Theory systs | QCDscale + PDF | QCDscale + PDF |
 | Binning | 34 bins, 50–3000 GeV (matched to RECO) | 34 bins, 50–3000 GeV |
+
+---
+
+## 2D (Double) EFT Scans
+
+`runScans.py`/`runPlots.py 2` build every operator **pair** (`C(N,2)` combinations, e.g. 351 for 27 operators) instead of one scan per operator. Same environment/pipeline rules as the 1D workflow above apply — this section only covers what's different for `mode=2`.
+
+### CL thresholds are different from 1D
+
+A 1D scan uses `2*deltaNLL = 1.0` (68%) / `3.84` (95%) — the chi2(1 dof) quantiles.
+A 2D **joint** region (both operators simultaneously) uses chi2(2 dof) instead:
+
+| CL | 1D threshold | 2D joint threshold |
+|----|-------------|---------------------|
+| 68% | 1.00 | **2.30** |
+| 95% | 3.84 | **5.99** |
+
+`readapt_double_boundaries.py` and the `scanEFT` class inside `mkEFTScan.py` (`HiggsAnalysis.AnalyticAnomalousCoupling.utils.scan`) both use 2.30/5.99 for the 2D contours.
+
+### `readapt_double_boundaries.py` — sizing the scan boundaries
+
+Reads every `higgsCombine.<op1>_<op2>.individual.MultiDimFit.mH125.root` grid, finds the 68%/95% contours via ROOT's `TH2::SetContour` + `CONT Z LIST` (same mechanism `mkEFTScan.py` uses), and proposes a per-operator boundary sized so the 95% CL comfortably fits inside the box rather than touching the edge or rattling around in a needlessly huge one.
+
+Key options:
+- `--target-fill` (default `0.5`) — when a boundary needs resizing, the new box is sized so the 95% CL reach fills this fraction of it.
+- `--min-fill` / `--max-fill` (default `0.25` / `0.90`) — an operator is left untouched ("good as is") only if, for **every** pair it appears in, the 95% CL fill fraction is inside this band. Outside it, the box gets resized toward `--target-fill`. A single unsatisfied pair marks the whole operator for redo, since a boundary is shared across all 26 pairs an operator appears in.
+- `--fallback-factor` (default `10.0`) — multiplier used only when a pair's likelihood is essentially flat within the current box (no usable curvature to extrapolate from at all).
+- `--fit-zcap` (default `50.0`) — grid points above this `2*deltaNLL` are excluded from the local quadratic extrapolation fit used when a contour hasn't closed yet, so saturated/non-converged points don't skew it.
+- `--pairs op1_op2,op3_op4,...` — restrict to specific pairs, for testing before a full run.
+- `--metadata` / `--out-metadata` / `--scan-dir` / `--report` — as named.
+
+```bash
+# quick check on one pair
+readapt_double_boundaries.py --metadata metadata.json --scan-dir . \
+    --out-metadata metadata.json --report report.json --pairs=cbBRe_cbe
+
+# full run, all pairs
+readapt_double_boundaries.py --metadata metadata.json --scan-dir . \
+    --out-metadata metadata_new.json --report report_full.json
+```
+
+Output includes a `GOOD AS IS` / `NEEDS REDO` list per operator, with which partner pair drove the lo/hi bound.
+
+**Two things it corrects for that aren't obvious from the algorithm alone:**
+- `--doSplitPoints` jobs each re-write their own copy of the best-fit reference point, so `hadd`-ing them back together stacks N duplicate copies of the origin point on top of the true minimum — this degrades both the `TGraph2D` Delaunay triangulation used for contour extraction and the local quadratic fit. `load_grid()` dedupes on rounded `(x,y)`, keeping the lowest `deltaNLL` per coordinate.
+- If a pair's 95% contour hasn't closed within the current box, the reach estimate (extrapolated or fallback) is clamped to never propose a box *smaller* than what was already scanned without finding convergence — logically, if the box wasn't big enough, the true reach can't be smaller than it.
+
+**Resolution matters more than you'd think.** A ~10×10-point grid (`--points=100` on a 2-POI scan) can fail to resolve a contour that's actually there, producing a spuriously narrow or unstable result — the fix in one case here was simply using far more points (thousands), not a smaller box.
+
+### Running the scan at scale — HTCondor support
+
+`runScans.py 2 scan --points=N --doSplitPoints=M` builds `pairs × M` individual `combineTool.py` commands. By default these run locally via Python `multiprocessing` on whatever machine invokes the script — fine for a handful of pairs, not for the full 351 (e.g. `351 × 50 = 17,550` jobs). Add `--condor` to generate (never auto-submit) an LLR T3 HTCondor submission instead, matching the `T3Queue`/`WNTag`/`include: /opt/exp_soft/cms/t3/t3queue` conventions used in `analysis/gridpack/*.sub`.
+
+Options:
+- `--condor` — write per-job scripts + a `.sub` file under `--condor-dir` (default `condor_jobs/`), print the `condor_submit` command, and exit without submitting or running anything.
+- `--condor-dir` (default `condor_jobs`)
+- `--cmssw-base` (default `/grid_mnt/data__data.polcms/cms/adufour/CMSSW_spritz/CMSSW_14_1_0_pre4`) — `cmsenv`'d into on the worker node; must be visible from LLR worker nodes.
+- `--proxy` (default `/home/llr/cms/adufour/.t3/proxy.cert`) — exported as `X509_USER_PROXY` in each job.
+- `--condor-queue` (default `long`) — LLR `T3Queue` value.
+- `--request-memory` (default `2G`), `--request-cpus` (default `1`) — a combine grid-point fit is much lighter than gridpack generation, so these default well below the gridpack templates' `20G`/`8`.
+- `--hadd-only` — skip building/running scan commands entirely and just hadd whatever `higgsCombine.<pair>.individual.POINTS.*.root` files are already on disk. Use this after the condor jobs finish.
+
+```bash
+runScans.py 2 initial --points=10000
+
+runScans.py 2 scan --points=10000 --doSplitPoints=50 --condor
+# review condor_jobs/scan.sub and a job_*.sh before submitting
+condor_submit condor_jobs/scan.sub
+
+# ... wait for all jobs to finish ...
+
+python3 check_condor_scan_failures.py --condor-dir condor_jobs   # see below, check before hadd'ing
+
+runScans.py 2 scan --points=10000 --doSplitPoints=50 --hadd-only
+```
+
+Each generated `job_*.sh` is self-contained: exports the proxy, sources `cvmfs cmsset_default.sh`, `cmsenv`'s into `--cmssw-base`, `cd`s into the working directory the scan was launched from, then runs its one `combineTool.py` invocation. Always sanity-check one script's content, and test on a small `--doOnly` slice, before submitting the full batch.
+
+### The EFT negative-yield failure mode
+
+A condor scan job can finish with `return value 0` (no crash, no eviction) but still come back with far fewer points than requested. Cause: at large enough Wilson coefficient values, the quadratic SMEFT parametrization (`σ_SM + c·σ_lin + c²·σ_quad`, see [EFT Specifics](#eft-specifics) above) can predict a **negative** event yield in some bin — a genuine EFT-validity boundary, not a bug. combine's grid loop appears to stop processing the rest of that job's point range once it hits this, rather than skipping the bad point and continuing, so a chunk silently comes back partial with a clean exit code. Signature in the job's `.out` log:
+
+```
+FASTEXIT from pdf_bininc_mm_mll
+RooAbsMinimizerFcn: Minimized function has error status.
+...
+Number of events is negative or error @ params=(... k_cbBRe = -14.55 ...)
+```
+
+`check_condor_scan_failures.py --condor-dir condor_jobs` scans every job's `.out` log for this signature (cross-referenced against `condor_jobs/joblist.txt` to know which operator pair each job belongs to) and reports which pairs hit it — run this **before** `--hadd-only`, since the per-chunk logs are the only place this is visible; after merging, an affected pair just looks like it has somewhat fewer total points than requested, not an obvious failure.
+
+Operators whose scan box already reaches a large absolute Wilson coefficient value (either because the operator itself has weak sensitivity, or because a boundary-sizing heuristic scaled up an already-wide 1D range) are the ones most likely to hit this — there's no way to predict it exactly without evaluating the per-bin quadratic yield formula directly, so the practical approach is: submit the full batch, run the checker afterward, and narrow just the flagged operators' ranges before re-running those specific pairs.
+
+### `runPlots.py` additions
+
+`runPlots.py` (all modes) now also supports, mirroring `runPlots_compare.py`:
+- `--doOnly op1,op2,...` — comma-separated operator names (not pair names) to restrict which combinations get (re)plotted.
+- `-j` / `--cores N` — parallel `mkEFTScan.py` jobs via `ThreadPoolExecutor`, capped at half the machine's CPU count by default.
+
+```bash
+runPlots.py 2 --doOnly=cbBRe,cbe -j 4
+```

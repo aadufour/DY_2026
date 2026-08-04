@@ -3,6 +3,7 @@
     - [x] validate the propagator correction: does it work with 10k events?
     - [x] make nanoaods
     - [x] analysis and fits
+    - [x] comparisons
 
 --
 - [ ] combine fits still says 138 fb^-1 -> to change (just visual!)

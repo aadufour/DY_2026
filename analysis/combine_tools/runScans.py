@@ -248,9 +248,18 @@ if __name__ == "__main__":
     with open(options.metadata) as file:
         metadata = json.load(file)
 
-    ops = metadata["operators"].keys()
+    ops = list(metadata["operators"].keys())
     if options.doOnly:
-        ops = [i for i in options.doOnly.split(",") if i in ops]
+        # Filter while preserving metadata.json's own key order, not the order
+        # operators were typed in --doOnly - pair names (and therefore
+        # model_<name>.root / higgsCombine.<name>...root lookups) are built
+        # from combinations() over this list, and the original full batch was
+        # built from metadata's order with no --doOnly filtering at all. If
+        # this preserved typed order instead, an operator typed early but
+        # listed late in metadata.json would get pair names in the opposite
+        # order from what already exists on disk, and silently miss them.
+        only_set = set(options.doOnly.split(","))
+        ops = [i for i in ops if i in only_set]
 
     if mode__ == 3: mode__ = len(ops)
 
