@@ -117,6 +117,9 @@ def main():
     p.add_argument("--zcap", type=float, default=10.0, help="2*deltaNLL cap on points used for the local quadratic fit (default 10)")
     p.add_argument("--out-matrix", default="correlation_matrix.csv")
     p.add_argument("--out-plot", default="correlation_matrix.pdf")
+    p.add_argument("--order", choices=["metadata", "correlation"], default="correlation",
+                    help="'correlation' (default) sorts operators by their mean correlation with all "
+                         "other operators, most anticorrelated first. 'metadata' keeps metadata.json's own order.")
     args = p.parse_args()
 
     with open(args.metadata) as fh:
@@ -146,6 +149,21 @@ def main():
             print(f"{a}_{b}: rho = {rho:+.3f}")
         except Exception as e:
             missing.append(f"{op1}_{op2} (error: {e})")
+
+    if args.order == "correlation":
+        means = []
+        for i in range(n):
+            row = np.delete(corr[i], i)  # exclude self-correlation (always 1.0)
+            means.append(np.nanmean(row) if np.any(np.isfinite(row)) else np.nan)
+        means = np.array(means)
+        # operators with no valid correlation at all sort to the end, not treated as "most anticorrelated"
+        order = sorted(range(n), key=lambda i: (np.isnan(means[i]), means[i] if not np.isnan(means[i]) else 0.0))
+        ops = [ops[i] for i in order]
+        corr = corr[np.ix_(order, order)]
+        print("\nOperator order (mean correlation with all other operators, most anticorrelated first):")
+        for new_i, old_i in enumerate(order):
+            label = f"{means[old_i]:+.3f}" if np.isfinite(means[old_i]) else "n/a"
+            print(f"  {ops[new_i]:8s} mean rho = {label}")
 
     with open(args.out_matrix, "w", newline="") as fh:
         writer = csv.writer(fh)
