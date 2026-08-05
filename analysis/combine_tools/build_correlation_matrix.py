@@ -12,8 +12,18 @@ marginalized correlation from a full simultaneous 27-operator fit (which
 profiles the other 25 operators instead of fixing them to 0) - see
 notes/combine.md, "2D (Double) EFT Scans" chapter, for the distinction.
 
+If --single-scan-dir is given, pairs where that quadratic fit fails
+("degenerate/flat" - not enough resolvable 2D curvature) fall back to
+tracing the likelihood's profiled valley (the y that minimizes z for each
+scanned x, and vice versa) instead, which only needs local per-slice minima
+rather than a fittable overall bowl. The resulting slope is combined with
+each operator's own (independently robust) 1D-scan curvature to derive rho
+= slope * sqrt(c_1d/a_1d). Every pair fit this way is clearly logged as
+using the fallback, both on stdout and in the missing/fallback summary.
+
 Usage:
     python3 build_correlation_matrix.py --metadata metadata.json --scan-dir . \\
+        --single-scan-dir ../../datacards_single/inc_mm/mll \\
         --out-matrix correlation_matrix.csv --out-plot correlation_matrix.pdf
 """
 
@@ -110,6 +120,113 @@ def fit_correlation(x, y, z, zcap):
     return float(np.clip(rho, -1.0, 1.0))
 
 
+def load_1d_grid(filepath, op):
+    f = ROOT.TFile.Open(filepath)
+    if not f or f.IsZombie():
+        raise IOError(f"cannot open {filepath}")
+    t = f.Get("limit")
+    if not t:
+        f.Close()
+        raise IOError(f"no 'limit' tree in {filepath}")
+
+    best = {}
+    for ev in t:
+        d = ev.deltaNLL
+        if not np.isfinite(d) or d > 1e4 or d < -1.0:
+            continue
+        x = getattr(ev, f"k_{op}")
+        key = round(x, 8)
+        if key not in best or d < best[key][1]:
+            best[key] = (x, d)
+    f.Close()
+
+    if len(best) < 6:
+        raise ValueError(f"too few valid 1D grid points ({len(best)})")
+
+    xs = np.array([v[0] for v in best.values()], dtype="d")
+    ds = np.array([v[1] for v in best.values()], dtype="d")
+    z = 2.0 * (ds - ds.min())
+    return xs, z
+
+
+def fit_1d_curvature(x, z, zcap):
+    """Fit a local 1D parabola z = A*dx^2 near the minimum and return the
+    curvature A in physical (non-normalized) units, or None if not a
+    well-behaved bowl. This is the standalone single-operator scan, which
+    doesn't suffer from the "not enough resolvable 2D curvature" problem
+    that motivates the valley-slope fallback in the first place."""
+    x0 = x[np.argmin(z)]
+    dx_full = x - x0
+    sx = max(np.abs(dx_full).max(), 1e-12)
+
+    mask = z <= zcap
+    if mask.sum() < 4:
+        mask = np.ones_like(z, dtype=bool)
+
+    dx = dx_full[mask] / sx
+    zz = z[mask]
+
+    design = np.column_stack([dx**2, dx, np.ones_like(dx)])
+    coeffs, *_ = np.linalg.lstsq(design, zz, rcond=None)
+    a_norm = coeffs[0]
+    if a_norm <= 0:
+        return None
+    return float(a_norm / sx**2)  # back to physical (raw-coordinate) units
+
+
+def profile_slope(u, v, zz):
+    """For each distinct value of u in the grid, find the v that minimizes
+    zz there (the profiled/valley trajectory), then fit a line v = m*u + q
+    to those points. Needs far less resolvable curvature than fitting the
+    full 2D bowl - it only needs the *location* of each slice's minimum,
+    not the overall curvature magnitude."""
+    ru = np.round(u, 8)
+    uniq = np.unique(ru)
+    pu, pv = [], []
+    for uv in uniq:
+        sel = ru == uv
+        i = np.argmin(zz[sel])
+        pu.append(uv)
+        pv.append(v[sel][i])
+    if len(pu) < 4:
+        return None
+    pu, pv = np.array(pu), np.array(pv)
+    design = np.column_stack([pu, np.ones_like(pu)])
+    coeffs, *_ = np.linalg.lstsq(design, pv, rcond=None)
+    return float(coeffs[0])
+
+
+def fit_correlation_valley_fallback(x, y, z, a_1d, c_1d, zcap):
+    """Fallback for pairs where the full 2D quadratic fit fails (not enough
+    resolvable curvature in some direction). Traces the likelihood's
+    profiled valley instead - which only needs local per-slice minima, not
+    a fittable overall bowl - to get a slope, then combines that slope with
+    the operators' own (independently robust) 1D-scan curvatures to derive
+    rho = slope * sqrt(c_1d/a_1d). Returns None if this also isn't usable."""
+    if a_1d is None or c_1d is None or a_1d <= 0 or c_1d <= 0:
+        return None
+
+    mask = z <= zcap
+    if mask.sum() < 8:
+        mask = np.ones_like(z, dtype=bool)
+    xs, ys, zs = x[mask], y[mask], z[mask]
+
+    m_xy = profile_slope(xs, ys, zs)  # dy/dx from profiling y given x
+    m_yx = profile_slope(ys, xs, zs)  # dx/dy from profiling x given y
+
+    slopes = []
+    if m_xy is not None:
+        slopes.append(m_xy)
+    if m_yx is not None and abs(m_yx) > 1e-9:
+        slopes.append(1.0 / m_yx)
+    if not slopes:
+        return None
+    m = float(np.mean(slopes))
+
+    rho = m * np.sqrt(c_1d / a_1d)
+    return float(np.clip(rho, -1.0, 1.0))
+
+
 # Physical grouping from latex/table/propcorr_ops_table.tex + non_propcorr_ops_table.tex
 # (the \midrule divisions in those tables): bosonic/Higgs-current, Higgs-quark
 # current + dipole, Higgs-lepton current, four-lepton, four-fermion semileptonic.
@@ -126,6 +243,11 @@ def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--metadata", default="metadata.json", help="Used only for the list of operator names")
     p.add_argument("--scan-dir", default=".", help="Directory containing higgsCombine.*.individual.MultiDimFit.mH125.root")
+    p.add_argument("--single-scan-dir", default=None,
+                    help="Directory containing the 1D higgsCombine.<op>.individual.MultiDimFit.mH125.root scans "
+                         "(e.g. .../datacards_single/inc_mm/mll). If given, pairs where the full 2D quadratic fit "
+                         "fails ('degenerate/flat') fall back to a valley-slope + 1D-curvature estimate instead of "
+                         "being dropped. If omitted, those pairs are just reported missing as before.")
     p.add_argument("--zcap", type=float, default=10.0, help="2*deltaNLL cap on points used for the local quadratic fit (default 10)")
     p.add_argument("--out-matrix", default="correlation_matrix.csv")
     p.add_argument("--out-plot", default="correlation_matrix.pdf")
@@ -144,7 +266,25 @@ def main():
     corr = np.full((n, n), np.nan)
     np.fill_diagonal(corr, 1.0)
 
+    curvature_cache = {}
+
+    def get_1d_curvature(op):
+        if op in curvature_cache:
+            return curvature_cache[op]
+        a_op = None
+        if args.single_scan_dir:
+            fp = os.path.join(args.single_scan_dir, f"higgsCombine.{op}.individual.MultiDimFit.mH125.root")
+            if os.path.isfile(fp):
+                try:
+                    x1d, z1d = load_1d_grid(fp, op)
+                    a_op = fit_1d_curvature(x1d, z1d, zcap=args.zcap)
+                except Exception as e:
+                    print(f"  [WARN] 1D curvature fit failed for {op}: {e}")
+        curvature_cache[op] = a_op
+        return a_op
+
     missing = []
+    fallback_pairs = []
     for op1, op2 in itertools.combinations(ops, 2):
         fp, a, b = find_scan_file(args.scan_dir, op1, op2)
         if fp is None:
@@ -153,13 +293,23 @@ def main():
         try:
             x, y, z = load_grid(fp, a, b)
             rho = fit_correlation(x, y, z, zcap=args.zcap)
+            method = "quadratic"
+            if rho is None and args.single_scan_dir:
+                a_1d = get_1d_curvature(a)
+                c_1d = get_1d_curvature(b)
+                rho = fit_correlation_valley_fallback(x, y, z, a_1d, c_1d, zcap=args.zcap)
+                method = "valley-slope fallback"
             if rho is None:
                 missing.append(f"{op1}_{op2} (degenerate/flat fit)")
                 continue
             i, j = idx[a], idx[b]
             corr[i, j] = rho
             corr[j, i] = rho
-            print(f"{a}_{b}: rho = {rho:+.3f}")
+            if method == "quadratic":
+                print(f"{a}_{b}: rho = {rho:+.3f}")
+            else:
+                print(f"{a}_{b}: rho = {rho:+.3f}  [FITTED VIA VALLEY-SLOPE FALLBACK - full 2D quadratic fit failed]")
+                fallback_pairs.append(f"{a}_{b}")
         except Exception as e:
             missing.append(f"{op1}_{op2} (error: {e})")
 
@@ -192,6 +342,11 @@ def main():
         for i, op in enumerate(ops):
             writer.writerow([op] + [f"{v:.4f}" if np.isfinite(v) else "" for v in corr[i]])
     print(f"\nWrote {args.out_matrix}")
+
+    if fallback_pairs:
+        print(f"\n{len(fallback_pairs)} pairs used the valley-slope fallback (full 2D quadratic fit failed):")
+        for pp in fallback_pairs:
+            print(" ", pp)
 
     if missing:
         total = n * (n - 1) // 2
