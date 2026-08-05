@@ -85,6 +85,19 @@ def load_grid(filepath, op1, op2):
     return x, y, z
 
 
+def _valid_rho(rho, tol=1e-6):
+    """A genuine correlation coefficient can never exceed 1 in magnitude. If
+    the raw computed value does, that's not "a strong correlation" - it's
+    proof the fit that produced it isn't reliable (e.g. a near-singular
+    quadratic, or a line fit through too few/too collinear points), and
+    silently clipping it into range would report a confident-looking but
+    fake +-1.0. Only a tiny numerical tolerance gets clipped; anything
+    beyond that is rejected outright."""
+    if not np.isfinite(rho) or abs(rho) > 1.0 + tol:
+        return None
+    return float(np.clip(rho, -1.0, 1.0))
+
+
 def fit_correlation(x, y, z, zcap):
     """Fit a local quadratic near the minimum and return the implied
     correlation coefficient, or None if the fit isn't a well-behaved bowl.
@@ -117,7 +130,7 @@ def fit_correlation(x, y, z, zcap):
         return None
 
     rho = V[0, 1] / np.sqrt(V[0, 0] * V[1, 1])
-    return float(np.clip(rho, -1.0, 1.0))
+    return _valid_rho(rho)
 
 
 def load_1d_grid(filepath, op):
@@ -188,7 +201,10 @@ def profile_slope(u, v, zz):
         i = np.argmin(zz[sel])
         pu.append(uv)
         pv.append(v[sel][i])
-    if len(pu) < 4:
+    # A line through too few points is essentially unconstrained - with
+    # only 4-5 points it will near-perfectly fit almost any noise, which is
+    # exactly what was producing every fallback correlation as +-1.000.
+    if len(pu) < 8:
         return None
     pu, pv = np.array(pu), np.array(pv)
     design = np.column_stack([pu, np.ones_like(pu)])
@@ -224,7 +240,7 @@ def fit_correlation_valley_fallback(x, y, z, a_1d, c_1d, zcap):
     m = float(np.mean(slopes))
 
     rho = m * np.sqrt(c_1d / a_1d)
-    return float(np.clip(rho, -1.0, 1.0))
+    return _valid_rho(rho)
 
 
 # Physical grouping from latex/table/propcorr_ops_table.tex + non_propcorr_ops_table.tex
