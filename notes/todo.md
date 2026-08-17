@@ -58,3 +58,93 @@ roberto
 - [ ] add stat uncertainty band (another color, unrelated to the systematic)
 - [ ] mll e 3D sono events/GeV!!
 - [ ] make better plots for the ratios of propcorr/baseline
+
+-------
+tmp: 2D fits
+
+operators appearing in a "degenerate/flat fit" pair from build_correlation_matrix.py - box/metadata.json range likely still wrong for these
+- [x] cbWRe
+- [x] cbBRe
+- [ ] clj1: NO!
+- [ ] cHj1: NO!
+- [ ] ced: NO!
+- [ ] cje: NO!
+- [ ] clu: NO!
+- [ ] cld: NO!
+- [ ] cHQ1: NO!
+- [ ] cHQ3: NO!
+- [ ] cHu: NO!
+- [ ] cHd: NO!
+- [x] cHbq
+- [ ] clj3: NO!
+- [ ] cHe: NO!
+- [x] cQl1
+- [x] cQl3
+- [x] cbe
+- [x] cQe
+- [x] cbl
+- [ ] ceu: NO!
+
+(didn't work for fits)
+
+IS UNCORRELATED:
+- [x] cbWRe_cbBRe: PDF AND PNG DO NOT MATCH!!
+- [x] cbWRe_clj1
+- [x] cbBRe_clj1
+- [x] cHj1_clj1
+- [ ] cHj1_ced
+- [x] cHj1_cje
+- [x] cHj1_clu
+- [x] cHj1_cld
+- [ ] cHQ1_clj1
+- [ ] cHQ1_cld
+- [ ] cHQ3_clj1
+- [ ] cHQ3_cld
+- [x] cHu_clj1
+- [ ] cHu_cje
+- [x] cHu_clu
+- [ ] cHu_cld
+- [x] cHd_cHbq
+- [x] cHd_clj1
+- [x] cHd_cje
+- [x] cHd_clu
+- [x] cHd_cld
+- [x] cHbq_clj1
+- [x] cHbq_clj3
+- [x] cHbq_ced
+- [ ] cHe_clj1
+- [ ] cHe_cje
+- [ ] cHe_clu
+- [ ] cHe_cld
+- [x] clj1_cQl1
+- [x] clj1_cQl3
+- [ ] clj1_cbe
+- [x] clj1_cQe
+- [ ] clj1_cbl
+- [ ] clj3_cQl1
+- [ ] clj3_cQl3
+- [ ] clj3_cQe
+- [ ] clj3_cbl
+- [ ] cQl1_ceu
+- [ ] cQl1_ced
+- [x] cQl1_cje
+- [x] cQl1_clu
+- [ ] cQl1_cld
+- [ ] cQl3_ceu
+- [ ] cQl3_ced
+- [x] cQl3_cje
+- [x] cQl3_clu
+- [ ] cQl3_cld
+- [ ] ceu_cQe
+- [ ] ced_cbe
+- [ ] ced_cQe
+- [ ] ced_cbl
+- [ ] cbe_cje
+- [x] cbe_clu
+- [ ] cbe_cld
+- [x] cje_cQe
+- [ ] cje_cbl
+- [ ] cQe_clu
+- [ ] cQe_cld
+- [ ] clu_cbl
+- [ ] cld_cbl
