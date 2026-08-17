@@ -365,7 +365,7 @@ hep.cms.label(ax=ax, data=True, label="Preliminary")
 
 suffix = "_horizontal" if args.horizontal else ""
 plt.tight_layout()
-plt.savefig(f"eft_summary_two_panel_multiInterval{suffix}.pdf", bbox_inches='tight')
-plt.savefig(f"eft_summary_two_panel_multiInterval{suffix}.png", dpi=150, bbox_inches='tight')
+plt.savefig(f"eft_summary_two_panel{suffix}.pdf", bbox_inches='tight')
+plt.savefig(f"eft_summary_two_panel{suffix}.png", dpi=150, bbox_inches='tight')
 
 plt.show()
