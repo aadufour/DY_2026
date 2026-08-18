@@ -299,7 +299,7 @@ v7 renames subsamples and postproc samples to match `AnomalousCouplingMorphing.p
 | `DYSMEFTsim_cHDD` | `w1_cHDD` | c=+1 template w(+1) |
 | `DYSMEFTsim_cHDD_m1` | `wm1_cHDD` | c=-1 template w(-1) |
 
-This means `histos.root` from `spritz-postproc` is already combine-ready. `build_shapes_morphing.py` only needs to add `histo_Data` (Asimov = SM) and write the datacard.
+This means `histos.root` from `spritz-postproc`/`spritz-postproc-eft` is already combine-ready. `make_cards.py` (run via `spritz-cards-eft`, see `notes/combine.md`) just needs to add `histo_Data` (Asimov = SM) and write the datacard — it reads the nuisance list straight from `config.py`, so no separate systematics bookkeeping is needed. (Note: the older `build_shapes_morphing.py` script, now in `analysis/spritz/old/`, is unused dead code — don't follow examples referencing it.)
 
 ### Theory systematics (v7)
 
@@ -581,18 +581,16 @@ Produces one PNG+PDF per operator in `check/`: SM (black), c=+1 (orange), c=−1
 ### 10. Build combine shapes + datacard
 ```bash
 dy_analysis
-python3 /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz/build_shapes_morphing.py \
-    --input histos.root \
-    --outdir /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_v7/datacards_morphing \
-    --region inc_mm --variable mll
+cd /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/<active_config_dir>
+spritz-cards-eft
 ```
 
-Output: `datacards_morphing/inc_mm/mll/shapes.root` + `datacard.txt`
+Output: `datacards/inc_mm/mll/shapes.root` + `datacard.txt` (one dir per region×variable in `config.py`; nuisances written automatically from `config.py`'s `nuisances` dict — see `notes/combine.md`)
 
 ### 11. Run combine (morphing workflow)
 ```bash
 dy_combine_morphing
-cd /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_v7/datacards_morphing/inc_mm/mll
+cd /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/<active_config_dir>/datacards/inc_mm/mll
 createJson.py --datacard datacard.txt --binname w1_
 createCombineJson.py --datacard datacard.txt
 createWS.py 1

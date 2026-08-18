@@ -6,7 +6,7 @@
     - [x] comparisons
 
 --
-- [ ] combine fits still says 138 fb^-1 -> to change (just visual!)
+- [x] combine fits still says 138 fb^-1 -> to change (just visual!)
 
 ---
 - [ ] WRITE ON THE NOTE?? For sure this part on propcorr ("never done by anyone before")
@@ -58,6 +58,48 @@ roberto
 - [ ] add stat uncertainty band (another color, unrelated to the systematic)
 - [ ] mll e 3D sono events/GeV!!
 - [ ] make better plots for the ratios of propcorr/baseline
+
+-----
+
+- [ ] FABIAN UPDATED THE REPO??
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 -------
 tmp: 2D fits

@@ -44,7 +44,7 @@ The linear term `σ_lin` can be **negative** (interference), which breaks combin
 | Combine env | `dy_combine_morphing` | `dy_combine` |
 | `createWS` script | `createWS.py` | `createWS_lhe.py` |
 | `createCombineJson` | `--binname w1_` | `--binname quad_` |
-| Datacard builder | `build_shapes_morphing.py` | `build_datacard_reco_bins.py` |
+| Datacard builder | `make_cards.py` (via `spritz-cards-eft`) | `build_datacard_reco_bins.py` |
 | Theory systs | QCDscale + PDF shape nuisances | QCDscale + PDF shape nuisances |
 | Normalization | spritz-postproc handles it correctly | Weights must be divided by N_gen (fix in `build_datacard_reco_bins.py`) |
 | Binning | 34 bins, 50–3000 GeV (RECO binning) | 34 bins, 50–3000 GeV (matched to RECO for comparison) |
@@ -85,7 +85,7 @@ dy_combine
 | `createWS_lhe.py` | **LHE only** | `text2workspace.py` with `AnomalousCouplingEFTNegative_comb` |
 | `runScans.py` | both | Runs `combine -M MultiDimFit` (initial fit + grid scan) |
 | `runPlots.py` | both | Makes likelihood scan plots |
-| `build_shapes_morphing.py` | RECO | Reads spritz `histos.root` → `shapes.root` + `datacard.txt` |
+| `make_cards.py` (`analysis/spritz/`, run via `spritz-cards-eft`) | RECO | Reads spritz `histos.root` → `datacards/{region}/{variable}/shapes.root` + `datacard.txt`. Imports `config.py` from the cwd and writes **every** nuisance in `analysis_dict["nuisances"]` — no hardcoded systematics list, so it can't silently drift from the config. |
 | `build_datacard_reco_bins.py` | LHE | Reads LHE cache → `histograms.root` + `datacard.txt` (RECO binning, N_gen fix applied) |
 | `build_datacard_syst.py` | LHE | Same as above but with coarse 7-bin LHE binning |
 | `rank_operators.py` | both | Ranked sensitivity plot from scan ROOT files |
@@ -94,44 +94,48 @@ dy_combine
 | `readapt_double_boundaries.py` | both | 2D scan boundary sizing from likelihood grids — see [2D (Double) EFT Scans](#2d-double-eft-scans) |
 | `check_condor_scan_failures.py` | both | Flags condor scan jobs that hit the EFT negative-yield failure — see below |
 
+**Not used:** `analysis/spritz/old/build_shapes_morphing.py` — an earlier, hand-rolled RECO datacard builder with a hardcoded 2-nuisance list (`QCDscale`, `PDF`) and a stale `.../nominal/histo_...` path convention that doesn't match `post_process.py`'s actual flat `{region}/{variable}/histo_...` keys. Superseded by `make_cards.py` (above), which reads the full nuisance list straight from `config.py`. Moved to `old/` since it's dead code, not the live pipeline.
+
 ---
 
-## RECO Morphing Workflow (active — spritz v7/v8)
+## RECO Morphing Workflow (active)
 
 ### Prerequisites
-- `histos.root` produced by spritz v7/v8 (see `notes/spritz.md`)
+- `histos.root` produced by the active spritz config via `spritz-postproc-eft` (see `notes/spritz.md`; check `config.py`'s symlink target for which config is currently active)
 - `dy_combine_morphing` environment active
 
 ### Step 1 — Build shapes.root + datacard.txt
 
+Run `spritz-cards-eft` from the config dir (inside the apptainer, needs `config.py` and
+`histos.root` present — `config.py` is typically a symlink to the active config, e.g.
+`config_propcorr_v1.py`). It wraps `analysis/spritz/make_cards.py`, which imports
+`config.py` and writes **every** nuisance defined in its `nuisances` dict — no separate
+`--input`/`--outdir` flags, no nuisance list to keep in sync by hand.
+
 ```bash
 dy_analysis
-cd /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_v7
+cd /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/<active_config_dir>
 
-python3 /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz/build_shapes_morphing.py \
-    --input  histos.root \
-    --outdir datacards_morphing \
-    --region inc_mm --variable mll
+spritz-cards-eft
 ```
 
-Output:
-- `datacards_morphing/inc_mm/mll/shapes.root` — `histo_sm`, `histo_w1_{op}`, `histo_wm1_{op}`, `histo_Data`, plus `histo_{proc}_QCDscaleUp/Down`, `histo_{proc}_PDFUp/Down`
-- `datacards_morphing/inc_mm/mll/datacard.txt` — process indices: sm=1 (background/reference), w1_op1=0, wm1_op1=−1, …
+Output (one `datacards/<region>/<variable>/` dir per region×variable found in `config.py`):
+- `datacards/inc_mm/mll/shapes.root` — `histo_sm`, `histo_w1_{op}`, `histo_wm1_{op}`, `histo_Data`, plus `histo_{proc}_{nuisance_name}Up/Down` for every shape nuisance in `config.py` that applies to that process
+- `datacards/inc_mm/mll/datacard.txt` — see [Process Index Convention](#process-index-convention-anomalouscouplingmorphing--reco-only) below for how indices are assigned
 
 ### Step 2 — Prepare metadata.json
 
 Copy from a previous version and adapt:
 
 ```bash
-cp .../dy_smeftsim_v6/datacards_morphing/inc_mm/mll/metadata.json \
-   datacards_morphing/inc_mm/mll/metadata.json
+cp .../<previous_config_dir>/datacards/inc_mm/mll/metadata.json \
+   datacards/inc_mm/mll/metadata.json
 
 python3 -c "
 import json
-path = 'datacards_morphing/inc_mm/mll/metadata.json'
+path = 'datacards/inc_mm/mll/metadata.json'
 with open(path) as f: m = json.load(f)
 m['analysis'] = 'dy_smeft_lo'
-m['nuisances'] = ['QCDscale', 'PDF']
 with open(path, 'w') as f: json.dump(m, f, indent=4)
 "
 ```
@@ -145,16 +149,19 @@ with open(path, 'w') as f: json.dump(m, f, indent=4)
         "cHDD": [-0.03, 0.03],
         "cHWB": [-0.01, 0.01],
         ...
-    },
-    "nuisances": ["QCDscale", "PDF"]
+    }
 }
 ```
+
+Note: `metadata.json`'s optional `"nuisances"` key (if present from an older copy) is not
+read by `createWS.py` or `runScans.py` — the datacard's own systematics block is what
+actually drives the fit. Safe to leave stale or drop it.
 
 ### Step 3 — Switch to morphing combine env
 
 ```bash
 dy_combine_morphing
-cd /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/dy_smeftsim_v7/datacards_morphing/inc_mm/mll
+cd /grid_mnt/data__data.polcms/cms/adufour/spritz/configs/<active_config_dir>/datacards/inc_mm/mll
 ```
 
 ### Step 4 — Create jsonComb.json
@@ -241,16 +248,22 @@ xrdcp eft_summary_two_panel.p* root://eosuser.cern.ch//eos/user/a/aldufour/www/m
 
 ## Process Index Convention (AnomalousCouplingMorphing — RECO only)
 
-| Process | Index | Role in combine |
-|---------|-------|----------------|
-| `sm` | 1 | Background (reference/SM template) |
-| `w1_op1` | 0 | Signal (c=+1 template) |
-| `wm1_op1` | −1 | Signal (c=−1 template) |
-| `w1_op2` | −2 | Signal |
-| `wm1_op2` | −3 | Signal |
-| … | … | … |
+Assigned by `make_cards.py` from `config.py`'s `samples` dict, in dict-insertion order
+(see `analysis/spritz/make_cards.py`, `is_signal`/`sig_idx`/`bkg_idx` logic):
 
-Combine requires ≥ 1 positive process index (background). `sm=1` fills that role.
+- **`sm`, `w1_{op}`, `wm1_{op}`** (any sample name `== "sm"` or starting with `w1_`/`wm1_`)
+  are treated as **signal** and get index `0, −1, −2, −3, …`, decrementing in the order
+  they appear in `samples` (`sm` first, then each operator's `w1_{op}`/`wm1_{op}` pair).
+- **Every other MC sample** (the real backgrounds — `GGToLL`, `Single Top`, `TT`, `WW`,
+  `WZ`, `ZZ`, `DYtt`, …) is background and gets index `1, 2, 3, …`, incrementing in
+  `samples`-dict order. Combine's "≥ 1 positive index" requirement is satisfied by these,
+  **not** by `sm`.
+- `DYll` is explicitly excluded (`if sample_name == "DYll": continue`) — it's the
+  MiNNLO/SMEFTsim-LO k-factor reference only, never written into the datacard.
+
+Exact index numbers therefore depend on how many/which background samples are enabled in
+`config.py` — don't hardcode them; read `datacard.txt`'s `process` rows if you need the
+actual values.
 
 ---
 
@@ -353,7 +366,7 @@ rank_operators.py --indir . --outdir ranking --stat --wide \
 | Combine env | `dy_combine` | `dy_combine_morphing` |
 | `createWS` script | `createWS_lhe.py` | `createWS.py` |
 | `createCombineJson` flag | `--binname quad_` | `--binname w1_` |
-| Datacard builder | `build_datacard_reco_bins.py` | `build_shapes_morphing.py` |
+| Datacard builder | `build_datacard_reco_bins.py` | `make_cards.py` (via `spritz-cards-eft`) |
 | Normalization | Manual N_gen fix required | Handled by spritz-postproc |
 | Scan output format | TGraph in `scan_{op}.root` | TTree in `higgsCombine.{op}.*.root` |
 | Theory systs | QCDscale + PDF | QCDscale + PDF |

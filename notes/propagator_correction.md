@@ -379,3 +379,250 @@ topU3l splits quarks into light-gen `(q,u,d)` = first two generations
 beyond these 15 can contribute to `q q̄ → μ+ μ-` propagator corrections
 given `V_CKM=1` and massless light fermions (the model's own
 approximations, §3.4).
+
+---
+
+## 11. Bug found: `linearPropCorrections` reading 0 despite correct diagram generation (2026-07-17)
+
+Everything in §1-§8 above was structurally correct (right diagrams, right
+coupling orders, right proc cards) — but the gridpacks built from that setup
+were still **physically invalid**. Checking the actual `Block SWITCHES`
+value baked into the built gridpack's model showed
+`linearPropCorrections = 0`, not `1` — meaning the propagator-correction
+insertions were present in every diagram (structurally) but numerically
+inert (`propCorr = 0/(0+10⁻⁴⁰) = 0`, see the `propCorr` internal-parameter
+definition, §10). This retroactively explains §7's inconclusive
+`χ²/dof = 1.44` result — the correction was switched off the whole time,
+so there was nothing to see.
+
+### Root cause (two layers)
+
+1. **Repack omission.** The on-disk untarred copy of the model
+   (`.../cards/Users/.../models/SMEFTsim_topU3l_MwScheme_UFO/restrict_all_massless.dat`)
+   had been hand-edited to `linearPropCorrections=1`, but that edit was
+   never repacked into `SMEFTsim_topU3l_MwScheme_UFO.tar.gz` itself. Since
+   `gridpack_generation.sh` re-extracts the `.tar.gz` fresh on every condor
+   worker, every build kept pulling the stale value from the tarball,
+   regardless of the on-disk edit.
+2. **Stale `__pycache__` (the one that actually mattered).** After fixing
+   (1) and repacking, gridpacks *still* built with `SWITCHES=0`. Cause: a
+   `__pycache__` directory of compiled Python bytecode sat inside the model
+   source, and `mv`-ing the model directory around (see §12) preserved file
+   mtimes, so Python kept treating the stale cache as valid rather than
+   re-reading current source. Deleting `__pycache__`/`*.pyc`, repacking
+   again, and clearing old build directories before resubmitting finally
+   fixed it for real (condor cluster 810127, all 7 bins, exit code 0).
+
+**Blind alley, for the record:** initially suspected a filename mismatch —
+Fabian's actual patched file is `restrict_massless.dat`, but the proc
+cards' `-all_massless` import suffix reads `restrict_all_massless.dat` (the
+user's own pre-existing "all ops ≈ 1" reweighting-base card, unrelated to
+Fabian's patch, see §1). Diffing the two showed `Block SWITCHES` identical
+(`1.0`) in both — the only real differences were the ~130 SMEFT
+Wilson-coefficient values (expected, different purposes). SHA256 checksums
+of all 4 of Fabian's actual files against
+`SMEFTsim_topU3l_MwScheme_propagatorhack_UFO/` confirmed byte-for-byte
+matches on LLR — the patch from §2 was applied correctly all along. The
+proc cards' `NPall<=2 NPprop^2<=2` / `import model ...-all_massless` lines
+were also verified intact. None of this was the bug; only `__pycache__` was.
+
+### Verification
+
+Grepping the built gridpack for the raw parameter name
+`linearPropCorrections` finds nothing — not because it's still broken, but
+because MG5 folds it into the derived internal parameter `propCorr`
+(§10.1), which becomes `MDL_PROPCORR` in the compiled Fortran. The
+definitive check, run against all 7 rebuilt bins:
+```bash
+tar -xJf DYSMEFTMll<bin>_propcorr_..._tarball.tar.xz process/madevent/Source/MODEL/intparam_definition.inc
+grep "MDL_PROPCORR =" process/madevent/Source/MODEL/intparam_definition.inc
+# MDL_PROPCORR = 1.000000D+00   <- confirmed, all 7 bins
+```
+
+---
+
+## 12. Model directory cleanup
+
+While chasing §11's bug, cleaned up the model's on-disk layout at the same
+time:
+- Moved the corrected model source out of the leaked-Mac-path editing
+  location (`cards/Users/albertodufour/MG5_2_9_18/mg5amcnlo/models/...`)
+  into a clean permanent home:
+  `.../genproductions/bin/MadGraph5_aMCatNLO/models/SMEFTsim_topU3l_MwScheme_UFO/`.
+  `cards/` now holds only proc cards, matching every other process
+  directory in that folder.
+- The `--strip-components=5` line in `gridpack_generation.sh` (~line 260,
+  the `# qui mia modifica` block from §2a) turned out to be
+  **self-authored and unconditional** — not upstream genproductions logic,
+  runs on every gridpack build for every process sharing this script (not
+  just this one), but safe to simplify since it was never guarded by a
+  process-name check anyway. Repacked the tarball rooted directly at
+  `SMEFTsim_topU3l_MwScheme_UFO/` (no artificial nesting) and dropped
+  `--strip-components=5` entirely — one less magic number to keep in sync.
+- Also moved the packed tarball itself (`SMEFTsim_topU3l_MwScheme_UFO.tar.gz`
+  + `.tar.gz.bak`, the pristine pre-Fabian reference) out of `cards/` into
+  `models/`, updating the one hardcoded path in `gridpack_generation.sh` to
+  match. `.tar.gz.bak` is untouched, archival only — needed if
+  baseline/non-propcorr gridpacks are ever rebuilt.
+
+---
+
+## 13. Quarantine of the invalid pre-fix outputs
+
+Once §11's bug was confirmed, everything built from the broken tarball
+needed clearing out before rebuilding — renamed (not deleted, since
+redoing the original CRAB production was expensive) with a
+`_BUGGED_20260717` suffix:
+- Gridpack build cards: `.../cards/DY_SMEFT_Gridpacks/DYSMEFTMll<bin>_propcorr/`
+  — **later restored to their original names**: these turned out to be
+  valid, reusable input (proc cards don't encode the SWITCHES bug, only the
+  model's restriction file did), quarantining them was overcautious.
+- MG5 build residue + built tarballs (top level of `MadGraph5_aMCatNLO/`):
+  `DYSMEFTMll<bin>_propcorr/`, `.log`, `..._tarball.tar.xz`.
+- Condor job logs under `MadGraph5_aMCatNLO/logs/` (`DYSMEFTMll<bin>_propcorr.{err,log,out}`)
+  — a location easy to miss since it's separate from the top-level `.log`
+  files above; would have been silently overwritten by resubmitting.
+- Local-LHE-gen gridpack copy: `/grid_mnt/.../gridpacks/propcorr/DYSMEFTMll<bin>_propcorr/`.
+- Gridpack copy CRAB downloads from, on CERN EOS user space:
+  `root://eosuser.cern.ch//eos/user/a/aldufour/gridpacks/DYSMEFTMll<bin>_propcorr_..._tarball.tar.xz`.
+- Local LHE output + cache: `/grid_mnt/.../LHE/propcorr/DYSMEFTMll<bin>_propcorr/`,
+  `CACHE/lhe_cache_propcorr.pkl`.
+- CRAB NanoAOD output (500k evt/bin, 96-98% CRAB success but physically
+  invalid): `/eos/grif/cms/llr/store/user/aldufour/3DY_SMEFTsim_LO_propcorr/`.
+- CRAB work area — **on lxplus AFS**, not LLR:
+  `/afs/cern.ch/user/a/aldufour/crab_gen/chain_production_propcorr`. CRAB
+  submission always runs from lxplus (needs the CMS VO proxy setup done
+  there); don't assume CRAB paths live under LLR's `DY_2026/analysis/crab/`
+  — that's just the git-tracked copy of the submission scripts, not where
+  they're actually run from.
+
+---
+
+## 14. Gridpack rebuild and LHE regeneration after the fix
+
+**Gridpack rebuild:** `condor_submit gridpacks_propcorr.submit` from
+`MadGraph5_aMCatNLO/`. First attempt (cluster 810124) died in ~8s on all 7
+jobs — unrelated to the model fix: `gridpacks_propcorr.submit` has
+`getenv = true`, which leaks the submitting shell's entire environment
+into the job, and `gridpack_generation.sh` refuses to run if a CMSSW
+environment is already sourced (it sets one up itself). Fix: always submit
+from a genuinely fresh login shell (`echo $CMSSW_BASE` should print
+nothing). Cluster 810127 (after a clean-shell resubmit) succeeded and is
+the one verified in §11.
+
+**LHE regeneration:** same `launch_lhe_propcorr.sh` mechanism as §5, but
+combined all 7 bins into one submit file
+(`launch_lhe_propcorr_all.sub`) using repeated `queue SampleId from seq
+1001 1010 |` blocks with macros (`ProcName`, `TARBALL`, `GridPath`)
+redefined between each — one `condor_submit` instead of seven. Needed one
+fix first: `launch_lhe_propcorr.sh` had `X509_USER_PROXY` hardcoded to a
+path that never existed (`/grid_mnt/.../​.t3/proxy.cert` instead of the
+actually-valid `/home/llr/cms/adufour/.t3/proxy.cert`) — likely a
+copy-paste slip from whoever wrote the script; fixed in place. Result: 70/70
+files, 100k events/bin confirmed (10 files × 10k events), all 7 bins.
+
+---
+
+## 15. Cache rebuild and propcorr-vs-baseline comparison
+
+Reran `build_cache_propcorr.py` (§6) on the freshly-regenerated LHE files —
+output now at `/grid_mnt/.../LHE/propcorr/CACHE/lhe_cache_propcorr_parallel.pkl`
+(note the `_parallel` suffix, matching what `run_compare_all_ops.sh`
+expects by default; the plain `lhe_cache_propcorr.pkl` name from §6/§13 is
+now stale).
+
+`compare_ops.py`/`run_compare_all_ops.sh` gained three features this round:
+- `--no-normalize`: plot raw cross-section-level bin content instead of
+  shape-normalized histograms — normalized shapes were hiding real
+  cross-section differences and looked misleading.
+- `--lims VAL`: fix the ratio-panel y-axis to `(1-VAL, 1+VAL)` across a
+  whole batch run, instead of auto-scaling per plot.
+- `PROPCORR_OPS` array in `run_compare_all_ops.sh`: routes the 15
+  propagator-correction-relevant operators' plots (§10) into
+  `$OUTDIR/propcorr_relevant/` automatically.
+
+**Two things chased down during this comparison, both resolved:**
+- `cHj3` showed a much larger propcorr-vs-baseline discrepancy than any
+  other operator (24× the baseline's max reweighted event weight) —
+  **deferred, not yet resolved**; flagged to discuss with Giacomo rather
+  than chase further in-session.
+- `cHQ1` and `cHQ3` produce **bit-identical** LHE weights in both propcorr
+  and baseline samples (confirmed at the raw `<wgt id=...>` level in the
+  LHE text, not just the derived cache) — initially suspected as a
+  MadGraph reweight-module bug, but it's real physics: both are
+  third-generation quark-doublet operators, and since top can never appear
+  as an initial-state parton, only their **sum** (`Δ_d^L = C_Hq1+C_Hq3`
+  restricted to the b-quark) is ever physically probed by this process —
+  setting either one to 1 alone gives the identical physical shift. Not a
+  bug, an exact degeneracy. (Consistent with §10.3's table: both enter only
+  via the b-quark current channel.)
+
+---
+
+## 16. CRAB resubmission and NanoAOD production (2026-07-22)
+
+Uploaded the 7 corrected, verified gridpack tarballs from LLR to the CERN
+EOS path CRAB actually reads from
+(`root://eosuser.cern.ch//eos/user/a/aldufour/gridpacks/DYSMEFTMll<bin>_propcorr_..._tarball.tar.xz`
+— overwriting the quarantined pre-fix copies' *un*-suffixed slot). From
+lxplus (`/afs/cern.ch/user/a/aldufour/crab_gen/`):
+```bash
+voms-proxy-init --voms cms --valid 192:00
+bash submit_2018_chain_propcorr.sh 1
+```
+All 7 bins submitted and completed successfully. Output:
+`/eos/grif/cms/llr/store/user/aldufour/3DY_SMEFTsim_LO_propcorr/DYSMEFTMll-nanoaod18_SMEFTsim_propcorr_mll_<bin>/.../<timestamp>/0000/SMP-RunIISummer20UL18NanoAODv9-00051_1.root`.
+
+---
+
+## 17. spritz-side integration
+
+- **`samples.json`** (`/grid_mnt/.../spritz_fabian/data/Full2018v9/samples/samples.json`):
+  added 7 entries, `DYSMEFTsim_LO_propcorr_mll_<bin>`, pointing at the §16
+  NanoAOD output. Cross sections extracted fresh from the regenerated LHE
+  `<init>` blocks (`XSECUP`/`XERRUP`, second line of the block — this *is*
+  the correct/standard way to read both the cross section and its MC
+  statistical uncertainty; all bins sub-0.3% relative error, and per-file
+  consistency confirmed by spot-checking a second seed file per bin):
+
+  | bin | xsec [pb] |
+  |---|---|
+  | 50_120 | 1088.54 |
+  | 120_200 | 13.138 |
+  | 200_400 | 4.2912 |
+  | 400_600 | 2.0757 |
+  | 600_800 | 1.5693 |
+  | 800_1000 | 1.2393 |
+  | 1000_3000 | 4.2038 |
+
+  (Note these are genuinely different from the baseline xsecs in §3/earlier
+  docs — expected, the propagator correction is part of what's being
+  measured.)
+
+- **New config**: `analysis/spritz/config_propcorr_v1.py`, deployed to
+  `spritz_fabian/configs/propcorr_v1/config.py`. Kept as a parallel config
+  rather than added to the baseline (v9 — see below) config, so the two can
+  be run/compared independently. Identical to v9 in every respect (same
+  backgrounds, data, regions, variables, nuisances, binning) except the EFT
+  signal section points at `DYSMEFTsim_LO_propcorr_mll_<bin>` instead of
+  `DYSMEFTsim_LO_mll_<bin>`.
+- **Baseline config versioning, unrelated to propcorr but worth noting
+  here since it happened the same day**: v8 didn't actually work correctly
+  (binning was wrong); v9 is now the real active baseline
+  (`analysis/spritz/config_v9.py`), v8 archived to
+  `analysis/spritz/old/config_v8.py`.
+
+---
+
+## 18. Combine fits (2026-07-30)
+
+Both 1D and 2D likelihood scans completed for the propcorr sample, at
+`spritz_fabian/configs/propcorr_v1/`:
+- `datacards_single/` — 1D (single-operator) scans.
+- `datacards_double/` — 2D (operator-pair) scans, following the "2D
+  (Double) EFT Scans" workflow in `notes/combine.md`.
+- Run across (at least) `mll`, `costhetastar`, and the `triple_diff` (3D)
+  variable, per the per-variable tmux session logs
+  (`tmux-pc-v1-fit-mll.log`, `tmux-pc-v1-fit-costheta.log`,
+  `tmux-pc-v1-fit-3D.log`, `tmux-pc-v1-fit-rapll.log`).
+- `summary_plots/`, `plots/`, `plots_propcorr/` hold the resulting output.
