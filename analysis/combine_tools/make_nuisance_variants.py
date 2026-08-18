@@ -55,6 +55,14 @@ Add-one-in (start stat-only, add one nuisance per variant):
         --outdir   nuisance_scan/inc_mm_mll \\
         --mode     add-one-in
 
+Incremental (start with 1 nuisance, add one more per variant up to the full
+set — N variants for N nuisances found). Order defaults to datacard order;
+pass --shuffle-seed for a reproducible random order instead:
+    python3 make_nuisance_variants.py \\
+        --datacard datacards/inc_mm/mll/datacard.txt \\
+        --outdir   nuisance_scan/inc_mm_mll \\
+        --mode     incremental [--shuffle-seed 42]
+
 Custom variants from a JSON spec {variant_name: [nuisance_names_to_DROP]}:
     python3 make_nuisance_variants.py \\
         --datacard datacards/inc_mm/mll/datacard.txt \\
@@ -65,6 +73,7 @@ Custom variants from a JSON spec {variant_name: [nuisance_names_to_DROP]}:
 import argparse
 import json
 import os
+import random
 
 
 def is_dash_line(line):
@@ -142,8 +151,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--datacard", required=True, help="Path to the full datacard.txt (from spritz-cards-eft)")
     parser.add_argument("--outdir", help="Directory to write variant subfolders into (required unless --list)")
-    parser.add_argument("--mode", choices=["leave-one-out", "add-one-in", "custom"], help="Variant generation mode")
+    parser.add_argument("--mode", choices=["leave-one-out", "add-one-in", "incremental", "custom"], help="Variant generation mode")
     parser.add_argument("--spec", help="JSON file {variant_name: [nuisance_names_to_drop]} — required for --mode custom")
+    parser.add_argument("--shuffle-seed", type=int, default=None,
+                        help="--mode incremental only: shuffle the add-order with this random seed instead of using datacard order")
     parser.add_argument("--list", action="store_true", help="Just print the nuisance names found in the datacard and exit")
     args = parser.parse_args()
 
@@ -173,6 +184,13 @@ def main():
         variants["stat_only"] = set(master_names)
         for n in master_names:
             variants[f"stat_plus_{n}"] = set(master_names) - {n}
+    elif args.mode == "incremental":
+        order = list(master_names)
+        if args.shuffle_seed is not None:
+            random.Random(args.shuffle_seed).shuffle(order)
+        for i in range(1, len(order) + 1):
+            variant_name = f"{i:02d}_plus_{order[i - 1]}"
+            variants[variant_name] = set(master_names) - set(order[:i])
     elif args.mode == "custom":
         if not args.spec:
             parser.error("--mode custom requires --spec")
@@ -185,6 +203,8 @@ def main():
             variants[variant_name] = set(drop_list)
 
     manifest = {}
+    if args.mode == "incremental":
+        manifest["_meta"] = {"mode": args.mode, "order": order, "shuffle_seed": args.shuffle_seed}
     print(f"Writing {len(variants)} variant(s) into {args.outdir}/")
     for variant_name, drop_set in variants.items():
         kept_names = [n for n in master_names if n not in drop_set]
