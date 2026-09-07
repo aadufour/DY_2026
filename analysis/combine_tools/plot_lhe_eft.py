@@ -205,10 +205,15 @@ def _eft_ratio_panel(rax, sm, sm_v, full, full_v, edges, c_values, colors):
     rax.set_ylim(0.5, 1.5)
 
 
-def _decorate(ax, rax, ylabel, xlabel, op, logy=False):
+def _decorate(ax, rax, ylabel, xlabel, op, logy=False, extra_handles=None):
     ax.set_ylabel(ylabel, fontsize=20)
-    ax.text(0.97, 0.97, op, transform=ax.transAxes,
-            ha="right", va="top", fontsize=20, fontweight="bold")
+    ax.text(0.02, 0.97, op, transform=ax.transAxes,
+            ha="left", va="top", fontsize=20, fontweight="bold")
+    handles, labels = ax.get_legend_handles_labels()
+    if extra_handles:
+        handles += extra_handles
+        labels  += [h.get_label() for h in extra_handles]
+    ax.legend(handles, labels, loc="upper right", fontsize=16)
     if logy:
         ax.set_yscale("log")
     rax.set_xlabel(xlabel)
@@ -242,14 +247,10 @@ def plot_variable(var, meta, histos, op, c_values, outdir):
 
     # SM + full (bottom panel: EFT/SM ratio)
     fig, ax, rax = _make_fig(logx)
+    from matplotlib.patches import Rectangle
+    mc_stat_proxy = Rectangle((0, 0), 1, 1, facecolor="grey", alpha=0.4, label="MC stat.")
     _stairs(ax, sm, edges, SM_COLOR, "SM", lw=2.5)
     _band(ax, sm, sm_v, edges, SM_COLOR)
-    # proxy handle so "MC stat." appears in the top legend
-    from matplotlib.patches import Rectangle
-    ax.legend(handles=ax.get_legend_handles_labels()[0] +
-              [Rectangle((0, 0), 1, 1, facecolor="grey", alpha=0.4, label="MC stat.")],
-              labels=ax.get_legend_handles_labels()[1] + ["MC stat."],
-              loc="upper right", fontsize=16)
     eft_colors  = [LIN_COLOR] + EXTRA_COLORS
     full_list   = []
     full_v_list = []
@@ -263,7 +264,7 @@ def plot_variable(var, meta, histos, op, c_values, outdir):
         full_v_list.append(full_v_cv)
     _eft_ratio_panel(rax, sm, sm_v, full_list, full_v_list, edges,
                      c_values=c_values, colors=eft_colors[:len(c_values)])
-    _decorate(ax, rax, ylab, xlab, op, logy=True)
+    _decorate(ax, rax, ylab, xlab, op, logy=True, extra_handles=[mc_stat_proxy])
     _save(fig, stem)
 
     # linear term
