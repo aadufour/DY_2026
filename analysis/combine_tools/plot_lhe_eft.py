@@ -164,6 +164,7 @@ def _band(ax, vals, variances, edges, color):
 
 
 def _ratio_band(rax, vals, variances, edges, color):
+    """MC stat uncertainty band around 1 (for lin/quad panels)."""
     sigma = np.sqrt(np.abs(variances))
     safe  = np.where(np.abs(vals) > 0, np.abs(vals), np.nan)
     rel   = sigma / safe
@@ -173,6 +174,39 @@ def _ratio_band(rax, vals, variances, edges, color):
     rax.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
     rax.set_ylabel("MC stat.")
     rax.set_ylim(0.5, 1.5)
+
+
+def _eft_ratio_panel(rax, sm, sm_v, full, full_v, edges, c_values, colors):
+    """
+    Bottom panel for sm_full figure: EFT/SM ratio with MC stat unc bands.
+    One curve per c value. SM unc band shown in grey around 1.
+    """
+    x    = np.repeat(edges, 2)[1:-1]
+    safe = np.where(sm > 0, sm, np.nan)
+
+    # SM uncertainty band (grey, around 1)
+    sm_rel = np.sqrt(np.abs(sm_v)) / safe
+    rax.fill_between(x, np.repeat(1 - sm_rel, 2), np.repeat(1 + sm_rel, 2),
+                     color="grey", alpha=0.3, linewidth=0, label="SM MC stat.")
+
+    # EFT/SM ratio curve + its uncertainty band per c value
+    for (cv, col, full_cv, full_v_cv) in zip(c_values, colors, full, full_v):
+        ratio     = full_cv / safe
+        ratio_err = np.sqrt(np.abs(full_v_cv)) / safe
+        rax.stairs(ratio, edges=edges, color=col, linewidth=1.8, linestyle="--",
+                   label=fr"SM+EFT ($c={cv}$)" if len(c_values) > 1 else r"SM+EFT ($c=1$)")
+        rax.fill_between(x,
+                         np.repeat(ratio - ratio_err, 2),
+                         np.repeat(ratio + ratio_err, 2),
+                         color=col, alpha=0.2, linewidth=0)
+
+    rax.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
+    rax.set_ylabel("EFT / SM", fontsize=12)
+    rax.legend(loc="upper left", fontsize=9)
+    # auto-range with a sensible cap
+    rax.autoscale(axis="y")
+    lo, hi = rax.get_ylim()
+    rax.set_ylim(max(lo, 0.5), min(hi, 3.0))
 
 
 def _decorate(ax, rax, ylabel, xlabel, op, logy=False):
@@ -211,18 +245,23 @@ def plot_variable(var, meta, histos, op, c_values, outdir):
     xlab  = meta["xlabel"]
     stem  = os.path.join(outdir, f"{var}_sm_full_{op}")
 
-    # SM + full
+    # SM + full (bottom panel: EFT/SM ratio)
     fig, ax, rax = _make_fig(logx)
     _stairs(ax, sm, edges, SM_COLOR, "SM", lw=2.5)
     _band(ax, sm, sm_v, edges, SM_COLOR)
-    _ratio_band(rax, sm, sm_v, edges, SM_COLOR)
-    for cv, col in zip(c_values, [LIN_COLOR] + EXTRA_COLORS):
-        full   = sm + cv * lin + cv**2 * quad
-        full_v = sm_v + cv**2 * lin_v + cv**4 * quad_v
-        lbl    = fr"SM+EFT ($c={cv}$)" if len(c_values) > 1 else r"SM+EFT ($c=1$)"
-        _stairs(ax, full, edges, col, lbl, ls="--", lw=2.0)
-        _band(ax, full, full_v, edges, col)
-        _ratio_band(rax, full, full_v, edges, col)
+    eft_colors  = [LIN_COLOR] + EXTRA_COLORS
+    full_list   = []
+    full_v_list = []
+    for cv, col in zip(c_values, eft_colors):
+        full_cv   = sm + cv * lin + cv**2 * quad
+        full_v_cv = sm_v + cv**2 * lin_v + cv**4 * quad_v
+        lbl       = fr"SM+EFT ($c={cv}$)" if len(c_values) > 1 else r"SM+EFT ($c=1$)"
+        _stairs(ax, full_cv, edges, col, lbl, ls="--", lw=2.0)
+        _band(ax, full_cv, full_v_cv, edges, col)
+        full_list.append(full_cv)
+        full_v_list.append(full_v_cv)
+    _eft_ratio_panel(rax, sm, sm_v, full_list, full_v_list, edges,
+                     c_values=c_values, colors=eft_colors[:len(c_values)])
     _decorate(ax, rax, ylab, xlab, op, logy=True)
     _save(fig, stem)
 
@@ -255,7 +294,7 @@ def plot_triple_diff_2d(histos, op, c_values, outdir):
 
     fig, axes = plt.subplots(
         N_TD_COSTH, N_TD_RAP,
-        figsize=(4.5 * N_RAP, 3.5 * N_COSTH),
+        figsize=(4.5 * N_TD_RAP, 3.5 * N_TD_COSTH),
         sharex=True, sharey=False,
     )
     fig.subplots_adjust(hspace=0.08, wspace=0.35)
