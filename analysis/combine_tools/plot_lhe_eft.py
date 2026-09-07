@@ -203,15 +203,15 @@ def _eft_ratio_panel(rax, sm, sm_v, full, full_v, edges, c_values, colors):
     rax.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
     rax.set_ylabel("EFT / SM", fontsize=20)
     rax.tick_params(axis="y", labelsize=16)
-    rax.legend(loc="upper left", fontsize=13)
+    rax.legend(loc="upper right", fontsize=14)
     rax.set_ylim(0.5, 1.5)
 
 
 def _decorate(ax, rax, ylabel, xlabel, op, logy=False):
-    ax.set_ylabel(ylabel, fontsize=16)
+    ax.set_ylabel(ylabel, fontsize=20)
     ax.text(0.97, 0.97, op, transform=ax.transAxes,
             ha="right", va="top", fontsize=20, fontweight="bold")
-    ax.legend(loc="upper left", fontsize=14)
+    ax.legend(loc="upper right", fontsize=16)
     if logy:
         ax.set_yscale("log")
     rax.set_xlabel(xlabel)
