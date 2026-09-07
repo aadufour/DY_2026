@@ -13,8 +13,11 @@
 
 ----
 
-- [ ] introduce syst one  by one: we can work out why the lines wiggle
+- [ ] (primo) introduce syst one  by one: we can work out why the lines wiggle. prima tolgo teoriche (pdf, qcd scale), poi exp. controllo che la parametrizzazione sia giusta: /grid_mnt/data__data.polcms/cms/adufour/CMSSW_spritz/CMSSW_14_1_0_pre4/src/tools/checks
+probabile da aggiornare per morphing.
+checkPositibity assume shapes che si chiamano "sm", "quad_" mentre tu hai "sm", "w1_" "wm1" etc...
 
+Le stelline sono un bruto segno nei plot 2D!
 
 - [ ] check SM of this plot against by SMEFTsim SM (reweighting weight)
 
@@ -48,7 +51,7 @@
 
 5. [ ] 2D operator scan
  - [x] mll
- - [ ] other vars
+ - [ ] other vars? chiedo a giacomo
 
 
 
@@ -61,7 +64,10 @@ roberto
 
 -----
 
-- [ ] FABIAN UPDATED THE REPO??
+- [ ] FABIAN UPDATED THE REPO?? (anche no)
+
+-----
+- [ ] need to check for validity of the linear approx? e.g. checking sm+lin vs full. chiedo a giacomo
 
 
 
