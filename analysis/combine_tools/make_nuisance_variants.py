@@ -32,12 +32,15 @@ Datacard layout this relies on (as written by analysis/spritz/make_cards.py):
     ...
 
 Everything up to and including the 2nd dash-only line is copied verbatim into
-every variant. After that, each line's first whitespace-separated token is
-checked against THEORY_NUISANCES (QCDScale, PDFweight) — only those two are
-candidates for removal/toggling in the variants below. Every other line
-(lumi, other experimental systs, autoMCStats, blanks, anything unrecognized)
-is always kept verbatim, since this tool isolates theoretical uncertainties
-specifically, not the full nuisance set.
+every variant. After that, rows for THEORY_NUISANCES (QCDScale, PDFweight)
+are dropped unconditionally — they never appear in any variant, not even
+"full"/"stat_only". Of the remaining lines, each one's first
+whitespace-separated token is its nuisance name (e.g. "lumi") except the
+autoMCStats line, which is always kept (MC-stat floor, not one of the
+systematics being isolated) and any line without a recognized name is also
+always kept (fail-open, so an unanticipated line format never gets silently
+dropped). Those remaining named nuisances are the ones the variant modes
+below add/remove.
 
 Usage
 -----
@@ -97,13 +100,23 @@ def split_datacard(lines):
     return lines[: split_at + 1], lines[split_at + 1 :]
 
 
+def strip_theory_nuisances(syst_lines):
+    """Drop QCDScale/PDFweight rows unconditionally — they never appear in
+    any variant, including 'full'/'stat_only'. Returns the filtered lines."""
+    kept = []
+    for line in syst_lines:
+        stripped = line.strip()
+        if stripped and stripped.split()[0] in THEORY_NUISANCES:
+            continue
+        kept.append(line)
+    return kept
+
+
 def classify_syst_lines(syst_lines):
     """
     Returns (nuisance_names_in_order, entries) where entries is a list of
-    (name_or_None, raw_line) — name is None for lines that are always kept:
-    blank, autoMCStats, or any systematic not in THEORY_NUISANCES. Only
-    QCDScale/PDFweight rows get a real name and are eligible to be dropped
-    by the variant modes below.
+    (name_or_None, raw_line) — name is None for lines that are always kept
+    (blank, autoMCStats, or unrecognized).
     """
     names = []
     entries = []
@@ -116,9 +129,6 @@ def classify_syst_lines(syst_lines):
             entries.append((None, line))
             continue
         name = stripped.split()[0]
-        if name not in THEORY_NUISANCES:
-            entries.append((None, line))
-            continue
         entries.append((name, line))
         if name not in names:
             names.append(name)
@@ -176,6 +186,7 @@ def main():
     with open(args.datacard) as f:
         lines = f.readlines()
     header_lines, syst_lines = split_datacard(lines)
+    syst_lines = strip_theory_nuisances(syst_lines)
     master_names, entries = classify_syst_lines(syst_lines)
 
     if args.list:
