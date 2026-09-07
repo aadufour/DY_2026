@@ -184,17 +184,16 @@ def _eft_ratio_panel(rax, sm, sm_v, full, full_v, edges, c_values, colors):
     x    = np.repeat(edges, 2)[1:-1]
     safe = np.where(sm > 0, sm, np.nan)
 
-    # SM uncertainty band (grey, around 1)
+    # SM uncertainty band (grey, around 1) — unlabelled here, label goes in top panel
     sm_rel = np.sqrt(np.abs(sm_v)) / safe
     rax.fill_between(x, np.repeat(1 - sm_rel, 2), np.repeat(1 + sm_rel, 2),
-                     color="grey", alpha=0.3, linewidth=0, label="SM MC stat.")
+                     color="grey", alpha=0.3, linewidth=0)
 
     # EFT/SM ratio curve + its uncertainty band per c value
     for (cv, col, full_cv, full_v_cv) in zip(c_values, colors, full, full_v):
         ratio     = full_cv / safe
         ratio_err = np.sqrt(np.abs(full_v_cv)) / safe
-        rax.stairs(ratio, edges=edges, color=col, linewidth=1.8, linestyle="--",
-                   label=fr"SM+EFT ($c={cv}$)" if len(c_values) > 1 else r"SM+EFT ($c=1$)")
+        rax.stairs(ratio, edges=edges, color=col, linewidth=1.8, linestyle="--")
         rax.fill_between(x,
                          np.repeat(ratio - ratio_err, 2),
                          np.repeat(ratio + ratio_err, 2),
@@ -203,7 +202,6 @@ def _eft_ratio_panel(rax, sm, sm_v, full, full_v, edges, c_values, colors):
     rax.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
     rax.set_ylabel("EFT / SM", fontsize=20)
     rax.tick_params(axis="y", labelsize=16)
-    rax.legend(loc="upper right", fontsize=14)
     rax.set_ylim(0.5, 1.5)
 
 
@@ -247,6 +245,9 @@ def plot_variable(var, meta, histos, op, c_values, outdir):
     fig, ax, rax = _make_fig(logx)
     _stairs(ax, sm, edges, SM_COLOR, "SM", lw=2.5)
     _band(ax, sm, sm_v, edges, SM_COLOR)
+    # proxy patch so "MC stat." appears in the top legend
+    from matplotlib.patches import Patch
+    ax.add_patch(Patch(facecolor="grey", alpha=0.3, label="MC stat."))
     eft_colors  = [LIN_COLOR] + EXTRA_COLORS
     full_list   = []
     full_v_list = []
