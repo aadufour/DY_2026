@@ -17,6 +17,24 @@
 probabile da aggiornare per morphing.
 checkPositibity assume shapes che si chiamano "sm", "quad_" mentre tu hai "sm", "w1_" "wm1" etc...
 
+
+07-Sep
+ugly ops fixed by disabling theory (mll) (all were fixed):
+- cHe (very ugly)
+- cll1
+- cHQ3
+- CHQ1
+- cHj3
+- cHDD
+- cHd
+
+ugly ops fixed by disabling theory (triple_diff):
+- cHe (not even that ugly, does it even make sense to remove unc?)
+
+
+
+
+
 Le stelline sono un bruto segno nei plot 2D!
 
 - [ ] check SM of this plot against by SMEFTsim SM (reweighting weight)

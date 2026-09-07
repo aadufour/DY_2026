@@ -58,11 +58,12 @@ def make_datacard(
         if sample_name == "DYll":
             continue
 
-        # sm + w1_* + wm1_* are EFT signal templates
+        # sm + w1_* + wm1_* + w11_*_* (cross terms) are EFT signal templates
         is_signal = (
             sample_name == "sm"
             or sample_name.startswith("w1_")
             or sample_name.startswith("wm1_")
+            or sample_name.startswith("w11_")
         )
 
         if is_signal:

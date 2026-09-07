@@ -168,18 +168,25 @@ def apply_kfactor(dout, regions, variables):
     Apply bin-by-bin k-factor (MiNNLO / SMEFTsim LO SM) to all EFT templates.
 
     For each (region, variable), computes k = histo_DYll / histo_sm and rescales
-    histo_sm, histo_w1_*, histo_wm1_* (nominal + all Up/Down systematics) by k.
-    This ensures the EFT SM template matches MiNNLO normalisation so combine fits
-    the correct SM prediction.
+    histo_sm, histo_w1_*, histo_wm1_*, histo_w11_*_* (nominal + all Up/Down
+    systematics) by k. This ensures the EFT SM template matches MiNNLO
+    normalisation so combine fits the correct SM prediction.
 
     histo_DYll is kept as-is (it remains in the background stack).
     """
+    import itertools
+
     OPERATORS = [
         "cHDD", "cHWB", "cbWRe", "cbBRe", "cHj1", "cHQ1", "cHj3", "cHQ3",
         "cHu", "cHd", "cHbq", "cHl1", "cHl3", "cHe", "cll1", "clj1", "clj3",
         "cQl1", "cQl3", "ceu", "ced", "cbe", "cje", "cQe", "clu", "cld", "cbl",
     ]
-    eft_prefixes = ["sm"] + [f"w1_{op}" for op in OPERATORS] + [f"wm1_{op}" for op in OPERATORS]
+    eft_prefixes = (
+        ["sm"]
+        + [f"w1_{op}" for op in OPERATORS]
+        + [f"wm1_{op}" for op in OPERATORS]
+        + [f"w11_{op_i}_{op_j}" for op_i, op_j in itertools.combinations(OPERATORS, 2)]
+    )
 
     for region in regions:
         for variable in variables:
