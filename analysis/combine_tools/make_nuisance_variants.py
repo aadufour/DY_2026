@@ -2,14 +2,14 @@
 """
 make_nuisance_variants.py
 ==========================
-Generate datacard.txt variants with different nuisance subsets, for isolating
-which systematic causes a non-parabolic ("wiggly") likelihood scan.
+Write a single datacard.txt variant with a given set of nuisances removed —
+by default the theory uncertainties (EXCLUDE_LIST: QCDScale, PDFweight).
 
 Does NOT touch shapes.root or re-run make_cards.py/spritz-cards-eft: combine
 only reads a histo_{proc}_{syst}Up/Down pair if the datacard's systematics
-block has a row for it, so one shared shapes.root works for every variant.
-Each variant folder just symlinks the source dir's shapes.root (and any other
-sidecar files, e.g. metadata.json) and gets its own filtered datacard.txt.
+block has a row for it, so the source dir's shapes.root works unchanged for
+the variant. The output dir just symlinks it (and any other requested
+sidecar files, e.g. metadata.json) alongside the filtered datacard.txt.
 
 Datacard layout this relies on (as written by analysis/spritz/make_cards.py):
     ...
@@ -31,56 +31,33 @@ Datacard layout this relies on (as written by analysis/spritz/make_cards.py):
     inc_mm_mll autoMCStats 10 0 1
     ...
 
-Everything up to and including the 2nd dash-only line is copied verbatim into
-every variant. After that, rows for THEORY_NUISANCES (QCDScale, PDFweight)
-are dropped unconditionally — they never appear in any variant, not even
-"full"/"stat_only". Of the remaining lines, each one's first
-whitespace-separated token is its nuisance name (e.g. "lumi") except the
-autoMCStats line, which is always kept (MC-stat floor, not one of the
-systematics being isolated) and any line without a recognized name is also
-always kept (fail-open, so an unanticipated line format never gets silently
-dropped). Those remaining named nuisances are the ones the variant modes
-below add/remove.
+Everything up to and including the 2nd dash-only line is copied verbatim.
+After that, each line's first whitespace-separated token is its nuisance
+name (e.g. "QCDScale", "lumi"); a line whose name is in the exclude set is
+dropped, everything else is kept as-is.
 
 Usage
 -----
 List the nuisances found in the real datacard (dry run, no files written):
     python3 make_nuisance_variants.py --datacard datacards/inc_mm/mll/datacard.txt --list
 
-Leave-one-out (start from the full set, drop one nuisance per variant):
+Default: drop EXCLUDE_LIST (QCDScale, PDFweight):
     python3 make_nuisance_variants.py \\
         --datacard datacards/inc_mm/mll/datacard.txt \\
-        --outdir   nuisance_scan/inc_mm_mll \\
-        --mode     leave-one-out
+        --outdir   nuisance_scan/inc_mm_mll_no_theory
 
-Add-one-in (start stat-only, add one nuisance per variant):
+Custom exclude list:
     python3 make_nuisance_variants.py \\
         --datacard datacards/inc_mm/mll/datacard.txt \\
-        --outdir   nuisance_scan/inc_mm_mll \\
-        --mode     add-one-in
-
-Incremental (start with 1 nuisance, add one more per variant up to the full
-set — N variants for N nuisances found). Order defaults to datacard order;
-pass --shuffle-seed for a reproducible random order instead:
-    python3 make_nuisance_variants.py \\
-        --datacard datacards/inc_mm/mll/datacard.txt \\
-        --outdir   nuisance_scan/inc_mm_mll \\
-        --mode     incremental [--shuffle-seed 42]
-
-Custom variants from a JSON spec {variant_name: [nuisance_names_to_DROP]}:
-    python3 make_nuisance_variants.py \\
-        --datacard datacards/inc_mm/mll/datacard.txt \\
-        --outdir   nuisance_scan/inc_mm_mll \\
-        --mode     custom --spec my_variants.json
+        --outdir   nuisance_scan/inc_mm_mll_no_lumi \\
+        --exclude  lumi
 """
 
 import argparse
-import json
 import os
-import random
 
 
-THEORY_NUISANCES = {"QCDScale", "PDFweight"}
+EXCLUDE_LIST = ["QCDScale", "PDFweight"]
 
 
 def is_dash_line(line):
@@ -98,18 +75,6 @@ def split_datacard(lines):
         )
     split_at = dash_idx[1]
     return lines[: split_at + 1], lines[split_at + 1 :]
-
-
-def strip_theory_nuisances(syst_lines):
-    """Drop QCDScale/PDFweight rows unconditionally — they never appear in
-    any variant, including 'full'/'stat_only'. Returns the filtered lines."""
-    kept = []
-    for line in syst_lines:
-        stripped = line.strip()
-        if stripped and stripped.split()[0] in THEORY_NUISANCES:
-            continue
-        kept.append(line)
-    return kept
 
 
 def classify_syst_lines(syst_lines):
@@ -144,40 +109,35 @@ def build_variant_lines(header_lines, entries, drop_set):
     return header_lines + kept
 
 
-def write_variant(outdir, variant_name, source_dir, header_lines, entries, drop_set, kept_names, sidecars):
-    variant_dir = os.path.join(outdir, variant_name)
-    os.makedirs(variant_dir, exist_ok=True)
+def write_variant(outdir, source_dir, header_lines, entries, drop_set, sidecars):
+    os.makedirs(outdir, exist_ok=True)
 
     lines = build_variant_lines(header_lines, entries, drop_set)
-    with open(os.path.join(variant_dir, "datacard.txt"), "w") as f:
+    with open(os.path.join(outdir, "datacard.txt"), "w") as f:
         f.writelines(lines)
 
     # Symlink only the requested sidecar files (default: shapes.root) — the source
     # dir may already contain a full prior run's output (model_*.root, scans,
-    # plots, ...); we don't want any of that pulled into a fresh variant folder.
+    # plots, ...); we don't want any of that pulled into the variant folder.
     for fname in sidecars:
         src = os.path.abspath(os.path.join(source_dir, fname))
         if not os.path.exists(src):
             print(f"  WARNING: sidecar '{fname}' not found in {source_dir}, skipping")
             continue
-        dst = os.path.join(variant_dir, fname)
+        dst = os.path.join(outdir, fname)
         if os.path.islink(dst) or os.path.exists(dst):
             os.remove(dst)
-        os.symlink(os.path.relpath(src, variant_dir), dst)
-
-    return variant_dir, kept_names
+        os.symlink(os.path.relpath(src, outdir), dst)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--datacard", required=True, help="Path to the full datacard.txt (from spritz-cards-eft)")
-    parser.add_argument("--outdir", help="Directory to write variant subfolders into (required unless --list)")
-    parser.add_argument("--mode", choices=["leave-one-out", "add-one-in", "incremental", "custom"], help="Variant generation mode")
-    parser.add_argument("--spec", help="JSON file {variant_name: [nuisance_names_to_drop]} — required for --mode custom")
-    parser.add_argument("--shuffle-seed", type=int, default=None,
-                        help="--mode incremental only: shuffle the add-order with this random seed instead of using datacard order")
+    parser.add_argument("--outdir", help="Directory to write the variant into (required unless --list)")
+    parser.add_argument("--exclude", default=None,
+                        help=f"Comma-separated nuisance names to drop (default: {','.join(EXCLUDE_LIST)})")
     parser.add_argument("--sidecars", default="shapes.root",
-                        help="Comma-separated filenames from the source dir to symlink into each variant folder "
+                        help="Comma-separated filenames from the source dir to symlink into the variant folder "
                              "(default: shapes.root only — deliberately NOT everything in the source dir, which may "
                              "already hold a prior run's model_*.root/scans/plots)")
     parser.add_argument("--list", action="store_true", help="Just print the nuisance names found in the datacard and exit")
@@ -186,7 +146,6 @@ def main():
     with open(args.datacard) as f:
         lines = f.readlines()
     header_lines, syst_lines = split_datacard(lines)
-    syst_lines = strip_theory_nuisances(syst_lines)
     master_names, entries = classify_syst_lines(syst_lines)
 
     if args.list:
@@ -195,55 +154,22 @@ def main():
             print(f"  {n}")
         return
 
-    if not args.outdir or not args.mode:
-        parser.error("--outdir and --mode are required unless --list is given")
+    if not args.outdir:
+        parser.error("--outdir is required unless --list is given")
+
+    drop_set = set(s.strip() for s in args.exclude.split(",") if s.strip()) if args.exclude else set(EXCLUDE_LIST)
+    unknown = drop_set - set(master_names)
+    if unknown:
+        print(f"  WARNING: exclude name(s) {sorted(unknown)} not found in {args.datacard}, ignoring")
 
     source_dir = os.path.dirname(os.path.abspath(args.datacard))
-    os.makedirs(args.outdir, exist_ok=True)
     sidecars = [s.strip() for s in args.sidecars.split(",") if s.strip()]
 
-    variants = {}  # variant_name -> drop_set
-    if args.mode == "leave-one-out":
-        variants["full"] = set()
-        for n in master_names:
-            variants[f"no_{n}"] = {n}
-    elif args.mode == "add-one-in":
-        variants["stat_only"] = set(master_names)
-        for n in master_names:
-            variants[f"stat_plus_{n}"] = set(master_names) - {n}
-    elif args.mode == "incremental":
-        order = list(master_names)
-        if args.shuffle_seed is not None:
-            random.Random(args.shuffle_seed).shuffle(order)
-        for i in range(1, len(order) + 1):
-            variant_name = f"{i:02d}_plus_{order[i - 1]}"
-            variants[variant_name] = set(master_names) - set(order[:i])
-    elif args.mode == "custom":
-        if not args.spec:
-            parser.error("--mode custom requires --spec")
-        with open(args.spec) as f:
-            spec = json.load(f)
-        for variant_name, drop_list in spec.items():
-            unknown = set(drop_list) - set(master_names)
-            if unknown:
-                parser.error(f"variant '{variant_name}': unknown nuisance name(s) {unknown} not in {master_names}")
-            variants[variant_name] = set(drop_list)
+    write_variant(args.outdir, source_dir, header_lines, entries, drop_set, sidecars)
 
-    manifest = {}
-    if args.mode == "incremental":
-        manifest["_meta"] = {"mode": args.mode, "order": order, "shuffle_seed": args.shuffle_seed}
-    print(f"Writing {len(variants)} variant(s) into {args.outdir}/")
-    for variant_name, drop_set in variants.items():
-        kept_names = [n for n in master_names if n not in drop_set]
-        variant_dir, kept = write_variant(
-            args.outdir, variant_name, source_dir, header_lines, entries, drop_set, kept_names, sidecars
-        )
-        manifest[variant_name] = {"kept": kept_names, "dropped": sorted(drop_set)}
-        print(f"  {variant_name:30s} kept={len(kept_names)}/{len(master_names)}  dropped={sorted(drop_set) or '-'}")
-
-    with open(os.path.join(args.outdir, "manifest.json"), "w") as f:
-        json.dump(manifest, f, indent=2)
-    print(f"Wrote {os.path.join(args.outdir, 'manifest.json')}")
+    kept_names = [n for n in master_names if n not in drop_set]
+    print(f"Wrote {os.path.join(args.outdir, 'datacard.txt')}")
+    print(f"  kept={len(kept_names)}/{len(master_names)}  dropped={sorted(drop_set) or '-'}")
 
 
 if __name__ == "__main__":
