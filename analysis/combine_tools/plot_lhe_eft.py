@@ -320,7 +320,7 @@ def plot_triple_diff_2d(histos, op, c_values, outdir):
                           np.append(sm_s, sm_s[-1]),
                           where="post", color=SM_COLOR, linewidth=1.8,
                           label="SM")
-            _band(ax, sm_s, sm_v_s, MLL_EDGES, SM_COLOR)
+            _band(ax, sm_s, sm_v_s, TD_MLL_EDGES, SM_COLOR)
 
             for cv, col in zip(c_values, [LIN_COLOR] + EXTRA_COLORS):
                 full   = sm_s + cv * lin_s + cv**2 * quad_s
