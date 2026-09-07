@@ -209,7 +209,6 @@ def _decorate(ax, rax, ylabel, xlabel, op, logy=False):
     ax.set_ylabel(ylabel, fontsize=20)
     ax.text(0.97, 0.97, op, transform=ax.transAxes,
             ha="right", va="top", fontsize=20, fontweight="bold")
-    ax.legend(loc="upper right", fontsize=16)
     if logy:
         ax.set_yscale("log")
     rax.set_xlabel(xlabel)
@@ -245,9 +244,12 @@ def plot_variable(var, meta, histos, op, c_values, outdir):
     fig, ax, rax = _make_fig(logx)
     _stairs(ax, sm, edges, SM_COLOR, "SM", lw=2.5)
     _band(ax, sm, sm_v, edges, SM_COLOR)
-    # proxy patch so "MC stat." appears in the top legend
-    from matplotlib.patches import Patch
-    ax.add_patch(Patch(facecolor="grey", alpha=0.3, label="MC stat."))
+    # proxy handle so "MC stat." appears in the top legend
+    from matplotlib.patches import Rectangle
+    ax.legend(handles=ax.get_legend_handles_labels()[0] +
+              [Rectangle((0, 0), 1, 1, facecolor="grey", alpha=0.4, label="MC stat.")],
+              labels=ax.get_legend_handles_labels()[1] + ["MC stat."],
+              loc="upper right", fontsize=16)
     eft_colors  = [LIN_COLOR] + EXTRA_COLORS
     full_list   = []
     full_v_list = []
