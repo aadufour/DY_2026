@@ -201,16 +201,13 @@ def _eft_ratio_panel(rax, sm, sm_v, full, full_v, edges, c_values, colors):
                          color=col, alpha=0.2, linewidth=0)
 
     rax.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
-    rax.set_ylabel("EFT / SM", fontsize=12)
+    rax.set_ylabel("EFT / SM", fontsize=16)
     rax.legend(loc="upper left", fontsize=9)
-    # auto-range with a sensible cap
-    rax.autoscale(axis="y")
-    lo, hi = rax.get_ylim()
-    rax.set_ylim(max(lo, 0.5), min(hi, 3.0))
+    rax.set_ylim(0.75, 1.25)
 
 
 def _decorate(ax, rax, ylabel, xlabel, op, logy=False):
-    ax.set_ylabel(ylabel, fontsize=14)
+    ax.set_ylabel(ylabel, fontsize=16)
     ax.text(0.97, 0.97, op, transform=ax.transAxes,
             ha="right", va="top", fontsize=20, fontweight="bold")
     ax.legend(loc="upper left", fontsize=12)
