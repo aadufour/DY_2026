@@ -8,8 +8,8 @@ by default the theory uncertainties (EXCLUDE_LIST: QCDScale, PDFweight).
 Does NOT touch shapes.root or re-run make_cards.py/spritz-cards-eft: combine
 only reads a histo_{proc}_{syst}Up/Down pair if the datacard's systematics
 block has a row for it, so the source dir's shapes.root works unchanged for
-the variant. The output dir just symlinks it (and any other requested
-sidecar files, e.g. metadata.json) alongside the filtered datacard.txt.
+the variant. The output dir just symlinks it (and, by default, metadata.json
+and jsonComb.json — see --sidecars) alongside the filtered datacard.txt.
 
 Datacard layout this relies on (as written by analysis/spritz/make_cards.py):
     ...
@@ -136,10 +136,10 @@ def main():
     parser.add_argument("--outdir", help="Directory to write the variant into (required unless --list)")
     parser.add_argument("--exclude", default=None,
                         help=f"Comma-separated nuisance names to drop (default: {','.join(EXCLUDE_LIST)})")
-    parser.add_argument("--sidecars", default="shapes.root",
+    parser.add_argument("--sidecars", default="shapes.root,metadata.json,jsonComb.json",
                         help="Comma-separated filenames from the source dir to symlink into the variant folder "
-                             "(default: shapes.root only — deliberately NOT everything in the source dir, which may "
-                             "already hold a prior run's model_*.root/scans/plots)")
+                             "(default: shapes.root, metadata.json, jsonComb.json — deliberately NOT everything in "
+                             "the source dir, which may already hold a prior run's model_*.root/scans/plots)")
     parser.add_argument("--list", action="store_true", help="Just print the nuisance names found in the datacard and exit")
     args = parser.parse_args()
 
