@@ -40,16 +40,30 @@ import numpy as np
 hep.style.use("CMS")
 
 # ---------------------------------------------------------------------------
-# Binning (matches config_v9.py)
+# Binning
+# 1D variables: fine binning from config.py (good for thesis plots)
+# triple_diff:  coarse binning from config_v9.py (14×5×4 = 280 bins)
 # ---------------------------------------------------------------------------
-MLL_EDGES   = np.array([40, 60, 80, 100, 120, 140, 180, 220, 270, 350, 500, 700, 1000, 1500, 3000], dtype=float)
-COSTH_EDGES = np.array([-1.0, -0.6, -0.2, 0.2, 0.6, 1.0])
-RAP_EDGES   = np.array([0.0, 0.48, 0.96, 1.44, 2.4])
 
-N_MLL   = len(MLL_EDGES)   - 1  # 14
-N_COSTH = len(COSTH_EDGES) - 1  # 5
-N_RAP   = len(RAP_EDGES)   - 1  # 4
-N_TD    = N_MLL * N_COSTH * N_RAP  # 280
+# fine 1D binning
+MLL_EDGES   = np.array([
+    *range(50, 76, 5),    # 50–75:  5 GeV steps
+    *range(76, 106, 2),   # 76–105: 2 GeV steps (Z peak)
+    *range(106, 120, 5),  # 106–119: 5 GeV steps
+    120, 150, 200, 250, 300, 400, 600, 800, 1000, 1500, 3000,
+], dtype=float)
+COSTH_EDGES = np.linspace(-1.0, 1.0, 51)   # 50 uniform bins
+RAP_EDGES   = np.linspace(0.0,  2.5, 51)   # 50 uniform bins
+
+# coarse triple_diff binning
+TD_MLL_EDGES   = np.array([40, 60, 80, 100, 120, 140, 180, 220, 270, 350, 500, 700, 1000, 1500, 3000], dtype=float)
+TD_COSTH_EDGES = np.array([-1.0, -0.6, -0.2, 0.2, 0.6, 1.0])
+TD_RAP_EDGES   = np.array([0.0, 0.48, 0.96, 1.44, 2.4])
+
+N_TD_MLL   = len(TD_MLL_EDGES)   - 1  # 14
+N_TD_COSTH = len(TD_COSTH_EDGES) - 1  # 5
+N_TD_RAP   = len(TD_RAP_EDGES)   - 1  # 4
+N_TD       = N_TD_MLL * N_TD_COSTH * N_TD_RAP  # 280
 
 OPERATORS = [
     "cHDD", "cHWB", "cbWRe", "cbBRe", "cHj1", "cHQ1", "cHj3", "cHQ3",
@@ -105,11 +119,11 @@ def fill_histograms(cache, op):
     out["costhetastar"] = fill1d(costh, COSTH_EDGES) + (COSTH_EDGES,)
     out["rapll_abs"]    = fill1d(rap,   RAP_EDGES)   + (RAP_EDGES,)
 
-    # triple_diff flat index: irap * N_COSTH * N_MLL + icos * N_MLL + imll
-    irap  = np.clip(np.searchsorted(RAP_EDGES,   rap,   side="right") - 1, 0, N_RAP - 1)
-    icos  = np.clip(np.searchsorted(COSTH_EDGES, costh, side="right") - 1, 0, N_COSTH - 1)
-    imll  = np.clip(np.searchsorted(MLL_EDGES,   mll,   side="right") - 1, 0, N_MLL - 1)
-    flat  = (irap * N_COSTH * N_MLL + icos * N_MLL + imll).astype(int)
+    # triple_diff uses its own coarser binning (14×5×4 = 280 bins)
+    irap  = np.clip(np.searchsorted(TD_RAP_EDGES,   rap,   side="right") - 1, 0, N_TD_RAP   - 1)
+    icos  = np.clip(np.searchsorted(TD_COSTH_EDGES, costh, side="right") - 1, 0, N_TD_COSTH - 1)
+    imll  = np.clip(np.searchsorted(TD_MLL_EDGES,   mll,   side="right") - 1, 0, N_TD_MLL   - 1)
+    flat  = (irap * N_TD_COSTH * N_TD_MLL + icos * N_TD_MLL + imll).astype(int)
 
     def fill_td(w):
         h = np.zeros(N_TD)
@@ -237,10 +251,10 @@ def plot_variable(var, meta, histos, op, c_values, outdir):
 
 def plot_triple_diff_2d(histos, op, c_values, outdir):
     sm, lin, quad, sm_v, lin_v, quad_v, _ = histos["triple_diff"]
-    widths = np.diff(MLL_EDGES)
+    widths = np.diff(TD_MLL_EDGES)
 
     fig, axes = plt.subplots(
-        N_COSTH, N_RAP,
+        N_TD_COSTH, N_TD_RAP,
         figsize=(4.5 * N_RAP, 3.5 * N_COSTH),
         sharex=True, sharey=False,
     )
@@ -248,22 +262,22 @@ def plot_triple_diff_2d(histos, op, c_values, outdir):
 
     handles, labels = [], []
 
-    for irap in range(N_RAP):
-        for icos in range(N_COSTH):
-            ax = axes[N_COSTH - 1 - icos][irap]  # flip: icos=0 at bottom
+    for irap in range(N_TD_RAP):
+        for icos in range(N_TD_COSTH):
+            ax = axes[N_TD_COSTH - 1 - icos][irap]  # flip: icos=0 at bottom
 
             sl = slice(
-                irap * N_COSTH * N_MLL + icos * N_MLL,
-                irap * N_COSTH * N_MLL + icos * N_MLL + N_MLL,
+                irap * N_TD_COSTH * N_TD_MLL + icos * N_TD_MLL,
+                irap * N_TD_COSTH * N_TD_MLL + icos * N_TD_MLL + N_TD_MLL,
             )
             sm_s    = sm[sl]   / widths
             lin_s   = lin[sl]  / widths
             quad_s  = quad[sl] / widths
             sm_v_s  = sm_v[sl] / widths**2
 
-            is_legend_cell = (irap == 0 and icos == N_COSTH - 1)
+            is_legend_cell = (irap == 0 and icos == N_TD_COSTH - 1)
 
-            h1, = ax.step(np.append(MLL_EDGES[:-1], MLL_EDGES[-1]),
+            h1, = ax.step(np.append(TD_MLL_EDGES[:-1], TD_MLL_EDGES[-1]),
                           np.append(sm_s, sm_s[-1]),
                           where="post", color=SM_COLOR, linewidth=1.8,
                           label="SM")
@@ -273,7 +287,7 @@ def plot_triple_diff_2d(histos, op, c_values, outdir):
                 full   = sm_s + cv * lin_s + cv**2 * quad_s
                 full_v = sm_v_s + cv**2 * (quad_v[sl] / widths**2)
                 lbl    = fr"SM+EFT ($c={cv}$)" if len(c_values) > 1 else r"SM+EFT ($c=1$)"
-                h2, = ax.step(np.append(MLL_EDGES[:-1], MLL_EDGES[-1]),
+                h2, = ax.step(np.append(TD_MLL_EDGES[:-1], TD_MLL_EDGES[-1]),
                               np.append(full, full[-1]),
                               where="post", color=col, linewidth=1.5,
                               linestyle="--", label=lbl)
@@ -286,8 +300,8 @@ def plot_triple_diff_2d(histos, op, c_values, outdir):
             ax.set_xscale("log")
             ax.set_yscale("log")
 
-            rap_lo, rap_hi   = RAP_EDGES[irap],  RAP_EDGES[irap + 1]
-            cos_lo, cos_hi   = COSTH_EDGES[icos], COSTH_EDGES[icos + 1]
+            rap_lo, rap_hi   = TD_RAP_EDGES[irap],   TD_RAP_EDGES[irap + 1]
+            cos_lo, cos_hi   = TD_COSTH_EDGES[icos], TD_COSTH_EDGES[icos + 1]
             lbl_text = (fr"$|y|$: [{rap_lo},{rap_hi}]" + "\n" +
                         fr"$\cos\theta^*$: [{cos_lo},{cos_hi}]")
             ax.text(0.97, 0.97, lbl_text, transform=ax.transAxes,

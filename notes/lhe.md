@@ -380,3 +380,55 @@ Then follow the LHE combine workflow in `notes/combine.md`.
 | `lhe_cache_new.pkl` | `LHE/SYST_slc7/CACHE/` | Active cache (MUF-only, 5-flav PDF) |
 | `lhe_cache_syst.pkl` | `LHE/SYST_slc7/CACHE/` | Old cache (kept for reference) |
 | LHE files | `LHE/SYST_slc7/DYSMEFTMll{lo}_{hi}/` | Raw MadGraph output, 7 mll bins |
+| `build_cache_propcorr.py` | `analysis/combine_tools/` | Cache builder for propcorr production (file-level parallelism) |
+| `lhe_cache_propcorr_parallel.pkl` | `LHE/propcorr/CACHE/` | Cache for propcorr LHE (7 mll bins, 50–3000 GeV) |
+| `plot_lhe_eft.py` | `analysis/combine_tools/` | Plot SM/lin/quad from propcorr cache (see §5) |
+
+---
+
+## 5. LHE-level EFT Plots (`plot_lhe_eft.py`)
+
+Produces thesis/presentation plots of the EFT decomposition directly from the
+propcorr LHE cache. No combine or shapes.root needed.
+
+### 5.1 Output figures (per operator)
+
+| Figure name | Content | y-scale |
+|-------------|---------|---------|
+| `{var}_sm_full_{op}` | SM + SM+EFT at c=1 | log |
+| `{var}_lin_{op}` | linear term at c=1 | linear (can be negative) |
+| `{var}_quad_{op}` | quadratic term at c=1 | log |
+| `triple_diff_2d_{op}` | 4×5 grid (|y|×cosθ*), mll on x-axis | log |
+
+Variables: `mll`, `costhetastar`, `rapll_abs`, `triple_diff` (unrolled 280 bins).
+
+### 5.2 Usage
+
+```bash
+# quick test — one operator
+python3 ~/DY2026/analysis/combine_tools/plot_lhe_eft.py \
+  --cache /grid_mnt/data__data.polcms/cms/adufour/LHE/propcorr/CACHE/lhe_cache_propcorr_parallel.pkl \
+  --outdir ~/plots/lhe_eft \
+  --operators cHDD \
+  --c-values 1.0
+
+# all operators
+python3 ~/DY2026/analysis/combine_tools/plot_lhe_eft.py \
+  --cache /grid_mnt/data__data.polcms/cms/adufour/LHE/propcorr/CACHE/lhe_cache_propcorr_parallel.pkl \
+  --outdir ~/plots/lhe_eft
+
+# multiple c values on the same canvas
+python3 ~/DY2026/analysis/combine_tools/plot_lhe_eft.py \
+  --cache ... --operators cHDD --c-values 0.5 1.0 2.0
+```
+
+### 5.3 Binning
+
+Matches `config_v9.py` (RECO analysis) for direct comparison:
+
+```
+mll:          [40,60,80,100,120,140,180,220,270,350,500,700,1000,1500,3000]  (14 bins)
+costhetastar: [-1.0,-0.6,-0.2,0.2,0.6,1.0]                                  (5 bins)
+rapll_abs:    [0.0,0.48,0.96,1.44,2.4]                                       (4 bins)
+triple_diff:  280 unrolled bins  (irap × N_COSTH × N_MLL + icos × N_MLL + imll)
+```
