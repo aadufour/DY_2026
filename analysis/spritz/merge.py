@@ -1,7 +1,9 @@
+import argparse
 import concurrent.futures
 import glob
 import hashlib
 import os
+import sys
 from math import ceil
 from typing import NewType
 
@@ -11,6 +13,13 @@ from spritz.framework.framework import (  # noqa: F401
     write_chunks,
     get_batch_cfg
 )
+
+parser = argparse.ArgumentParser(description="merge of spritz files")
+parser.add_argument("--skip-events", dest="skip_events", action="store_true", default=False,
+                    help="Do not merge events fields (saves memory). Only merge histos")
+parser.add_argument("--cpus", dest="cpus", type=int, default=16,
+                    help="Number of parallel workers (default: 16)")
+args, _ = parser.parse_known_args()
 
 MERGE_RESULT_FNAME = "tmp_special_"
 
@@ -41,11 +50,14 @@ def read_inputs(inputs: list[str]) -> list[Result]:
         if isinstance(job_result, list):
             for job_result_single in job_result:
                 if job_result_single["result"] != {}:
-                    new_job_result.append(job_result_single["result"]["real_results"])
+                    r = job_result_single["result"]["real_results"]
+                    if args.skip_events:
+                        for ds in r:
+                            r[ds].pop("events", None)
+                    new_job_result.append(r)
             inputs_obj.extend(new_job_result)
         else:
             inputs_obj.append(job_result)
-    # print(inputs_obj)
     return inputs_obj
 
 
@@ -123,7 +135,7 @@ def main():
     reduce_function = sum
     reduce_function = add_dict_iterable
     elements_for_task = 10
-    cpus = 6
+    cpus = args.cpus
     with concurrent.futures.ProcessPoolExecutor(max_workers=cpus) as executor:
         create_tree(
             inputs,

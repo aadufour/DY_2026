@@ -86,6 +86,11 @@ Use the `spritz-shell` alias (defined in `~/.bashrc`):
 spritz-shell
 ```
 
+### Python inside apptainer
+```bash
+/usr/local/envs/spritz/bin/python
+```
+
 Which expands to:
 ```bash
 apptainer exec \
