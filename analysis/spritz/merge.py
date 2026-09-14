@@ -77,11 +77,17 @@ def postprocess_inputs(inputs):
 
 
 def reduction(inputs, reduce_function, output):
-    inputs_obj = read_inputs(inputs)
-    result = reduce_function(inputs_obj)
-    postprocess_inputs(inputs)
-    print("writing to", output)
-    write_chunks(result, output)
+    try:
+        inputs_obj = read_inputs(inputs)
+        result = reduce_function(inputs_obj)
+        postprocess_inputs(inputs)
+        print("writing to", output)
+        write_chunks(result, output)
+    except Exception as e:
+        import traceback
+        print("ERROR in reduction:", e, file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
+        raise
 
 
 def split_inputs(inputs, elements_for_task):
