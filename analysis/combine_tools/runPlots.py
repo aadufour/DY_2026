@@ -120,7 +120,7 @@ if __name__ == "__main__":
 
         fn = f"higgsCombine.{outname}.individual.MultiDimFit.mH125.root"
 
-        cmds.append("mkEFTScan.py " + f"{fn} -p {op_pois} -maxNLL 10 -lumi 138 -cms -preliminary -o scan_{outname} -ff png pdf root")
+        cmds.append("mkEFTScan.py " + f"{fn} -p {op_pois} -maxNLL 10 -lumi 59.74 -cms -preliminary -o scan_{outname} -ff png pdf root")
 
     print(cmds)
 

@@ -225,7 +225,7 @@ if __name__ == "__main__":
 
         fn = f"higgsCombine.{outname}.individual.MultiDimFit.mH125.root"
 
-        cmd = f"mkEFTScan.py {fn} -p {op_pois} -maxNLL 10 -lumi 138 -cms -preliminary -o scan_{outname} -ff png pdf root"
+        cmd = f"mkEFTScan.py {fn} -p {op_pois} -maxNLL 10 -lumi 59.74 -cms -preliminary -o scan_{outname} -ff png pdf root"
 
         # Determine main label — required for legend to appear in mkEFTScan.py
         main_label = options.label

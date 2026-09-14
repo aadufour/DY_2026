@@ -57,7 +57,8 @@ import argparse
 import os
 
 
-EXCLUDE_LIST = ["QCDScale", "PDFweight"]
+#EXCLUDE_LIST = ["QCDScale", "PDFweight"]
+EXCLUDE_LIST = ["QCDScale"]
 
 
 def is_dash_line(line):
