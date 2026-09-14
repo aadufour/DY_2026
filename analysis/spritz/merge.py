@@ -19,6 +19,8 @@ parser.add_argument("--skip-events", dest="skip_events", action="store_true", de
                     help="Do not merge events fields (saves memory). Only merge histos")
 parser.add_argument("--cpus", dest="cpus", type=int, default=16,
                     help="Number of parallel workers (default: 16)")
+parser.add_argument("--batch-size", dest="batch_size", type=int, default=10,
+                    help="Number of pkls per reduction task (default: 10)")
 args, _ = parser.parse_known_args()
 
 MERGE_RESULT_FNAME = "tmp_special_"
@@ -140,7 +142,7 @@ def main():
     #print(output)
     reduce_function = sum
     reduce_function = add_dict_iterable
-    elements_for_task = 10
+    elements_for_task = args.batch_size
     cpus = args.cpus
     with concurrent.futures.ProcessPoolExecutor(max_workers=cpus) as executor:
         create_tree(
