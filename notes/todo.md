@@ -1,11 +1,3 @@
-1. [x] Propapagtor correction! especially important when you are on shell!
-    - [x] build gridpack with propagator correction: I just updated restrict all massless so 1 1.000000e+00 # linearPropCorrections. actually we need to put it back in the tar.gz
-    - [x] validate the propagator correction: does it work with 10k events?
-    - [x] make nanoaods
-    - [x] analysis and fits
-    - [x] comparisons
-
---
 - [x] combine fits still says 138 fb^-1 -> to change (just visual!)
 
 ---
@@ -13,31 +5,27 @@
 
 ----
 
-- [ ] (primo) introduce syst one  by one: we can work out why the lines wiggle. prima tolgo teoriche (pdf, qcd scale), poi exp. controllo che la parametrizzazione sia giusta: /grid_mnt/data__data.polcms/cms/adufour/CMSSW_spritz/CMSSW_14_1_0_pre4/src/tools/checks
+- [x] (primo) introduce syst one  by one: we can work out why the lines wiggle. prima tolgo teoriche (pdf, qcd scale), poi exp. controllo che la parametrizzazione sia giusta: /grid_mnt/data__data.polcms/cms/adufour/CMSSW_spritz/CMSSW_14_1_0_pre4/src/tools/checks
 probabile da aggiornare per morphing.
 checkPositibity assume shapes che si chiamano "sm", "quad_" mentre tu hai "sm", "w1_" "wm1" etc...
 
+...non mi torna come mai debba essere necessario modificare queste cose... comunque ho capito che il problema è QCD
+- [ ] tolgo QCD scale dai fit.
+- [ ] alphaS entra?
 
-07-Sep
-ugly ops fixed by disabling theory (mll) (all were fixed):
-- cHe (very ugly)
-- cll1
-- cHQ3
-- CHQ1
-- cHj3
-- cHDD
-- cHd
+----------
+- [ ]
 
-ugly ops fixed by disabling theory (triple_diff):
-- cHe (not even that ugly, does it even make sense to remove unc?)
+------------
 
 
 
 
+- [ ] Introduce mixed terms fo 2D fits
+    - cannot MERGE them!
+----
 
-Le stelline sono un bruto segno nei plot 2D!
-
-- [ ] check SM of this plot against by SMEFTsim SM (reweighting weight)
+- [ ] check SM of this plot against by SMEFTsim SM (reweighting weight)(l'ha fatto fiacomo nella '/Users/albertodufour/Desktop/3DY_Fabian_Samples_LO - Presentazioni Google.pdf')
 
 
 ---
@@ -53,7 +41,7 @@ Le stelline sono un bruto segno nei plot 2D!
 
 ---
 
-2. [ ] cHQ1 and cHQ3 are the same???
+2. [ ] cHQ1 and cHQ3 are the same!
 
 
 -------
@@ -65,13 +53,6 @@ Le stelline sono un bruto segno nei plot 2D!
 
 
 4. [ ] Scan with ONLY LINEAR/QUADRATIC (maybe very close to c=0) -> check giacomos model on mattermost
----
-
-5. [ ] 2D operator scan
- - [x] mll
- - [ ] other vars? chiedo a giacomo
-
-
 
 ---
 roberto
@@ -93,124 +74,20 @@ roberto
 
 
 
+-------------
+Govoni 23 Sept
+- perche queste variabili? non si potrebbe prima selezionare op -> scelgo variabili migliori per sens? [possibile sviluppo]
 
+- REWEIGHTING: se w1 w wm1 non fossero reweighted non potrei fare algebra -> lin quad
+- TopU3l: è la terza generazione quark singled out o solo top?
+- MINNLO è NNTLO QCD e NLO QCD? da capire
+- il k factor da minnlo non dovrebbe propagare incertezza QCD?
+- cos'è tt_ptrw?
 
+- variare binning: citare come possibilità ma non approfondire
+- studio iniezione segnale BSM: so fittare? injection study
+- bias study: cosa succede se si stima male il fondo (piu tecnico)
 
+- fix summary plot per quando ho due minimi (e.g. yll e ctheta buggati)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
--------
-tmp: 2D fits
-
-operators appearing in a "degenerate/flat fit" pair from build_correlation_matrix.py - box/metadata.json range likely still wrong for these
-- [x] cbWRe
-- [x] cbBRe
-- [ ] clj1: NO!
-- [ ] cHj1: NO!
-- [ ] ced: NO!
-- [ ] cje: NO!
-- [ ] clu: NO!
-- [ ] cld: NO!
-- [ ] cHQ1: NO!
-- [ ] cHQ3: NO!
-- [ ] cHu: NO!
-- [ ] cHd: NO!
-- [x] cHbq
-- [ ] clj3: NO!
-- [ ] cHe: NO!
-- [x] cQl1
-- [x] cQl3
-- [x] cbe
-- [x] cQe
-- [x] cbl
-- [ ] ceu: NO!
-
-(didn't work for fits)
-
-IS UNCORRELATED:
-- [x] cbWRe_cbBRe: PDF AND PNG DO NOT MATCH!!
-- [x] cbWRe_clj1
-- [x] cbBRe_clj1
-- [x] cHj1_clj1
-- [ ] cHj1_ced
-- [x] cHj1_cje
-- [x] cHj1_clu
-- [x] cHj1_cld
-- [ ] cHQ1_clj1
-- [ ] cHQ1_cld
-- [ ] cHQ3_clj1
-- [ ] cHQ3_cld
-- [x] cHu_clj1
-- [ ] cHu_cje
-- [x] cHu_clu
-- [ ] cHu_cld
-- [x] cHd_cHbq
-- [x] cHd_clj1
-- [x] cHd_cje
-- [x] cHd_clu
-- [x] cHd_cld
-- [x] cHbq_clj1
-- [x] cHbq_clj3
-- [x] cHbq_ced
-- [ ] cHe_clj1
-- [ ] cHe_cje
-- [ ] cHe_clu
-- [ ] cHe_cld
-- [x] clj1_cQl1
-- [x] clj1_cQl3
-- [ ] clj1_cbe
-- [x] clj1_cQe
-- [ ] clj1_cbl
-- [ ] clj3_cQl1
-- [ ] clj3_cQl3
-- [ ] clj3_cQe
-- [ ] clj3_cbl
-- [ ] cQl1_ceu
-- [ ] cQl1_ced
-- [x] cQl1_cje
-- [x] cQl1_clu
-- [ ] cQl1_cld
-- [ ] cQl3_ceu
-- [ ] cQl3_ced
-- [x] cQl3_cje
-- [x] cQl3_clu
-- [ ] cQl3_cld
-- [ ] ceu_cQe
-- [ ] ced_cbe
-- [ ] ced_cQe
-- [ ] ced_cbl
-- [ ] cbe_cje
-- [x] cbe_clu
-- [ ] cbe_cld
-- [x] cje_cQe
-- [ ] cje_cbl
-- [ ] cQe_clu
-- [ ] cQe_cld
-- [ ] clu_cbl
-- [ ] cld_cbl
+- profilazione: lascio variare gli altri coefficienti durante un fit (o una parte)
