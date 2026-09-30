@@ -19,9 +19,9 @@
 ## 0. 1-jet study (already in progress)
 
 - [x] Generate all 28 gridpacks (4 sets × 7 bins) with MLM matching (`ickkw=1`, `xqcut=15`)
+- [ ] NanoAOD generation (Giacomo)
 - [ ] Integrate 1j samples into spritz pipeline (spritz-merge, spritz-postproc, spritz-postproc-eft, spritz-cards-eft)
 - [ ] Compare propcorr / nonpropcorr / 0j+1j predictions for mll
-- [ ] Motivation: real emission from `p p > l l j` brings LO prediction closer to NLO (as suggested by Giacomo in 23 Sept meeting)
 
 ---
 
