@@ -45,8 +45,13 @@ export PATH=$PATH:/grid_mnt/data__data.polcms/cms/adufour/CMSSW_14_1_0_pre4/src/
 export PATH=/grid_mnt/data__data.polcms/cms/adufour/spritz/analysis/spritz:$PATH
 export PATH=/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz:$PATH
 export PATH=/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/combine_tools:$PATH
-export PYTHONPATH=/grid_mnt/data__data.polcms/cms/adufour/spritz_fabian/src:$PYTHONPATH
-export SPRITZ_PATH=/grid_mnt/data__data.polcms/cms/adufour/spritz_fabian
+if [ -z "$SPRITZ_GIACOMO" ]; then
+    export PYTHONPATH=/grid_mnt/data__data.polcms/cms/adufour/spritz_fabian/src:$PYTHONPATH
+    export SPRITZ_PATH=/grid_mnt/data__data.polcms/cms/adufour/spritz_fabian
+else
+    export PYTHONPATH=/grid_mnt/data__data.polcms/cms/adufour/spritz_giacomo/src:$PYTHONPATH
+    export SPRITZ_PATH=/grid_mnt/data__data.polcms/cms/adufour/spritz_giacomo
+fi
 
 runScans.py() { python3 /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/combine_tools/runScans.py "$@"; }
 runPlots.py() { python3 /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/combine_tools/runPlots.py "$@"; }
@@ -66,4 +71,4 @@ tlog() {
     tmux new-session -A -s "$name" \; pipe-pane -o "cat >> $log"
 }
 
-alias spritz-shell-giacomo='PYTHONPATH=/grid_mnt/data__data.polcms/cms/adufour/spritz_giacomo/src:$PYTHONPATH apptainer exec -B /etc/grid-security/certificates:/etc/grid-security/certificates -B /cvmfs -B /grid_mnt -B /grid_mnt/data__data.polcms/cms/adufour/spritz_giacomo/data/Full2018v9/samples/samples.json:/opt/spritz/data/Full2018v9/samples/samples.json /grid_mnt/data__data.polcms/cms/adufour/spritz-env.sif bash --rcfile ~/.bashrc'
+alias spritz-shell-giacomo='SPRITZ_GIACOMO=1 apptainer exec -B /etc/grid-security/certificates:/etc/grid-security/certificates -B /cvmfs -B /grid_mnt -B /grid_mnt/data__data.polcms/cms/adufour/spritz_giacomo/data/Full2018v9/samples/samples.json:/opt/spritz/data/Full2018v9/samples/samples.json /grid_mnt/data__data.polcms/cms/adufour/spritz-env.sif bash --rcfile ~/.bashrc'
