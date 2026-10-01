@@ -72,4 +72,4 @@ tlog() {
     tmux new-session -A -s "$name" \; pipe-pane -o "cat >> $log"
 }
 
-alias spritz-shell-giacomo='SPRITZ_GIACOMO=1 apptainer exec -B /etc/grid-security/certificates:/etc/grid-security/certificates -B /cvmfs -B /grid_mnt -B /grid_mnt/data__data.polcms/cms/adufour/spritz_giacomo/data/Full2018v9/samples/samples.json:/opt/spritz/data/Full2018v9/samples/samples.json /grid_mnt/data__data.polcms/cms/adufour/spritz-env.sif bash --rcfile ~/.bashrc'
+alias spritz-shell-giacomo='SPRITZ_GIACOMO=1 PATH=/home/llr/cms/adufour/.conda/envs/spritz/bin:$PATH apptainer exec -B /etc/grid-security/certificates:/etc/grid-security/certificates -B /cvmfs -B /grid_mnt -B /grid_mnt/data__data.polcms/cms/adufour/spritz_giacomo/data/Full2018v9/samples/samples.json:/opt/spritz/data/Full2018v9/samples/samples.json /grid_mnt/data__data.polcms/cms/adufour/spritz-env.sif bash --rcfile ~/.bashrc'
