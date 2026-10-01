@@ -10,6 +10,13 @@ PROXY=/grid_mnt/data__data.polcms/cms/adufour/proxy.pem
 FW_PATH=${SPRITZ_PATH:-/grid_mnt/data__data.polcms/cms/adufour/spritz_fabian}
 CFG_JSON=${FW_PATH}/data/Full2018v9/cfg.json
 
+# spritz_giacomo needs python 3.12 (conda env); the sif python is 3.10
+if [ -n "$SPRITZ_GIACOMO" ]; then
+    PYTHON=/home/llr/cms/adufour/.conda/envs/spritz/bin/python
+else
+    PYTHON=python
+fi
+
 # Get the runner name from config.py in the current directory
 RUNNER_NAME=$(python3 -c "
 import sys, re
@@ -52,7 +59,7 @@ time apptainer exec \
     --env PYTHONPATH=${FW_PATH}/src:${FW_PATH} \
     --env X509_USER_PROXY=/tmp/x509up_u\$(id -u) \
     /grid_mnt/data__data.polcms/cms/adufour/spritz-env.sif \
-    python ${RUNNER_NAME} .
+    ${PYTHON} ${RUNNER_NAME} .
 RUNEOF
 chmod +x condor/run.sh
 
