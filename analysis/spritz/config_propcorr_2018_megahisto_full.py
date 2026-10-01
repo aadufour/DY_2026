@@ -29,7 +29,7 @@ runner = "/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz/runner
 
 special_analysis_cfg = {
     "do_variations": True,
-    "do_theory_variations": False, # 116 variations
+    "do_theory_variations": True, # 116 variations
     "do_rochester_stat_variations": False, # 100 variations
     "do_jet_variations": False, # 24 variations
     "invert_one_isolation_loose": False,
@@ -185,6 +185,7 @@ samples.update({
     point: {
         "samples": [f"{dataset}_{point}" for dataset in eft_datasets],
         "is_smeft": True,
+        "noStat": True,
         **({"is_signal": True} if point != "sm" else {}),
     }
     for point in eft_points
@@ -319,7 +320,43 @@ nuisances = {
         ]
     },
     #############
-    # Theory
+    # Theory (from propcorr v1)
+    #############
+    "QCDscale": {
+        "name": "QCDScale",
+        "type": "shape",
+        "kind": "envelope",
+        "samples": (
+            {k: [f"QCDScale_{i}" for i in [0,1,3,4,5,7,8]] for k in ["Single_Top", "TT", "VV"]}
+            | {k: [(f"QCDScale_{2*i}", f"QCDScale_{i}") for i in [0,1,3,4,5,7,8]] for k in ["DYmm_NNLO", "DYtt"]}
+            | {k: [f"QCDScale_{i}" for i in [0,1,3,5,7]] for k in eft_points}  # EFT: only 8 scale weights (0-7)
+        ),
+        "is_theory_unc": True,
+    },
+    "PDFweight": {
+        "name": "PDFweight",
+        "type": "shape",
+        "kind": "square",
+        # Single Top does not have reliable LHEPdfWeight in NanoAOD
+        "samples": {k: [f"PDFWeight_{i}" for i in range(101)] for k in ["DYmm_NNLO", "DYtt", "TT", "VV"] + eft_points},
+        "is_theory_unc": True,
+    },
+    "alphaS": {
+        "name": "alphaS",
+        "type": "shape",
+        "kind": "envelope",
+        "samples": {k: [f"PDFWeight_{i}" for i in [101, 102]] for k in ["DYmm_NNLO", "DYtt"] + eft_points},
+        "is_theory_unc": True,
+    },
+    "PSWeight": {
+        "name": "PSWeight",
+        "type": "shape",
+        "kind": "envelope",
+        "samples": {k: [f"PSWeight_{i}" for i in range(4)] for k in ["DYmm_NNLO", "DYtt", "Single_Top", "TT", "VV"] + eft_points},
+        "is_theory_unc": True,
+    },
+    #############
+    # Theory: HO corrections
     #############
     "NLO EW correction": {"name": "NLO_EW", "type": "shape", "samples": ["DYmm_NNLO", "DYtt"], "kind": "weight"},
     "N3LO QCD correction": {"name": "N3LO_QCD", "type": "shape", "samples": ["DYmm_NNLO"], "kind": "weight"},
