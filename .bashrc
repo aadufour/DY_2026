@@ -54,6 +54,7 @@ if [ -z "$SPRITZ_GIACOMO" ]; then
 else
     export PYTHONPATH=/grid_mnt/data__data.polcms/cms/adufour/spritz_giacomo/src:$PYTHONPATH
     export SPRITZ_PATH=/grid_mnt/data__data.polcms/cms/adufour/spritz_giacomo
+    export PATH=/home/llr/cms/adufour/.conda/envs/spritz/bin:$PATH
 fi
 
 runScans.py() { python3 /grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/combine_tools/runScans.py "$@"; }
