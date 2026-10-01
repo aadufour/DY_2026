@@ -45,7 +45,9 @@ export PATH=$PATH:/grid_mnt/data__data.polcms/cms/adufour/CMSSW_14_1_0_pre4/src/
 export PATH=/grid_mnt/data__data.polcms/cms/adufour/spritz/analysis/spritz:$PATH
 export PATH=/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz:$PATH
 export PATH=/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/combine_tools:$PATH
-export PATH=$HOME/.local/bin:$PATH
+if [ -z "$SPRITZ_GIACOMO" ]; then
+    export PATH=$HOME/.local/bin:$PATH
+fi
 if [ -z "$SPRITZ_GIACOMO" ]; then
     export PYTHONPATH=/grid_mnt/data__data.polcms/cms/adufour/spritz_fabian/src:$PYTHONPATH
     export SPRITZ_PATH=/grid_mnt/data__data.polcms/cms/adufour/spritz_fabian
