@@ -68,65 +68,18 @@ roberto
 -----
 - [ ] need to check for validity of the linear approx? e.g. checking sm+lin vs full. chiedo a giacomo
 
+-----
+Meeting notes moved to notes/meetings.md (2026-10-03)
 
-
-
-
-
-
--------------
-Govoni 23 Sept +. risposte giacomo 28 sept (dopo il !)
-- perche queste variabili? non si potrebbe prima selezionare op -> scelgo variabili migliori per sens? [possibile sviluppo]
-! viene da paper teorico. è così semplice che xsec full può essere completamente descritta da queste tre. c'è ridondanza.
-
-- REWEIGHTING: se w1 w wm1 non fossero reweighted non potrei fare algebra -> lin quad
-- TopU3l: è la terza generazione quark singled out o solo top?
-- MINNLO è NNLO QCD e NLO EWK? da capire
-! NLO EWK is not embedded in the matrix element but comes from pythia (ISR, FSR): missing virtual contributions
-- il k factor da minnlo non dovrebbe propagare incertezza QCD?
-! either take the minnlo or LO, free to choose. MINNLO better (smaller). take the minnlo and add on top a little uncertainty (lognormal). It would be nice to add the generation generate p p > l l j (adding real emission part of the diadgrams) -> prediction gets closer to LO. would need to generate new gridpacks.
-- cos'è tt_ptrw?
-
-- variare binning: citare come possibilità ma non approfondire
-! si possono fare i due estremi: 1. stesso humero assoluto di bin tra single var e 3D (mll può essere più sensibile ma quando guardo in 2D PUò ESSERE MEGLIO, meno correlazione. quando faccio i fit profiled (e poi globali. quella è lòa fogura di merito principale). si rivsolvono e.g. flat direction) o 2. la variabili
-
-
-- studio iniezione segnale BSM: so fittare? injection study
-! abbastanza facile (comando di combine mettendo WC a zero, --setparameter a x invece di 0)
-- bias study: cosa succede se si stima male il fondo (piu tecnico)
-
-
-
-- fix summary plot per quando ho due minimi (e.g. yll e ctheta buggati)
-
-- profilazione: lascio variare gli altri coefficienti durante un fit (o una parte).
-! si può fare, tutto già implementato. Posso scegliere sottogruppo (servono i fit 2D).
-devo escludere operatori flat finche il set di operatori è closed e faccio un profiled.
-
-PRIMA COSA PROFILED. Imparo le direzioni che non posso costringere con questo approccio, qual è il set massimo di operatori che posso metter insieme (PCA?? unico modo per non buttare operatori). Per esempio sarebbe bello dare un'idea con 2018 delle flat 
-
-Devo lavorare su incertezza. I k factor sono uguali tra Sm e EFT? Posso prenddere un operatore che c'è sia in SMEFTsim e SMEFTatNLO (sempre MG5 ma NLO). voglio controllare che tra i due il k factor rimanga uguale lin(op) (????????????->mattermost 15:18). se sono uguali posso applicare anche a EFT. ho il confronto solo a NLO pero lo estrapolo anche A NNLO! giustifico il fatto di usare k factor basato su SM per ordini successivi. Mai stato fatto, interessante.
-
-- Fare full run2 è un esercizio di stile. Non ci guadagno granché
-
-
-
-------------
-28 sept giacomo fabian
-- covariance matrix?
-- last slide of fabian (bottom formula)
-- we will maybe add a lognormal to take into account mismodeling uncertainty. or smt else?
-
-
-Fabian timeline:
-- defending beginning of feb.
-- finish thesis end of nov.
-
-
-- missing all reviews (they all require impact plots)
-    ->ptv (o btv?), jme and muon
-- then preapproval
-    -> would be nice to have nlo EW + NNLO QCD SMEFTsim, smeftatnlo (not corr matrix). 1D results and maybe 1 2D examples
-    -> maybe SMP general oct 16 (or 1 nov?)
-
-- maybe SMPV on oct6? check on thursday
+-----
+Uncertainties, open points for SMP-V (2026-10-03, details in notes/uncertainties.md)
+- [ ] lumi: confirm 0.84% for 2018 (spritz data/common/lumi.json rel_unc) with Giacomo / current LUM POG table (older recommendation 2.5%)
+- [ ] lumi: read rel_unc from lumi.json instead of hardcoding 1.0084 (config_v9.py, config_propcorr_v1.py)
+- [ ] lumi label: plots say 59.74 fb^-1, normalisation uses 59.56 fb^-1 -> make consistent on slides/plots
+- [ ] COMBINE slide: PDF text is wrong ("103 replicas divided up/down") -> NNPDF3.1 symmetric Hessian, 100 eigenvectors summed in quadrature, alphaS separate (101/102)
+- [ ] mu_trig: 2-muon formula 1-(1-sf1)(1-sf2) uses SFs instead of efficiencies, uncertainty suppressed ~50x (same in Giacomo's version)
+- [ ] high-pT muons: check muWP and SF validity above ~200 GeV (mll up to 3 TeV, SFs clamped to last pT bin)
+- [ ] fit: check post-fit pulls/constraints of mu_reco/mu_idiso/mu_trig (Z peak can constrain SFs measured on the same Z events)
+- [ ] alphaS: Up = mem 102, Down = mem 101 instead of envelope (same result now, cleaner)
+- [ ] Rochester: why is the nominal set 5 instead of set 0?
+- [ ] Run 2: lumi correlation scheme across years, per-year muon SF correlations
