@@ -76,10 +76,20 @@ Uncertainties, open points for SMP-V (2026-10-03, details in notes/uncertainties
 - [ ] lumi: confirm 0.84% for 2018 (spritz data/common/lumi.json rel_unc) with Giacomo / current LUM POG table (older recommendation 2.5%)
 - [ ] lumi: read rel_unc from lumi.json instead of hardcoding 1.0084 (config_v9.py, config_propcorr_v1.py)
 - [ ] lumi label: plots say 59.74 fb^-1, normalisation uses 59.56 fb^-1 -> make consistent on slides/plots
-- [ ] COMBINE slide: PDF text is wrong ("103 replicas divided up/down") -> NNPDF3.1 symmetric Hessian, 100 eigenvectors summed in quadrature, alphaS separate (101/102)
+- [x] COMBINE slide: PDF text is wrong ("103 replicas divided up/down") -> NNPDF3.1 symmetric Hessian, 100 eigenvectors summed in quadrature, alphaS separate (101/102)
 - [ ] mu_trig: 2-muon formula 1-(1-sf1)(1-sf2) uses SFs instead of efficiencies, uncertainty suppressed ~50x (same in Giacomo's version)
 - [ ] high-pT muons: check muWP and SF validity above ~200 GeV (mll up to 3 TeV, SFs clamped to last pT bin)
 - [ ] fit: check post-fit pulls/constraints of mu_reco/mu_idiso/mu_trig (Z peak can constrain SFs measured on the same Z events)
 - [ ] alphaS: Up = mem 102, Down = mem 101 instead of envelope (same result now, cleaner)
 - [ ] Rochester: why is the nominal set 5 instead of set 0?
 - [ ] Run 2: lumi correlation scheme across years, per-year muon SF correlations
+
+-----
+Final version of the analysis (after SMP-V, 2026-10-04, details in notes/uncertainties.md)
+- [ ] fakes: add data-driven nonprompt-muon estimate (Fabian's fake templates, same-sign region inc_mm_ss) with fakes_param + fakes_model nuisances, as in spritz_giacomo/configs/dy-eft-2018
+- [ ] b-veto against ttbar (TT ~25% of total at 200-500 GeV) + btagSF_sf / btagSF_eff / puidSF nuisances -> discuss with Giacomo
+- [ ] higher-order DY: N3LO QCD + NLO EW corrections with their uncertainties (as in dy-eft-2018) instead of only the NNLO QCD MiNNLO k-factor
+- [ ] background cross-section lnN uncertainties (WZ, ZZ, GGToLL have none; TT/WW only scale/PDF)
+- [ ] alphaS also on TT and WW (members 101/102 available, one-line config change)
+- [ ] MC stat of sm/EFT templates: full covariance-matrix treatment; first quantify n_eff per bin for the 1D mll fit (histos.root)
+- [ ] PSWeight: split ISR and FSR into separate nuisances?
