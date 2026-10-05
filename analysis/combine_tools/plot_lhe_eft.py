@@ -176,7 +176,7 @@ def _ratio_band(rax, vals, variances, edges, color):
     rax.set_ylim(0.5, 1.5)
 
 
-def _eft_ratio_panel(rax, sm, sm_v, full, full_v, edges, c_values, colors):
+def _eft_ratio_panel(rax, sm, sm_v, full, full_v, edges, c_values, colors, ylim):
     """
     Bottom panel for sm_full figure: EFT/SM ratio with MC stat unc bands.
     One curve per c value. SM unc band shown in grey around 1.
@@ -202,7 +202,7 @@ def _eft_ratio_panel(rax, sm, sm_v, full, full_v, edges, c_values, colors):
     rax.axhline(1.0, color="black", linewidth=0.8, linestyle="dashed")
     rax.set_ylabel("EFT / SM", fontsize=20)
     rax.tick_params(axis="y", labelsize=16)
-    rax.set_ylim(0.5, 1.5)
+    rax.set_ylim(*ylim)
 
 
 def _decorate(ax, rax, ylabel, xlabel, op, logy=False, extra_handles=None):
@@ -231,7 +231,7 @@ def _save(fig, stem):
 # Per-variable 1D plot
 # ---------------------------------------------------------------------------
 
-def plot_variable(var, meta, histos, op, c_values, outdir):
+def plot_variable(var, meta, histos, op, c_values, outdir, ratio_ylim):
     sm, lin, quad, sm_v, lin_v, quad_v, edges = histos[var]
 
     # divide by bin width for Events/GeV axes
@@ -263,7 +263,8 @@ def plot_variable(var, meta, histos, op, c_values, outdir):
         full_list.append(full_cv)
         full_v_list.append(full_v_cv)
     _eft_ratio_panel(rax, sm, sm_v, full_list, full_v_list, edges,
-                     c_values=c_values, colors=eft_colors[:len(c_values)])
+                     c_values=c_values, colors=eft_colors[:len(c_values)],
+                     ylim=ratio_ylim)
     _decorate(ax, rax, ylab, xlab, op, logy=True, extra_handles=[mc_stat_proxy])
     _save(fig, stem)
 
@@ -371,6 +372,8 @@ def main():
     parser.add_argument("--outdir",    default="plots/lhe_eft")
     parser.add_argument("--operators", nargs="+", default=OPERATORS)
     parser.add_argument("--c-values",  nargs="+", type=float, default=[1.0])
+    parser.add_argument("--ratio-ylim", nargs=2, type=float, default=[0.5, 1.5],
+                        metavar=("LO", "HI"), help="y-range of the EFT/SM ratio panel")
     parser.add_argument("--variables", nargs="+",
                         default=["mll", "costhetastar", "rapll_abs",
                                  "triple_diff", "triple_diff_2d"],
@@ -400,7 +403,8 @@ def main():
             if var == "triple_diff_2d":
                 plot_triple_diff_2d(histos, op, args.c_values, args.outdir)
             else:
-                plot_variable(var, VAR_META[var], histos, op, args.c_values, args.outdir)
+                plot_variable(var, VAR_META[var], histos, op, args.c_values, args.outdir,
+                              args.ratio_ylim)
 
         print(f"  {op:12s}  done")
 
