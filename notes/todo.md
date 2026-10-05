@@ -90,6 +90,11 @@ Final version of the analysis (after SMP-V, 2026-10-04, details in notes/uncerta
 - [ ] b-veto against ttbar (TT ~25% of total at 200-500 GeV) + btagSF_sf / btagSF_eff / puidSF nuisances -> discuss with Giacomo
 - [ ] higher-order DY: N3LO QCD + NLO EW corrections with their uncertainties (as in dy-eft-2018) instead of only the NNLO QCD MiNNLO k-factor
 - [ ] background cross-section lnN uncertainties (WZ, ZZ, GGToLL have none; TT/WW only scale/PDF)
-- [ ] alphaS also on TT and WW (members 101/102 available, one-line config change)
+- [ ] alphaS on TT (members 101/102 available, ±3%; WW has none: replica set 320900)
+- [ ] WW PDF: stored set 320900 is MC replicas → use std. dev. (kind stdev, members 1-100), not quadrature (~10x overestimate now)
+- [ ] ST s-channel: LHE scale/PDF weights off by factor 2 → rescale x2 or exclude from QCDScale (ask Giacomo)
+- [ ] Single_Top PDF/alphaS: tW weights broken → flat lnN or borrow ttbar relative variation
+- [ ] background xsec: WZ/ZZ normalised at LO (27.59 / 12.17 pb vs NLO ~47 / ~16.5) → fix or add lnN; verify WW (11.09) and tW (21.7) against XSDB
+- [ ] (maybe) switch VV to the exclusive NLO samples as in spritz_giacomo/configs/dy-2018 (Fabian already updated them): WWTo2L2Nu, WZTo3LNu, WZTo2Q2L, ZZTo4L, ZZTo2L2Nu, ZZTo2Q2L (POWHEG / aMC@NLO) → NLO shape + norm, QCD scale/PDF/alphaS available (alphaS not for WW, ZZTo2L2Nu). Would also solve the WZ/ZZ-at-LO item. Giacomo (2026-10-05): current inclusive Pythia setup is consistent, no contradiction
 - [ ] MC stat of sm/EFT templates: full covariance-matrix treatment; first quantify n_eff per bin for the 1D mll fit (histos.root)
 - [ ] PSWeight: split ISR and FSR into separate nuisances?

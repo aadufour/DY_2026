@@ -48,6 +48,124 @@ k-factor); its uncertainty is the systematic that enters the fit as a nuisance.
   rateParams.
 - Source: config_v9.py (datasets/samples), samples_fabian.json.
 
+Slide (Keynote table): Process | Generator | Order, with DY → μμ labelled as
+"SM reference, k-factor" (POWHEG MiNNLO, NNLO QCD) — in the fit the DY → μμ prediction
+is the SMEFTsim LO sample scaled bin-by-bin to MiNNLO, the MiNNLO sample is not stacked.
+Nonprompt removed (not in the analysis yet).
+One-liner: "All backgrounds are official CMS UL18 samples (generator order chosen per
+process); only the SMEFTsim signal is privately produced."
+
+### Why the orders differ
+- Official CMS central samples, produced once for the collaboration with the best
+  practical generator per process; required precision scales with importance.
+- DY → mumu / tautau: dominant (~99% of events) → state of the art, MiNNLO (NNLO QCD
+  matched to PS).
+- ttbar, single top, WW: POWHEG NLO + PS, Run 2 standard; good shapes with known
+  deficits (top pT → reweighting), normalised to higher-order inclusive cross sections.
+- WZ, ZZ: small backgrounds → cheap inclusive Pythia8 LO samples, adequate for shape;
+  normalisation is what matters.
+- gamma gamma → mumu: pure QED at lowest order (no partons in the hard process), higher
+  orders are small O(alpha) QED corrections. The physics is the photon flux (elastic:
+  protons intact; inelastic: dissociation), which PDF-based generators don't model
+  well → CepGen/LPair.
+
+### Why they can be stacked
+- The stack is a sum of expected yields of different, non-overlapping processes, each
+  normalised to its own sigma × L. Valid if:
+  1. no double counting: gamma gamma initial state not in the q qbar DY samples; DYtt
+     only tau decays; mass-binned DY and EFT samples stitched with gen-level mll cuts
+     (LHE mll filters in the runner); tW/ttbar NLO overlap removed in the tW samples
+     (diagram removal).
+  2. no interference between stacked processes (different initial/final states).
+- Mixing orders is consistent; each component is as accurate as its generator → lower
+  order components deserve larger normalisation uncertainties (see missing background
+  sigma lnN below).
+
+### Normalisation cross sections ("a che ordine?")
+- Source: spritz/Latinos UL cross-section DB in Fabian's framework,
+  `spritz_fabian/data/Full2018v9/samples/samples.json`, read by post_process.py ~l.369.
+  Local copy: `analysis/spritz/samples_fabian.json` (committed 2026-06-04). Values not
+  chosen by us; `kfact = 1` everywhere. The `ref` labels in the JSON are unreliable
+  (A1 = V+jets talk, copy-pasted onto WZ, ZZ, gamma gamma, ST t-ch).
+- "Order" = perturbative order of the sigma used to normalise (LO, NLO, NNLO, +NNLL
+  resummation), independent of the generator order of the sample.
+
+| Sample | sigma [pb] | Order | Note |
+|---|---|---|---|
+| DY → mumu (MiNNLO, k-factor) | 2006.65 (M>50) | NNLO QCD | MiNNLO generator sigma |
+| DY → tautau | 1164.31 | NNLO QCD | same sigma × fraction with ≥1 e/mu decay (≈0.58) |
+| ttbar → 2l2nu | 89.28 | NNLO+NNLL | 831.76 × BR(2l2nu) ≈ 0.107 |
+| ST s-channel | 3.38 | NLO | 10.32 × leptonic BR |
+| ST t-channel top / antitop | 134.2 / 80.0 | NLO (5f) | ~LHC Top WG 136.0 / 81.0 |
+| ST tW top / antitop | 21.7 each | approx. NNLO | 35.85 × BR(no full had.) ≈ 19.6 → 21.7 is ~10% high, check |
+| WW → 2l2nu | 11.09 | probably NLO (POWHEG) | NNLO ≈ 12.2 |
+| WZ inclusive | 27.59 | LO (Pythia8) | NLO ≈ 47 → ~40% low |
+| ZZ inclusive | 12.17 | LO (Pythia8) | NLO ≈ 16.5 → ~25% low |
+| gamma gamma → mumu | 0.25/0.37/0.56 (50–200) | LO (CepGen) | generator sigma |
+
+- SM+EFT templates are normalised bin-by-bin to MiNNLO → NNLO QCD.
+- Main issue: WZ/ZZ at LO (small backgrounds, but visible in the stack). WW and tW
+  values to verify against XSDB / the spreadsheet linked in the JSON header.
+- Verify LLR file == local copy (md5 + print xsec of key samples).
+
+## Theory weights available in the background NanoAODs (2026-10-05)
+
+Checked one file per dataset (DAS + global redirector, 2000 events): which of
+LHEScaleWeight / LHEPdfWeight / PSWeight exist and whether their means are sane
+(weights are ratios w_var/w_nom → means should be ≈1). "BROKEN" = present but
+physically impossible means. Script: inline python heredoc (see session 2026-10-05),
+run in spritz-shell-giacomo with a valid proxy.
+
+| sample | QCD scale | PDF | alpha_s | PS |
+|---|---|---|---|---|
+| DYtt | OK (n=18, MiNNLO layout) | OK (n=103, LHA 306000–306102) | OK (0.984/1.015) | OK (n=4) |
+| TT | OK (n=9) | OK (n=103, LHA 306000–306102) | OK (0.972/1.029) | OK |
+| WW | OK (n=9) | OK (n=101, LHA 320900–321000) | – | OK |
+| WZ | – | – | – | OK |
+| ZZ | – | – | – | OK |
+| ST_s | BROKEN (≈0.5) | BROKEN (n=101, LHA 325500–325600, ≈0.5) | – | OK |
+| ST_t top/antitop | OK (n=9) | OK (n=103, LHA 325300–325402) | OK (0.980/1.019) | OK |
+| ST_tW top/antitop | OK (n=9) | BROKEN (n=101, LHA 320900–321000, ≈ −0.06) | – | OK |
+| GG El-El / Inel-El / Inel-Inel | – | – | – | – (dummy, n=1, =1.0) |
+| SM+EFT (SMEFTsim propcorr) | OK (n=8) | OK (n=103, LHA 325300–325402) | OK (0.987/1.009) | OK |
+
+Explanations:
+- LHE weights (scale, PDF, alpha_s) are written by the matrix-element generator into the
+  LHE file; PSWeight by Pythia8. No LHE step → no scale/PDF/alpha_s weights.
+- WZ, ZZ: Pythia8-only samples (`..._TuneCP5_13TeV-pythia8`), Pythia generates the hard
+  process at LO, no LHE file → only PS weights.
+- gamma gamma: CepGen/LPair (photon fluxes, no PDFs, no LHE weights); dissociation
+  showered with Pythia6 → NanoAOD has a single dummy PS weight (code registers PS only
+  if n=4 → nothing applied).
+- alpha_s is not a separate branch: last 2 members of a 103-member `..._pdfas` set
+  (central + 100 + 2 alpha_s). NanoAOD stores ONE PDF set per sample (first available
+  from a priority list).
+- WW: stored set LHA 320900 = NNPDF3.1 NNLO nf=4, `ErrorType: replicas`, 101 members
+  (verified from LHAPDF .info). → no alpha_s members; the AlphaS_* fields in the .info
+  are just the running coupling of the central fit (AlphaS_MZ 0.2135 is alpha_s(m_b),
+  reference scale = 4.92 GeV ↔ alpha_s(mZ) = 0.118).
+- Single top channels: t-channel (qb → q't, 1 lepton), s-channel (qq̄' → tb̄, 1 lepton),
+  tW (bg → tW, 2 leptons, overlaps with ttbar at NLO → diagram removal). After the
+  dimuon selection Single_Top ≈ tW. All 5 samples merged into one template (each with
+  its own sigma × L).
+- ST_s (aMC@NLO 4f): all scale/PDF ratios ≈ 0.5 (nominal exactly 1) → common factor-2
+  normalisation problem; ×2 gives sensible scale means (1.04 … 0.92). Probably
+  recoverable, to confirm.
+- ST_tW PDF: all members ≈ −0.06 → unusable. tW scale weights fine.
+
+Consequences for the fit:
+1. WW PDF uses `kind: square` (Hessian rule) on MC replicas → overestimated ~10×
+   (√100), plus member-0 offset (0.994). Should be std. dev. over members 1–100.
+2. Single_Top QCDScale includes the bogus ×0.5 s-channel variation (diluted, but
+   wrong) → ×2 or exclude ST_s.
+3. alpha_s for ttbar available (±3%, gg-dominated) but not used.
+4. Single_Top PDF/alpha_s: not available for tW (the relevant channel) → options: flat
+   lnN, or borrow ttbar relative PDF variation.
+
+Slide table (2026-10-05) = availability in NanoAOD, not what the datacard uses:
+WZ/ZZ scale/PDF/alpha_s = –; Single t PDF/alpha_s = – (t-ch only); ttbar alpha_s = ✓;
+WW alpha_s = –; gamma gamma all –.
+
 ## Nuisance × process matrix (datacard, identical for v9 and propcorr_v1)
 
 | Nuisance | GGToLL | Single_Top | TT | WW | WZ | ZZ | DYtt | sm + EFT |
@@ -68,10 +186,11 @@ provides the generator weights. Gaps:
 
 | Gap | Reason |
 |---|---|
-| GGToLL: no QCDScale/PDF/alpha_s/PS | CepGen/LPair: photon fluxes (form factors / structure functions), no PDFs, no Pythia8 shower weights |
-| WZ, ZZ: no QCDScale/PDF/alpha_s | Pythia8-only LO samples, no LHE weights |
-| Single_Top: no PDF/alpha_s | unreliable LHEPdfWeight in its NanoAOD (config comment) |
-| TT, WW, Single_Top: no alpha_s | CHOICE: alphaS configured only for DY-type samples + EFT; TT/WW have members 101/102 → one-line change to add |
+| GGToLL: no QCDScale/PDF/alpha_s/PS | forced (verified): no LHE weights, PS weight is a dummy (n=1) |
+| WZ, ZZ: no QCDScale/PDF/alpha_s | forced (verified): Pythia8-only, no LHE weights |
+| Single_Top: no PDF/alpha_s | justified (verified): tW PDF weights ≈ −0.06, ST_s off by ×2; only t-ch usable |
+| TT: no alpha_s | CHOICE: members 101/102 available (±3%) → one-line change to add |
+| WW: no alpha_s | forced (verified): stored PDF set 320900 is MC replicas, no alpha_s members |
 | tt_ptrw: TT only | correction defined for ttbar |
 | MC stat: not on sm/EFT | same events reweighted (covariance treatment in progress) |
 
