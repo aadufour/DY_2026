@@ -38,6 +38,7 @@ sed -i \
   -e '/Requirements/d' \
   -e '/+JobFlavour/d' \
   -e '/^log/a T3Queue = short\nWNTag   = el9\ninclude : /opt/exp_soft/cms/t3/t3queue |' \
+  -e 's/^request_memory *=.*/request_memory=6144/' \
   "$JDL"
 
 # Rewrite transfer_input_files line from scratch
