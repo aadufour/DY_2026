@@ -143,7 +143,7 @@ outside apptainer: `cd condor && condor_submit submit.jdl`.
 
 The wrapper patches `submit.jdl` and `run.sh`:
 - T3 queue (`T3Queue = short`, `WNTag = el9`, `include : /opt/exp_soft/cms/t3/t3queue |`)
-- `request_memory=6144` (default 2048 is too low: jobs reach 4-5.7 GB)
+- `request_memory=8192` (default 2048 is too low: jobs reach 4-7.7 GB)
 - `run.sh`: apptainer + proxy copied from `/grid_mnt/.../proxy.pem`; with `SPRITZ_GIACOMO` set, uses the
   conda py3.12 (`/home/llr/cms/adufour/.conda/envs/spritz/bin/python`), needed for the runner's py3.12 syntax
 
@@ -161,7 +161,8 @@ Runner catches errors per chunk: **exit code 0 does not mean success** — check
   `XRootD error: [FATAL] Auth failed: No protocols left to try`. Fix: renew proxy, resubmit.
   Leftover `err.txt` from the removed cluster still show Auth failed (all written at 14:48, many nodes) — ignore.
 - Memory: default `request_memory=2048` -> jobs held (`over cgroup memory limit`, usage 4.0-5.7 GB).
-  Fixed live with `condor_qedit 816402 RequestMemory 6144 && condor_release 816402`.
+  Fixed live with `condor_qedit 816402 RequestMemory 6144 && condor_release 816402`, then 8192 (usage up to 7.7 GB):
+  `condor_qedit -constraint 'ClusterId==816402 && (JobStatus==5 || JobStatus==1)' RequestMemory 8192 && condor_release 816402`
 - Wall time: full jobs take ~1.5-1.7 h (max seen ~100 min); the `short` queue limit is **2 h (job killed)**.
   Jobs that only redid failed chunks of the 1st attempt took ~18 min (misleading early estimate).
   Runner writes results only at the end -> a job killed at 2 h loses all its chunks.
