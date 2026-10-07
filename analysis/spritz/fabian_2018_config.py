@@ -2,7 +2,7 @@ import json
 import hist
 import numpy as np
 from itertools import combinations_with_replacement
-from spritz.framework.framework import cmap_pastel, cmap_petroff, get_fw_path, get_rw_idx_dict, get_eft_points
+from spritz.framework.framework import cmap_pastel, cmap_petroff, get_fw_path, get_rw_idx, get_eft_points
 
 fw_path = get_fw_path()
 with open(f"{fw_path}/data/common/lumi.json") as file:
@@ -19,7 +19,7 @@ runner = f"{fw_path}/src/spritz/runners/runner_3DY_eft.py"
 
 special_analysis_cfg = {
     "do_variations": True,
-    "do_theory_variations": False, # 116 variations
+    "do_theory_variations": True, # 116 variations
     "do_rochester_stat_variations": False, # 100 variations
     "do_jet_variations": False, # 24 variations
     "invert_one_isolation_loose": False,
@@ -27,108 +27,57 @@ special_analysis_cfg = {
     "reweight_fakes": True,
 }
 
+# Higher order corrections
+n3lo_qcd = {
+    "file": f"{fw_path}/data/common/kfactor_ewscheme3_3D_N3LO_N3LL_NNLO_NNLL.root",
+    "object": "ratio_N3LO+N3LL_over_NNLO+NNLL",
+    "name": "N3LO_QCD",
+}
+nlo_ew = {
+    "file": f"{fw_path}/data/common/powheg_ew_ratio.root",
+    "object": "h_ratio",
+    "name": "NLO_EW",
+}
+
+# SMEFT samples
+file_key = "DYMuMu_LO_EFT_SMEFTsim_propcorr_mll%s_Photos_startingOne"
+eft_bins = ["50_120","120_200","200_400","400_600"]#,"600_800","800_1000","1000_3000"]
 operators = ["clj1", "clj3", "ceu", "ced", "cje", "clu", "cld"]
-rw_idx_dict = get_rw_idx_dict()
+
 eft_points = get_eft_points(operators)
-eft_idx = {p: rw_idx_dict[p] for p in eft_points}
 cov_pairs = list(combinations_with_replacement(eft_points, 2))
 
-eft_reweighting = {
-    "weight_branch": "LHEReweightingWeight",
-    "points": eft_idx,
-}
 eft_datasets = {
-    f"DYmm_LO_mll{b}": {
-        "files": f"DYMuMu_LO_EFT_SMEFTsim_propcorr_mll{b}_Photos_startingOne",
+    f"DYmm_mll{b}": {
+        "files": file_key % b,
         "task_weight": 8,
-        "eft_reweighting": eft_reweighting
-    } for b in ["50_120", "120_200", "200_400", "400_600", "600_800", "800_1000", "1000_3000"]
+        "eft_reweighting": {
+            "weight_branch": "LHEReweightingWeight",
+            "points": {p: get_rw_idx(file_key % b, p) for p in eft_points},
+            "covariance_pairs": cov_pairs
+        }
+    } for b in eft_bins
 }
 
-ho_corrections = [
-    {
-        "file": f"{fw_path}/data/common/kfactor_ewscheme3_3D_N3LO_N3LL_NNLO_NNLL.root",
-        "object": "ratio_N3LO+N3LL_over_NNLO+NNLL",
-        "name": "N3LO_QCD",
-    },{
-        "file": f"{fw_path}/data/common/powheg_ew_ratio.root",
-        "object": "h_ratio",
-        "name": "NLO_EW",
-    }       
-]
+# SM samples
+dy_bins = ["10to50","50to100","100to200","200to400","400to500","500to700"]#,"700to800",
+    #"800to1000","1000to1500","1500to2000","2000toInf"]
+ggll_bins = ["10to30","30to50","50to200","200to1500"]#,"1500toInf"]
 
-datasets = eft_datasets | {
-    "DYmm_NNLO_M-10to50": {
-        "files": "DYJetsToMuMu_M-10to50",
-        "task_weight": 8,
-        "max_weight": 1e9, # filter MC events with extremely large weights
-        "ho_corrections": ho_corrections
-    },
-    "DYmm_NNLO_M-50to100": {
-        "files": "DYJetsToMuMu",
-        "task_weight": 8,
-        "max_weight": 1e9,
-        "ho_corrections": ho_corrections
-    },
-    "DYmm_NNLO_M-100to200": {
-        "files": "DYJetsToMuMu_M-100to200",
-        "task_weight": 8,
-        "max_weight": 1e9,
-        "ho_corrections": ho_corrections
-    },
-    "DYmm_NNLO_M-200to400": {
-        "files": "DYJetsToMuMu_M-200to400",
-        "task_weight": 8,
-        "max_weight": 1e9,
-        "ho_corrections": ho_corrections
-    },
-    "DYmm_NNLO_M-400to500": {
-        "files": "DYJetsToMuMu_M-400to500",
-        "task_weight": 8,
-        "max_weight": 1e9,
-        "ho_corrections": ho_corrections
-    },
-    "DYmm_NNLO_M-500to700": {
-        "files": "DYJetsToMuMu_M-500to700",
-        "task_weight": 8,
-        "max_weight": 1e9,
-        "ho_corrections": ho_corrections
-    },
-    "DYmm_M-700to800": {
-        "files": "DYJetsToMuMu_M-700to800",
-        "task_weight": 8,
-        "max_weight": 1e9,
-        "ho_corrections": ho_corrections
-    },
-    "DYmm_M-800to1000": {
-        "files": "DYJetsToMuMu_M-800to1000",
-        "task_weight": 8,
-        "max_weight": 1e9,
-        "ho_corrections": ho_corrections
-    },
-    "DYmm_M-1000to1500": {
-        "files": "DYJetsToMuMu_M-1000to1500",
-        "task_weight": 8,
-        "max_weight": 1e9,
-        "ho_corrections": ho_corrections
-    },
-    "DYmm_M-1500to2000": {
-        "files": "DYJetsToMuMu_M-1500to2000",
-        "task_weight": 8,
-        "max_weight": 1e9,
-        "ho_corrections": ho_corrections
-    },
-    "DYmm_M-2000toInf": {
-        "files": "DYJetsToMuMu_M-2000toInf",
-        "task_weight": 8,
-        "max_weight": 1e9,
-        "ho_corrections": ho_corrections
+datasets = eft_datasets | { 
+    **{
+        f"DYmm_MiNNLO_M-{b}": {
+            "files": f"DYJetsToMuMu_M-{b}" if b!="50to100" else "DYJetsToMuMu",
+            "task_weight": 8,
+            "max_weight": 1e9,
+            "ho_corrections": [n3lo_qcd, nlo_ew] 
+        } for b in dy_bins 
     },
     "DYtt": {
         "files": "DYJetsToTauTau",
         "task_weight": 8,
         "max_weight": 1e9,
-        "ho_corrections": [ho_corrections[1]]
+        "ho_corrections": [nlo_ew]
     },
     "ST_s-channel": {
         "files": "ST_s-channel",
@@ -185,71 +134,19 @@ datasets = eft_datasets | {
         "files": "ZZTo2Q2L",
         "task_weight": 8,
     },
-    "GGToMuMu_M-10to30_El-El": {
-        "files": "GGToMuMu_M-10to30_El-El",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-10to30_Inel-El_El-Inel": {
-        "files": "GGToMuMu_M-10to30_Inel-El_El-Inel",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-10to30_Inel-Inel": {
-        "files": "GGToMuMu_M-10to30_Inel-Inel",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-30to50_El-El": {
-        "files": "GGToMuMu_M-30to50_El-El",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-30to50_Inel-El_El-Inel": {
-        "files": "GGToMuMu_M-30to50_Inel-El_El-Inel",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-30to50_Inel-Inel": {
-        "files": "GGToMuMu_M-30to50_Inel-Inel",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-50to200_El-El": {
-        "files": "GGToMuMu_M-50to200_El-El",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-50to200_Inel-El_El-Inel": {
-        "files": "GGToMuMu_M-50to200_Inel-El_El-Inel",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-50to200_Inel-Inel": {
-        "files": "GGToMuMu_M-50to200_Inel-Inel",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-200to1500_El-El": {
-        "files": "GGToMuMu_M-200to1500_El-El",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-200to1500_Inel-El_El-Inel": {
-        "files": "GGToMuMu_M-200to1500_Inel-El_El-Inel",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-200to1500_Inel-Inel": {
-        "files": "GGToMuMu_M-200to1500_Inel-Inel",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-1500toInf_El-El": {
-        "files": "GGToMuMu_M-1500toInf_El-El",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-1500toInf_Inel-El_El-Inel": {
-        "files": "GGToMuMu_M-1500toInf_Inel-El_El-Inel",
-        "task_weight": 8,
-    },
-    "GGToMuMu_M-1500toInf_Inel-Inel": {
-        "files": "GGToMuMu_M-1500toInf_Inel-Inel",
-        "task_weight": 8,
-    },
+    **{
+        f"GGToMuMu_M-{b}_{case}": {
+            "files": f"GGToMuMu_M-{b}_{case}",
+            "task_weight": 8 
+        } for b in ggll_bins 
+        for case in ["El-El", "Inel-El_El-Inel", "Inel-Inel"] 
+    }
 }
 
 for dataset in datasets:
     datasets[dataset]["read_form"] = "mc"
 
+# Data
 samples_data = []
 for era in ["A", "B", "C", "D"]:
     datasets[f"SingleMuon_{era}"] = {
@@ -261,6 +158,7 @@ for era in ["A", "B", "C", "D"]:
     }
     samples_data.append(f"SingleMuon_{era}")
 
+# Merge samples
 samples = {
     "Data": {
         "samples": samples_data,
@@ -268,21 +166,8 @@ samples = {
     },
     "GGToLL": { 
         "samples": [
-            "GGToMuMu_M-10to30_El-El",
-            "GGToMuMu_M-10to30_Inel-El_El-Inel",
-            "GGToMuMu_M-10to30_Inel-Inel",
-            "GGToMuMu_M-30to50_El-El",
-            "GGToMuMu_M-30to50_Inel-El_El-Inel",
-            "GGToMuMu_M-30to50_Inel-Inel",
-            "GGToMuMu_M-50to200_El-El",
-            "GGToMuMu_M-50to200_Inel-El_El-Inel",
-            "GGToMuMu_M-50to200_Inel-Inel",
-            "GGToMuMu_M-200to1500_El-El",
-            "GGToMuMu_M-200to1500_Inel-El_El-Inel",
-            "GGToMuMu_M-200to1500_Inel-Inel",
-            "GGToMuMu_M-1500toInf_El-El",
-            "GGToMuMu_M-1500toInf_Inel-El_El-Inel",
-            "GGToMuMu_M-1500toInf_Inel-Inel",
+            f"GGToMuMu_M-{b}_{case}" for b in ggll_bins 
+            for case in ["El-El", "Inel-El_El-Inel", "Inel-Inel"]
         ] 
     },
     "Single_Top": {
@@ -315,65 +200,48 @@ samples = {
             "DYtt"
         ]
     },
-    "DYmm_NNLO": {
+    "DYmm_MiNNLO": {
         "samples": [
-            "DYmm_NNLO_M-10to50",
-            "DYmm_NNLO_M-50to100",
-            "DYmm_NNLO_M-100to200",
-            "DYmm_NNLO_M-200to400",
-            "DYmm_NNLO_M-400to500",
-            "DYmm_NNLO_M-500to700",
-            "DYmm_NNLO_M-700to800",
-            "DYmm_NNLO_M-800to1000",
-            "DYmm_NNLO_M-1000to1500",
-            "DYmm_NNLO_M-1500to2000",
-            "DYmm_NNLO_M-2000toInf",
+            f"DYmm_MiNNLO_M-{b}" for b in dy_bins
         ],
+        "exclude_from_datacard": True
     },
-}
-
-samples.update({
-    f"DYmm_LO_{point}": {
-        "samples": [f"{dataset}_{point}" for dataset in eft_datasets],
-        "is_smeft": True,
-        **({"is_signal": True} if point != "sm" else {}),
+    **{
+        f"DYmm_{point}": {
+            "samples": [f"{dataset}_{point}" for dataset in eft_datasets],
+            "is_smeft": True,
+            "is_signal": point != "sm" 
+        } for point in eft_points
+    },
+    **{
+        f"DYmm_cov_{a}_{b}": {
+            "samples": [f"{dataset}_cov_{a}_{b}" for dataset in eft_datasets],
+            "covariance_of": (f"DYmm_{a}", f"DYmm_{b}"),
+            "is_variance": True,
+            "exclude_from_datacard": True,
+        } for a, b in cov_pairs
     }
-    for point in eft_points
-})
+}
 
-# samples.update({
-#     f"cov_{op1}_{op2}": {
-#         "samples": [f"{dataset}_cov_{op1}_{op2}" for dataset in eft_datasets],
-#         "is_variance": True,
-#         "exclude_from_datacard": True,
-#         "covariance_of": (op1, op2),
-#     }
-#     for op1, op2 in cov_pairs
-# })
+colors = {
+    "Fakes": cmap_petroff[0],
+    "GGToLL": cmap_petroff[1],
+    "Single_Top": cmap_petroff[2],
+    "TT": cmap_petroff[3],
+    "VV": cmap_petroff[4],
+    "DYtt": cmap_petroff[8],
+    "DYmm_MiNNLO": cmap_petroff[9],
+    "DYmm": cmap_petroff[9]
+}
 
+# Renormalize samples from "reference" to "target"
 renorm_samples = {
-    "target": "DYmm_NNLO",
-    "reference": "DYmm_LO_sm",
-    "samples": [f"DYmm_LO_{point}" for point in eft_points]
+    "target": "DYmm_MiNNLO",
+    "reference": "DYmm_sm",
+    "samples": [f"DYmm_{point}" for point in eft_points]+[f"DYmm_cov_{a}_{b}" for a, b in cov_pairs]
 }
 
-fakes_dict = {
-    "regions": [{"target": "bveto_mm", "source": "bveto_mm_ss"}],
-    "subtract_mc": [s for s in samples if not (samples[s].get("is_data") or samples[s].get("is_smeft"))],
-    "nuisances": ["Fakes transfer factor: Fit", "Fakes transfer factor: Model"]
-}
-
-colors = {}
-colors["Fakes"] = cmap_petroff[0]
-colors["GGToLL"] = cmap_petroff[1]
-colors["Single_Top"] = cmap_petroff[2]
-colors["TT"] = cmap_petroff[3]
-colors["VV"] = cmap_petroff[4]
-colors["DYtt"] = cmap_petroff[8]
-colors["DYmm_NNLO"] = cmap_petroff[9]
-colors["DYmm_LO"] = cmap_petroff[5]
-colors.update({f"DYmm_LO_{point}": cmap_pastel[i % len(cmap_pastel)] for i, point in enumerate(eft_points)})
-
+# Define regions
 preselections = lambda events: (50 < events.mll) & (events.mll < 500)
 
 regions = {
@@ -387,6 +255,7 @@ regions = {
     },
 }
 
+# Define variables and histograms
 def cos_theta_star(l1, l2):
     get_sign = lambda nr: nr / abs(nr)  # noqa: E731
     return (
@@ -395,7 +264,6 @@ def cos_theta_star(l1, l2):
         * (l2.pz * l1.energy - l1.pz * l2.energy)
         / np.sqrt(((l1 + l2).mass) ** 2 + ((l1 + l2).pt) ** 2)
     )
-
 
 variables = {
     "mll": {
@@ -439,13 +307,27 @@ cards_regions = ["bveto_mm"]
 cards_variables = ["triple_diff"]
 covariance_file = "covariance.root"
 
-mc_samples = [skey for skey in samples if not samples[skey].get("is_data",False)]
+all_samples = [s for s in samples if not samples[s].get("is_variance")]
+mc_samples = [s for s in all_samples if not samples[s].get("is_data")]
+
+# Fakes
+fakes_dict = {
+    "regions": [
+        {"target": "bveto_mm", "source": "bveto_mm_ss"}
+    ],
+    "subtract_mc": [
+        s for s in mc_samples if not (samples[s].get("is_smeft"))
+    ],
+    "nuisances": [
+        "Fakes transfer factor: Fit", "Fakes transfer factor: Model"
+    ]
+}
 
 nuisances = {
     "lumi": {
         "name": "lumi",
         "type": "lnN",
-        "samples": dict((skey, str(lumi_unc)) for skey in mc_samples)
+        "samples": {s: str(lumi_unc) for s in mc_samples}
     },
     ## Use the following if you want to apply the automatic combine MC stat nuisances
     "stat": {
@@ -497,7 +379,7 @@ nuisances = {
         "name": "rochester_syst",
         "type": "shape",
         "kind": "square",
-        "samples": samples,
+        "samples": all_samples,
         "variations": [
             {"label": "Rochester corr. set2", "tag": "rochester_set2"},
             {"label": "Rochester corr. set3", "tag": "rochester_set3"},
@@ -510,13 +392,13 @@ nuisances = {
     "NLO EW correction": {
         "name": "NLO_EW",
         "type": "shape",
-        "samples": ["DYmm_NNLO", "DYtt"],
+        "samples": ["DYmm_MiNNLO", "DYtt", *[f"DYmm_{point}" for point in eft_points]],
         "kind": "weight"
     },
     "N3LO QCD correction": {
         "name": "N3LO_QCD",
         "type": "shape",
-        "samples": ["DYmm_NNLO"],
+        "samples": ["DYmm_MiNNLO", *[f"DYmm_{point}" for point in eft_points]],
         "kind": "weight"
     },
     "Top $p_{T}$ corr.": {
@@ -553,13 +435,13 @@ nuisances = {
         "name": "fakes_param",
         "type": "shape",
         "kind": "weight",
-        "samples": samples,
+        "samples": all_samples,
     },
     "Fakes transfer factor: Model": {
         "name": "fakes_model",
         "type": "shape",
         "kind": "envelope",
-        "samples": samples,
+        "samples": all_samples,
         "variations": [
             {"label": "fakes_model", "tag": "fakes_model"}
         ],
@@ -593,16 +475,16 @@ corrections = {
     },
     "Rochester corr.": { 
         "name": "rochester",
-        "samples": samples, 
+        "samples": all_samples, 
         "related_nuisances": ["Rochester corr. (syst)"]
     },
     "NLO EW correction": { 
         "name": "NLO_EW",
-        "samples": ["DYmm_NNLO", "DYtt"] 
+        "samples": ["DYmm_MiNNLO", "DYtt", *[f"DYmm_{point}" for point in eft_points]] 
     },
     "N3LO QCD correction": { 
         "name": "N3LO_QCD",
-        "samples": ["DYmm_NNLO"] 
+        "samples": ["DYmm_MiNNLO", *[f"DYmm_{point}" for point in eft_points]] 
     },
     "Top $p_{T}$ corr.": { 
         "name": "tt_ptrw",
@@ -619,7 +501,7 @@ corrections = {
     },
     "Fakes transfer factor": { 
         "name": "fakes",
-        "samples": samples,
+        "samples": all_samples,
         "related_nuisances": ["Fakes transfer factor: Fit", "Fakes transfer factor: Model"] 
     },
 }
