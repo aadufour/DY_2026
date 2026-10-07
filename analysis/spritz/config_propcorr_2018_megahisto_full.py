@@ -67,7 +67,7 @@ eft_reweighting = {
     "points": eft_idx,
 }
 eft_datasets = {
-    f"DYmm_LO_mll{b}": {
+    f"DYmm_mll{b}": {
         "files": f"DYMuMu_LO_EFT_SMEFTsim_propcorr_mll{b}_Photos_startingOne",
         "task_weight": 8,
         "eft_reweighting": eft_reweighting,
@@ -87,7 +87,7 @@ ho_corrections = [
     }
 ]
 
-dy_nnlo_bins = {
+dy_minnlo_bins = {
     "M-10to50": "DYJetsToMuMu_M-10to50",
     "M-50to100": "DYJetsToMuMu",
     "M-100to200": "DYJetsToMuMu_M-100to200",
@@ -100,15 +100,13 @@ dy_nnlo_bins = {
     "M-1500to2000": "DYJetsToMuMu_M-1500to2000",
     "M-2000toInf": "DYJetsToMuMu_M-2000toInf",
 }
-# NB: Fabian's config named the >=700 datasets "DYmm_M-..." while the DYmm_NNLO
-# sample asked for "DYmm_NNLO_M-..."; here all are consistently "DYmm_NNLO_M-..."
-dy_nnlo_datasets = {
-    f"DYmm_NNLO_{m}": {
+dy_minnlo_datasets = {
+    f"DYmm_MiNNLO_{m}": {
         "files": f,
         "task_weight": 8,
         "max_weight": 1e9, # filter MC events with extremely large weights
         "ho_corrections": ho_corrections,
-    } for m, f in dy_nnlo_bins.items()
+    } for m, f in dy_minnlo_bins.items()
 }
 
 gg_datasets = {
@@ -117,7 +115,7 @@ gg_datasets = {
     for c in ["El-El", "Inel-El_El-Inel", "Inel-Inel"]
 }
 
-datasets = eft_datasets | dy_nnlo_datasets | gg_datasets | {
+datasets = eft_datasets | dy_minnlo_datasets | gg_datasets | {
     "DYtt": {
         "files": "DYJetsToTauTau",
         "task_weight": 8,
@@ -176,13 +174,14 @@ samples = {
         "samples": ["WWTo2L2Nu", "WZTo3LNu", "WZTo2Q2L", "ZZTo4L", "ZZTo2L2Nu", "ZZTo2Q2L"]
     },
     "DYtt": {"samples": ["DYtt"]},
-    "DYmm_NNLO": {"samples": list(dy_nnlo_datasets)},
+    # replaced in the datacard by the EFT templates (renormalized to it)
+    "DYmm_MiNNLO": {"samples": list(dy_minnlo_datasets), "exclude_from_datacard": True},
 }
 
-# EFT templates: Giacomo's naming (sample key = point name), needed by the
-# cards-eft machinery
+# EFT templates
+eft_samples = [f"DYmm_{point}" for point in eft_points]
 samples.update({
-    point: {
+    f"DYmm_{point}": {
         "samples": [f"{dataset}_{point}" for dataset in eft_datasets],
         "is_smeft": True,
         "noStat": True,
@@ -193,9 +192,9 @@ samples.update({
 
 # Bin-by-bin normalization of LO SMEFTsim templates to MiNNLO (K-factor).
 renorm_samples = {
-    "target": "DYmm_NNLO",
-    "reference": "sm",
-    "samples": eft_points,
+    "target": "DYmm_MiNNLO",
+    "reference": "DYmm_sm",
+    "samples": eft_samples,
 }
 
 fakes_dict = {
@@ -211,8 +210,9 @@ colors["Single_Top"] = cmap_petroff[2]
 colors["TT"] = cmap_petroff[3]
 colors["VV"] = cmap_petroff[4]
 colors["DYtt"] = cmap_petroff[8]
-colors["DYmm_NNLO"] = cmap_petroff[9]
-colors.update({point: cmap_pastel[i % len(cmap_pastel)] for i, point in enumerate(eft_points)})
+colors["DYmm_MiNNLO"] = cmap_petroff[9]
+colors["DYmm"] = cmap_petroff[9]
+colors.update({s: cmap_pastel[i % len(cmap_pastel)] for i, s in enumerate(eft_samples)})
 
 # ---- Regions -----------------------------------------------------------------
 # MC kept up to 3000 GeV; data blinded above 500 GeV in the signal region by the runner.
@@ -328,8 +328,8 @@ nuisances = {
         "kind": "envelope",
         "samples": (
             {k: [f"QCDScale_{i}" for i in [0,1,3,4,5,7,8]] for k in ["Single_Top", "TT", "VV"]}
-            | {k: [(f"QCDScale_{2*i}", f"QCDScale_{i}") for i in [0,1,3,4,5,7,8]] for k in ["DYmm_NNLO", "DYtt"]}
-            | {k: [f"QCDScale_{i}" for i in [0,1,3,5,7]] for k in eft_points}  # EFT: only 8 scale weights (0-7)
+            | {k: [(f"QCDScale_{2*i}", f"QCDScale_{i}") for i in [0,1,3,4,5,7,8]] for k in ["DYmm_MiNNLO", "DYtt"]}
+            | {k: [f"QCDScale_{i}" for i in [0,1,3,5,7]] for k in eft_samples}  # EFT: only 8 scale weights (0-7)
         ),
         "is_theory_unc": True,
     },
@@ -338,28 +338,28 @@ nuisances = {
         "type": "shape",
         "kind": "square",
         # Single Top does not have reliable LHEPdfWeight in NanoAOD
-        "samples": {k: [f"PDFWeight_{i}" for i in range(101)] for k in ["DYmm_NNLO", "DYtt", "TT", "VV"] + eft_points},
+        "samples": {k: [f"PDFWeight_{i}" for i in range(101)] for k in ["DYmm_MiNNLO", "DYtt", "TT", "VV"] + eft_samples},
         "is_theory_unc": True,
     },
     "alphaS": {
         "name": "alphaS",
         "type": "shape",
         "kind": "envelope",
-        "samples": {k: [f"PDFWeight_{i}" for i in [101, 102]] for k in ["DYmm_NNLO", "DYtt"] + eft_points},
+        "samples": {k: [f"PDFWeight_{i}" for i in [101, 102]] for k in ["DYmm_MiNNLO", "DYtt"] + eft_samples},
         "is_theory_unc": True,
     },
     "PSWeight": {
         "name": "PSWeight",
         "type": "shape",
         "kind": "envelope",
-        "samples": {k: [f"PSWeight_{i}" for i in range(4)] for k in ["DYmm_NNLO", "DYtt", "Single_Top", "TT", "VV"] + eft_points},
+        "samples": {k: [f"PSWeight_{i}" for i in range(4)] for k in ["DYmm_MiNNLO", "DYtt", "Single_Top", "TT", "VV"] + eft_samples},
         "is_theory_unc": True,
     },
     #############
     # Theory: HO corrections
     #############
-    "NLO EW correction": {"name": "NLO_EW", "type": "shape", "samples": ["DYmm_NNLO", "DYtt"], "kind": "weight"},
-    "N3LO QCD correction": {"name": "N3LO_QCD", "type": "shape", "samples": ["DYmm_NNLO"], "kind": "weight"},
+    "NLO EW correction": {"name": "NLO_EW", "type": "shape", "samples": ["DYmm_MiNNLO", "DYtt", *eft_samples], "kind": "weight"},
+    "N3LO QCD correction": {"name": "N3LO_QCD", "type": "shape", "samples": ["DYmm_MiNNLO", *eft_samples], "kind": "weight"},
     "Top $p_{T}$ corr.": {"name": "tt_ptrw", "type": "shape", "samples": ["TT"], "kind": "weight"},
     #############
     # b-tagging
@@ -399,8 +399,8 @@ corrections = {
         "samples": samples,
         "related_nuisances": ["Rochester corr. (syst)"]
     },
-    "NLO EW correction": {"name": "NLO_EW", "samples": ["DYmm_NNLO", "DYtt"]},
-    "N3LO QCD correction": {"name": "N3LO_QCD", "samples": ["DYmm_NNLO"]},
+    "NLO EW correction": {"name": "NLO_EW", "samples": ["DYmm_MiNNLO", "DYtt", *eft_samples]},
+    "N3LO QCD correction": {"name": "N3LO_QCD", "samples": ["DYmm_MiNNLO", *eft_samples]},
     "Top $p_{T}$ corr.": {"name": "tt_ptrw", "samples": ["TT"]},
     "puidSF": {"name": "puidSF", "samples": mc_samples},
     "btagSF": {
