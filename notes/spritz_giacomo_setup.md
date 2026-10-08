@@ -244,9 +244,36 @@ Status: merge submitted 2026-10-08 (cluster 816414, 100 jobs).
 - Fix: `condor_qedit -constraint 'ClusterId==816414 && JobStatus==5' RequestMemory 65536 && condor_release 816414`
   (48 GB still too little for one group). Worker nodes have 96-128 GB, so 64 GB slots exist (fewer per node).
   Use 65536 directly next time.
-- Login node (llruicms01) has 187 GB (163 available): the final local `spritz-merge --merge` (expected
-  ~50 GB+) should fit; run it at a quiet moment with `/usr/bin/time -v` to record the peak (needed for postproc).
+- `job_4` was removed at the 2 h `short` limit (`SYSTEM_PERIODIC_REMOVE`: short 120 min, long 240 h,
+  reserv 48 h, held jobs removed after 48 h); rerun alone on `long` with 64 GB it took 13 min (bad node the first time).
+  Single-folder rerun: `sed -e 's/^T3Queue = short/T3Queue = long/' -e 's/^queue 1 Folder in .*/queue 1 Folder in job_4/' submit.jdl > submit_job4.jdl`
+- Result: 100 files of ~840-863 MB = 84 GB in `merge_condor/` (each contains all datasets).
+  Note: `find -size -1M` rounds up to whole MB and only matches empty files: use `-size -100000c` to find tiny ones.
 - Next runs: booking EFT histograms only for `triple_diff` (`eft_variables`) would cut ~25% of EFT memory.
+
+### Final merge (`spritz-merge --merge`): do NOT run it on the login node
+
+- `merge.py` has a **hardcoded `cpus = 10`** (line ~225) and `elements_for_task=10` -> 11 tasks, 10 in parallel.
+  Each task holds the full result (all 7 EFT bins, ~16 GB) plus copies.
+- 1st attempt on llruicms01 with `cpus = 10`: `BrokenProcessPool` (a worker killed, out of memory).
+- 2nd attempt with `cpus = 2`: one worker grew from 33 to 69 GB in a few minutes (more than the ~40-50 GB
+  estimate), ~105 GB total = 56% of the shared login node (others only ran ~0.2 GB jobs) -> killed by hand.
+  Login nodes are shared: don't run multi-10-GB processes there.
+- Solution: **`spritz-merge-final-llr [mem_MB] [cpus]`** (in `analysis/spritz/`, on PATH): sets `cpus` in
+  `merge.py` (backup `merge.py.bak`), writes `merge_final/run.sh` + `merge_final/submit.jdl` (one job,
+  `long` queue, no file transfer: reads/writes on /grid_mnt in the config dir) and submits.
+  Run it from the config dir **outside apptainer** (inside, condor_submit is missing: then just
+  `condor_submit merge_final/submit.jdl` from the host).
+- Used: `spritz-merge-final-llr 120000 1` (120 GB, 1 worker; largest nodes ~128 GB, so 2 workers won't fit).
+  Submitted 2026-10-08. Follow with `tail merge_final/out.txt merge_final/err.txt`.
+- If even 120 GB is not enough, the merged result itself is too large for any node -> shrink the histograms
+  (EFT only for `triple_diff`, theory variations on SM only, fewer variables).
+
+### Disk cleanup
+- 2026-10-08: deleted `spritz_fabian/configs/propcorr_v2/condor` (408 GB, never merged; v2 can only be
+  re-obtained by rerunning). Kept config, `histos.root` + `datacards/` (from an earlier 7 Sep pass), logs.
+- After `results_merged_new.pkl` exists and postproc works: `condor/` (503 GB) and then `merge_condor/` (84 GB)
+  of propcorr_new can go.
 
 ### Useful monitoring commands
 
@@ -267,8 +294,9 @@ Avoid `condor_history -constraint ...` without `-limit`: it scans the whole sche
 ## Next steps
 
 1. ~~Batch jobs~~ done 2026-10-08, all 6100 complete
-2. Merge: wait for the 100 `merge_condor` jobs (check holds/memory, `err.txt`), then `spritz-merge --merge`
-3. Write `spritz-merge-llr` wrapper with the patches above
+2. ~~Condor merge~~ done (100 groups, 84 GB); final merge running as condor job (`spritz-merge-final-llr 120000 1`)
+3. Write `spritz-merge-llr` wrapper for the `--condor` step (patches above, 64 GB, consecutive grouping by
+   EFT mass bin instead of interleaved so each job holds ~1 EFT bin)
 4. `spritz-postproc`: check histogram names to confirm renorm matches variations at nuisance level (QCDscaleUp etc.)
 5. `spritz-cards-eft`; ask Giacomo whether it works without `covariance.root`
 6. Process names are `DYmm_<point>`: our combine tools (`AnomalousCouplingMorphing_comb`) look up `w11_<i>_<j>`,
