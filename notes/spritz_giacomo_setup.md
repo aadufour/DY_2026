@@ -216,7 +216,7 @@ The generated files are for **CERN lxplus** and must be patched for LLR before s
   (no proxy needed: the worker reads `job_*/chunks_job.pkl` by absolute path on `/grid_mnt`, no input transfer)
 - `special_start.sh`: pointed to `spritz_fabian/src` -> spritz_giacomo
 - `submit.jdl`: remove `MY.SingularityImage`, `use_x509userproxy`, `+JobFlavour`; add T3 queue lines;
-  `request_memory=12288` (default 2048; each group sums ~61 job outputs of ~1.5 GB uncompressed EFT histos)
+  `request_memory=65536` (default 2048; groups need 15-50 GB, see below)
 ```bash
 cd merge_condor && G=/grid_mnt/data__data.polcms/cms/adufour/spritz_giacomo && cat > run.sh <<EOF
 #!/bin/bash
@@ -225,7 +225,7 @@ time apptainer exec -B /cvmfs -B /grid_mnt \\
     /grid_mnt/data__data.polcms/cms/adufour/spritz-env.sif \\
     /home/llr/cms/adufour/.conda/envs/spritz/bin/python merge_worker.py .
 EOF
-chmod +x run.sh && echo "export PYTHONPATH=$G/src:\$PYTHONPATH" > special_start.sh && sed -i -e '/MY.SingularityImage/d' -e '/use_x509userproxy/d' -e '/+JobFlavour/d' -e 's/^request_memory *=.*/request_memory=12288/' -e '/^log/a T3Queue = short\nWNTag   = el9\ninclude : /opt/exp_soft/cms/t3/t3queue |' submit.jdl
+chmod +x run.sh && echo "export PYTHONPATH=$G/src:\$PYTHONPATH" > special_start.sh && sed -i -e '/MY.SingularityImage/d' -e '/use_x509userproxy/d' -e '/+JobFlavour/d' -e 's/^request_memory *=.*/request_memory=65536/' -e '/^log/a T3Queue = short\nWNTag   = el9\ninclude : /opt/exp_soft/cms/t3/t3queue |' submit.jdl
 condor_submit submit.jdl     # outside apptainer
 ```
 Each merge job overwrites `merge_condor/job_N/chunks_job.pkl` with `{"real_results": merged}`. When all are done:
@@ -233,7 +233,20 @@ Each merge job overwrites `merge_condor/job_N/chunks_job.pkl` with `{"real_resul
 7 EFT mass bins x 406 points x ~146 variations at once (possibly 10+ GB RAM on the login node); check the size
 of the merged group files first. TODO: turn the patches into a `spritz-merge-llr` wrapper.
 
-Status: merge submitted 2026-10-08 (100 jobs).
+Status: merge submitted 2026-10-08 (cluster 816414, 100 jobs).
+
+**Merge memory is large** (usage 15-45+ GB per job, 12 GB request was not enough):
+- `add_dict` is correct (lists of batch histograms are summed element-wise, any key), memory is real.
+- Groups are **interleaved** (merge job k gets `job_k, job_k+100, job_k+200, ...`), so every group holds all
+  7 EFT mass bins -> more merge jobs (`--njobs`) would NOT reduce memory.
+- Per EFT mass bin in RAM: triple_diff 576 bins (with flow) x 407 points x 3 region slots x 147 syst x 16 B
+  ~1.65 GB + 1D variables ~0.6 GB = ~2.3 GB; x 7 bins ~16 GB, plus ~2-3 copies during `add_dict`.
+- Fix: `condor_qedit -constraint 'ClusterId==816414 && JobStatus==5' RequestMemory 65536 && condor_release 816414`
+  (48 GB still too little for one group). Worker nodes have 96-128 GB, so 64 GB slots exist (fewer per node).
+  Use 65536 directly next time.
+- Login node (llruicms01) has 187 GB (163 available): the final local `spritz-merge --merge` (expected
+  ~50 GB+) should fit; run it at a quiet moment with `/usr/bin/time -v` to record the peak (needed for postproc).
+- Next runs: booking EFT histograms only for `triple_diff` (`eft_variables`) would cut ~25% of EFT memory.
 
 ### Useful monitoring commands
 
