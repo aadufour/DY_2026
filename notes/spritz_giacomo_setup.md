@@ -169,9 +169,71 @@ Runner catches errors per chunk: **exit code 0 does not mean success** — check
 - Queues: only `short` and `long`. `long` is heavily throttled (~9 of our jobs ran at once vs ~600 on short):
   don't move many jobs there; use it only for the few that get killed on short.
   Queue is a job attribute: `condor_qedit -constraint '...' T3Queue '"long"'`.
-- Output: ~105 MB per job -> ~640 GB total. `/grid_mnt/data__data.polcms` was 98% full (5.2 TB free).
-- Expected total ~15 h (6100 x ~1.5 h / ~620 running).
+- Output: **503 GB** in `condor/` (24,416 files). `/grid_mnt/data__data.polcms` was 98% full (5.2 TB free).
+  Result size per job follows the EFT mass bin of its EFT chunk (compression of empty bins):
+  mll50_120 / 120_200 up to ~113 MB, 200_400 ~86-93 MB, 400_600 ~72-84 MB.
+- Done 2026-10-08 morning (~18 h after submission), plus retries:
+  - 260 jobs missing chunks (all missing their EFT chunk): GRIF `TimeoutError: Operation expired` (transient,
+    GRIF overloaded by many jobs reading the same EFT files), leftover Auth failed, few GRIF `unauthorized identity`.
+    GRIF read test with proxy OK -> retried with `submit_retry.jdl` (only those folders), all recovered.
+  - 7 jobs held for memory before the fix -> released with 10240 MB.
+- **Jobs 6059-6099 (41) contain no EFT chunk** (6059 EFT chunks -> one each in job_0..job_6058): their result
+  file is only ~2 MB but they are complete. Don't mistake them for failures.
+- Final check: 0 untouched inputs (`find job_* -name chunks_job.pkl -size -500k`), no complete-size job with
+  `Error for chunk`.
 - Proxy valid until 2026-10-15.
+
+### Checking which DONE jobs are actually incomplete
+
+Condor exit 0 is not enough. Size of `chunks_job.pkl` (input ~10 kB, jobs w/o EFT ~2 MB, with EFT 70-113 MB):
+```bash
+condor_q $USER -af TransferInput | grep -o 'job_[0-9]*' | sort -u > queued.txt
+find job_* -name chunks_job.pkl -printf "%s %h\n" > sizes.txt
+awk '$1<1e7 {print $2}' sizes.txt | grep -vxF -f queued.txt > incomplete.txt   # then inspect, see below
+```
+Inspect contents (inside `spritz-shell-giacomo`; only small files, fast): chunks with `result == {}` are missing.
+```python
+from spritz.framework.framework import read_chunks
+for c in read_chunks("job_N/chunks_job.pkl"):
+    print(c["data"]["dataset"], len(c["result"]), (c.get("error") or "")[:80])
+```
+Errors in `err.txt` from unreadable files are `Exception: ('Error, could not read any of the filenames ...` with the
+XRootD errors inside one string: grep for `Operation expired|Auth failed|unauthorized identity|Unable to open file`.
+Retry only some folders:
+```bash
+sed "s/^queue 1 Folder in .*/queue 1 Folder in $(paste -sd, incomplete.txt)/" submit.jdl > submit_retry.jdl && condor_submit submit_retry.jdl
+```
+
+### Merge on condor (`spritz-merge --condor`), 2026-10-08
+
+Run **from the config dir** (`configs/propcorr_new`, not `condor/`: it appends `condor/` itself), inside
+`spritz-shell-giacomo`:
+```bash
+spritz-merge --condor -dr      # prepares merge_condor/ (100 groups of ~61 jobs, --njobs to change), no submit
+```
+The generated files are for **CERN lxplus** and must be patched for LLR before submitting:
+- `run.sh`: Fabian's afs proxy path + bare `python` -> replaced by apptainer + conda py3.12 + spritz_giacomo
+  (no proxy needed: the worker reads `job_*/chunks_job.pkl` by absolute path on `/grid_mnt`, no input transfer)
+- `special_start.sh`: pointed to `spritz_fabian/src` -> spritz_giacomo
+- `submit.jdl`: remove `MY.SingularityImage`, `use_x509userproxy`, `+JobFlavour`; add T3 queue lines;
+  `request_memory=12288` (default 2048; each group sums ~61 job outputs of ~1.5 GB uncompressed EFT histos)
+```bash
+cd merge_condor && G=/grid_mnt/data__data.polcms/cms/adufour/spritz_giacomo && cat > run.sh <<EOF
+#!/bin/bash
+time apptainer exec -B /cvmfs -B /grid_mnt \\
+    --env SPRITZ_PATH=$G --env PYTHONPATH=$G/src:$G \\
+    /grid_mnt/data__data.polcms/cms/adufour/spritz-env.sif \\
+    /home/llr/cms/adufour/.conda/envs/spritz/bin/python merge_worker.py .
+EOF
+chmod +x run.sh && echo "export PYTHONPATH=$G/src:\$PYTHONPATH" > special_start.sh && sed -i -e '/MY.SingularityImage/d' -e '/use_x509userproxy/d' -e '/+JobFlavour/d' -e 's/^request_memory *=.*/request_memory=12288/' -e '/^log/a T3Queue = short\nWNTag   = el9\ninclude : /opt/exp_soft/cms/t3/t3queue |' submit.jdl
+condor_submit submit.jdl     # outside apptainer
+```
+Each merge job overwrites `merge_condor/job_N/chunks_job.pkl` with `{"real_results": merged}`. When all are done:
+`spritz-merge --merge` (local) -> `results_merged_new.pkl`. **Watch memory**: the local final merge holds all
+7 EFT mass bins x 406 points x ~146 variations at once (possibly 10+ GB RAM on the login node); check the size
+of the merged group files first. TODO: turn the patches into a `spritz-merge-llr` wrapper.
+
+Status: merge submitted 2026-10-08 (100 jobs).
 
 ### Useful monitoring commands
 
@@ -191,9 +253,9 @@ Avoid `condor_history -constraint ...` without `-limit`: it scans the whole sche
 
 ## Next steps
 
-1. Wait for cluster 816402; release held jobs (memory: raise to 8192; wall time: move only those to `long`)
-2. Check failed chunks (`Error for chunk`), resubmit `submit.jdl` (only missing chunks are redone)
-3. `spritz-merge --condor` (~640 GB input)
+1. ~~Batch jobs~~ done 2026-10-08, all 6100 complete
+2. Merge: wait for the 100 `merge_condor` jobs (check holds/memory, `err.txt`), then `spritz-merge --merge`
+3. Write `spritz-merge-llr` wrapper with the patches above
 4. `spritz-postproc`: check histogram names to confirm renorm matches variations at nuisance level (QCDscaleUp etc.)
 5. `spritz-cards-eft`; ask Giacomo whether it works without `covariance.root`
 6. Process names are `DYmm_<point>`: our combine tools (`AnomalousCouplingMorphing_comb`) look up `w11_<i>_<j>`,
