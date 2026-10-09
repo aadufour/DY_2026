@@ -261,7 +261,7 @@ Status: merge submitted 2026-10-08 (cluster 816414, 100 jobs).
   Login nodes are shared: don't run multi-10-GB processes there.
 - Solution: **`spritz-merge-final-llr [mem_MB] [cpus]`** (in `analysis/spritz/`, on PATH): sets `cpus` in
   `merge.py` (backup `merge.py.bak`), writes `merge_final/run.sh` + `merge_final/submit.jdl` (one job,
-  `long` queue, no file transfer: reads/writes on /grid_mnt in the config dir) and submits.
+  `long` queue, should_transfer_files = YES (with NO the job never matches any LLR worker: FileSystemDomain), reads/writes directly on /grid_mnt in the config dir) and submits.
   Run it from the config dir **outside apptainer** (inside, condor_submit is missing: then just
   `condor_submit merge_final/submit.jdl` from the host).
 - Used: `spritz-merge-final-llr 120000 1` (120 GB, 1 worker; largest nodes ~128 GB, so 2 workers won't fit).

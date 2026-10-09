@@ -1,6 +1,8 @@
 #!/bin/bash
 # spritz-merge-final-llr: run the final `spritz-merge --merge` as one condor job on LLR T3
 # (instead of on the login node: it needs ~50-100 GB RAM with 27 EFT operators).
+# should_transfer_files must be YES: with NO, condor requires the worker FileSystemDomain to equal the
+# login node one, which no LLR worker matches (job idles forever). Inputs/outputs are on /grid_mnt anyway.
 # Usage: run OUTSIDE apptainer, from the config dir (e.g. configs/propcorr_new),
 #        after all `spritz-merge --condor` jobs (merge_condor/) are done.
 #   spritz-merge-final-llr [request_memory_MB] [cpus]     defaults: 100000 2
@@ -37,7 +39,7 @@ chmod +x merge_final/run.sh
 cat > merge_final/submit.jdl << EOF
 universe = vanilla
 executable = ${CONFIG_DIR}/merge_final/run.sh
-should_transfer_files = NO
+should_transfer_files = YES
 output = ${CONFIG_DIR}/merge_final/out.txt
 error  = ${CONFIG_DIR}/merge_final/err.txt
 log    = ${CONFIG_DIR}/merge_final/log.txt
