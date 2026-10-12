@@ -4,7 +4,7 @@
 # Base: Fabian's dy-eft-2018 (backgrounds, nuisances, corrections, renorm_samples, fakes_dict)
 # EFT:  Giacomo's dy-eft-full-smeftsim-propcorr-2018-megahisto (27 operators, 406 points,
 #       vectorized eft_reweighting; covariance pairs dropped for now)
-# Runner: runner_3DY_eft_blind.py = Fabian's runner_3DY_eft.py +
+# Runner: runner_3DY_eft_blind_pr6.py = PR fstaeg/spritz#6 runner (single pass over weight variations) +
 #   - data_mll_max: data blinded above 500 GeV, MC kept up to 3000
 
 import itertools
@@ -25,7 +25,7 @@ plot_label = "2018 EFT (SMEFTsim propcorr, 27 ops)"
 year_label = "2018"
 njobs = 6100
 
-runner = "/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz/runner_3DY_eft_blind.py"
+runner = "/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/spritz/runner_3DY_eft_blind_pr6.py"
 
 special_analysis_cfg = {
     "do_variations": True,
