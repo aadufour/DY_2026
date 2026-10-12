@@ -137,6 +137,9 @@ fi
 
 ## Condor on LLR T3
 
+Pipeline order (always): `spritz-fileset` -> `spritz-chunks` -> `spritz-batch` (-> condor submit) -> `spritz-merge`
+-> `spritz-postproc` -> plot -> datacards (`spritz-cards`). Don't skip `spritz-chunks`.
+
 `spritz-batch` must be run via the wrapper **`spritz-batch-llr`** (in `analysis/spritz/`, on PATH), inside `spritz-shell-giacomo`.
 `condor_submit: command not found` at the end of spritz-batch is expected (no condor in the container); then submit
 outside apptainer: `cd condor && condor_submit submit.jdl`.
