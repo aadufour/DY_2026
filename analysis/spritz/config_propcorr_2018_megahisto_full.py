@@ -284,6 +284,27 @@ cards_regions = ["bveto_mm"]
 cards_variables = ["triple_diff"]
 covariance_file = "covariance.root"
 
+# ---- Theory variation tags ---------------------------------------------------
+# Indices of LHEScaleWeight for (muR,muF) = (.5,.5),(.5,1),(1,.5),(1,2),(2,1),(2,2), depending on the
+# generator convention (as in Fabian's dy-2018 config):
+#   9 weights (central included):  0,1,3,5,7,8   Single_Top, TT, WW/WZ3L/ZZ4L/ZZ2L2Nu
+#   8 weights (no central):        0,1,3,4,6,7   WZTo2Q2L, ZZTo2Q2L; ASSUMED also for the MG5 LO SMEFTsim
+#                                                (the old propcorr configs say "only 8 scale weights (0-7)")
+#   18 weights (MiNNLO):           0,2,6,10,14,16
+scale_labels = [
+    "$\\mu_{R}=0.5, \\mu_{F}=0.5$", "$\\mu_{R}=0.5, \\mu_{F}=1$", "$\\mu_{R}=1, \\mu_{F}=0.5$",
+    "$\\mu_{R}=1, \\mu_{F}=2$", "$\\mu_{R}=2, \\mu_{F}=1$", "$\\mu_{R}=2, \\mu_{F}=2$",
+]
+scale_idx = {}
+for k in ["Single_Top", "TT", "WWTo2L2Nu", "WZTo3LNu", "ZZTo4L", "ZZTo2L2Nu"]:
+    scale_idx[k] = [0, 1, 3, 5, 7, 8]
+for k in ["WZTo2Q2L", "ZZTo2Q2L", *eft_samples]:
+    scale_idx[k] = [0, 1, 3, 4, 6, 7]
+for k in ["DYmm_MiNNLO", "DYtt"]:
+    scale_idx[k] = [0, 2, 6, 10, 14, 16]
+# alphaS (PDFWeight_101/102): same keys as Fabian's config + the EFT templates
+alphas_keys = ["DYmm_MiNNLO", "DYtt", "TT", "ZZTo4L", "ZZTo2Q2L", "WZTo3LNu", "WZTo2Q2L", *eft_samples]
+
 # ---- Nuisances ---------------------------------------------------------------
 mc_samples = [skey for skey in samples if not samples[skey].get("is_data", False)]
 
@@ -320,40 +341,49 @@ nuisances = {
         ]
     },
     #############
-    # Theory (from propcorr v1)
+    # Theory (format of Fabian's dy-2018 config: "variations" list, per-sample "tag" dicts)
     #############
-    "QCDscale": {
+    "QCD scale": {
         "name": "QCDScale",
         "type": "shape",
         "kind": "envelope",
-        "samples": (
-            {k: [f"QCDScale_{i}" for i in [0,1,3,4,5,7,8]] for k in ["Single_Top", "TT", "VV"]}
-            | {k: [(f"QCDScale_{2*i}", f"QCDScale_{i}") for i in [0,1,3,4,5,7,8]] for k in ["DYmm_MiNNLO", "DYtt"]}
-            | {k: [f"QCDScale_{i}" for i in [0,1,3,5,7]] for k in eft_samples}  # EFT: only 8 scale weights (0-7)
-        ),
-        "is_theory_unc": True,
+        "samples": ["DYmm_MiNNLO", "DYtt", "Single_Top", "TT", "VV", *eft_samples],
+        "variations": [
+            {"label": scale_labels[j], "tag": {k: f"QCDScale_{idx[j]}" for k, idx in scale_idx.items()}}
+            for j in range(6)
+        ],
     },
-    "PDFweight": {
-        "name": "PDFweight",
+    "PDF": {
+        "name": "PDFWeight",
         "type": "shape",
         "kind": "square",
-        # Single Top does not have reliable LHEPdfWeight in NanoAOD
-        "samples": {k: [f"PDFWeight_{i}" for i in range(101)] for k in ["DYmm_MiNNLO", "DYtt", "TT", "VV"] + eft_samples},
-        "is_theory_unc": True,
+        # Single_Top left out: unreliable LHEPdfWeight in NanoAOD (as in propcorr v1)
+        "samples": ["DYmm_MiNNLO", "DYtt", "TT", "VV", *eft_samples],
+        "variations": [
+            {"label": f"PDF Hessian set {i}", "tag": f"PDFWeight_{i}"} for i in range(1, 101)
+        ],
     },
-    "alphaS": {
+    "$\\alpha_{S}$": {
         "name": "alphaS",
         "type": "shape",
         "kind": "envelope",
-        "samples": {k: [f"PDFWeight_{i}" for i in [101, 102]] for k in ["DYmm_MiNNLO", "DYtt"] + eft_samples},
-        "is_theory_unc": True,
+        "samples": ["DYmm_MiNNLO", "DYtt", "TT", "VV", *eft_samples],
+        "variations": [
+            {"label": "$\\alpha_{S} = 0.116$", "tag": {k: "PDFWeight_101" for k in alphas_keys}},
+            {"label": "$\\alpha_{S} = 0.120$", "tag": {k: "PDFWeight_102" for k in alphas_keys}},
+        ],
     },
-    "PSWeight": {
+    "Parton shower": {
         "name": "PSWeight",
         "type": "shape",
         "kind": "envelope",
-        "samples": {k: [f"PSWeight_{i}" for i in range(4)] for k in ["DYmm_MiNNLO", "DYtt", "Single_Top", "TT", "VV"] + eft_samples},
-        "is_theory_unc": True,
+        "samples": ["DYmm_MiNNLO", "DYtt", "Single_Top", "TT", "VV", *eft_samples],
+        "variations": [
+            {"label": "ISR=2, FSR=1", "tag": "PSWeight_0"},
+            {"label": "ISR=1, FSR=2", "tag": "PSWeight_1"},
+            {"label": "ISR=0.5, FSR=1", "tag": "PSWeight_2"},
+            {"label": "ISR=1, FSR=0.5", "tag": "PSWeight_3"},
+        ],
     },
     #############
     # Theory: HO corrections

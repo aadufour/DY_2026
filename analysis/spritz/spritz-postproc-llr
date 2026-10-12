@@ -1,6 +1,7 @@
 #!/bin/bash
 # spritz-postproc-llr: run `spritz-postproc` as one condor job on LLR T3
-# (on the login node it spawns cpus=10 workers of 15-46 GB each and gets OOM-killed).
+# (on the login node it spawns 10 workers of 15-46 GB each and gets OOM-killed).
+# Needs spritz with the --cpus option (PR fstaeg/spritz#6); the output is histos.pkl.
 # should_transfer_files must be YES: with NO, condor requires the worker FileSystemDomain to equal the
 # login node one, which no LLR worker matches (job idles forever). Inputs/outputs are on /grid_mnt anyway.
 # Usage: run OUTSIDE apptainer, from the config dir (e.g. configs/propcorr_new),
@@ -19,12 +20,6 @@ ENV=/home/llr/cms/adufour/.conda/envs/spritz
 
 [ -f condor/results_merged_new.pkl ] || { echo "No condor/results_merged_new.pkl here: run from the config dir after the final merge"; exit 1; }
 
-# post_process.py has a hardcoded worker count: set it to CPUS (backup kept once)
-PP=$G/src/spritz/scripts/post_process.py
-[ -f $PP.bak ] || cp $PP $PP.bak
-sed -i "s/^\( *\)cpus = [0-9]*$/\1cpus = ${CPUS}/" $PP
-grep -n "cpus = " $PP
-
 mkdir -p postproc_job
 cat > postproc_job/run.sh << EOF
 #!/bin/bash
@@ -32,7 +27,7 @@ cd ${CONFIG_DIR}
 time apptainer exec -B /cvmfs -B /grid_mnt \\
     --env SPRITZ_PATH=${G} --env PYTHONPATH=${G}/src:${G} \\
     ${SIF} \\
-    ${ENV}/bin/python ${ENV}/bin/spritz-postproc
+    ${ENV}/bin/python ${ENV}/bin/spritz-postproc --cpus ${CPUS}
 EOF
 chmod +x postproc_job/run.sh
 
