@@ -294,6 +294,37 @@ Avoid `condor_history -constraint ...` without `-limit`: it scans the whole sche
 
 ---
 
+## Status 2026-10-12 (paused: waiting for Giacomo/Fabian to settle the setup)
+
+- Old run (`configs/propcorr_new`, old runner): batch + condor merge + final merge done. `condor/results_merged_new.pkl`
+  (1.2 GB; identical copy `results_merged_new_BACKUP.pkl` in the config dir). `condor/job_*` being deleted by hand
+  (keep the pkl in `condor/`: postproc reads `condor/results_merged_new.pkl`).
+- **`spritz-postproc` crashed with `KeyError: 'variations'`**: our theory nuisances (QCDscale/PDFweight/alphaS/PSWeight)
+  used the old v1 format (`samples` dict of tag lists). Current spritz wants `"variations": [{"label","tag"}]` for
+  `envelope/square/stdev` (tag may be a dict keyed by sample group or dataset), or `hessian` (one `tag`, Down = mirror) /
+  `updown` (`tag_up`,`tag_down`). Fixed in `config_propcorr_2018_megahisto_full.py`, format copied from Fabian's
+  `dy-2018` config (saved as `dy_2018_config_pr6.py`). Not yet re-run on the cluster.
+- Scale-weight indices: 9-weight samples 0,1,3,5,7,8; 8-weight (WZ/ZZ->2Q2L, SMEFTsim LO: verified nLHEScaleWeight=8,
+  nLHEPdfWeight=103, nPSWeight=4) 0,1,3,4,6,7; MiNNLO (18) 0,2,6,10,14,16. DY QCD-scale/PS "look weird" to Fabian: open.
+- **fstaeg/spritz PR #6** (Giacomo, open): runner computes weight-only variations in one pass (30-300 s/job claimed), float64
+  `sumw` (old runner: float32, permille-level effect on our MC), `--cpus` and `--split-dataset` for merge/postproc
+  (no more hardcoded `cpus = 10`), `hessian` PDF kind, `EFTHistogram` storage, `spritz-pkl2root`, `spritz-renormalize`.
+  `spritz_giacomo` is now on branch `pr6` (fetched with `git fetch origin pull/6/head:pr6`; back: `git checkout giacomo`).
+  New framework still reads the old EFT layout (expand_eft_combined falls back), so the old merged pkl may work.
+- Files in `analysis/spritz/`: `runner_3DY_eft_blind_pr6.py` (PR6 runner + 3-line `data_mll_max` blinding; config points
+  to it), `*_pr6.py` copies of PR6 runner/postproc/merge/framework for reading, `spritz-postproc-llr` and
+  `spritz-merge-final-llr` (now use `--cpus`).
+- New directory `configs/propcorr_pr6`: fileset + chunks done (37,172 chunks vs ~30,500 in the old run: +22%, cause
+  unknown; compare per dataset with `propcorr_new/data/chunks.pkl`). **Nothing submitted.**
+- Pipeline order: fileset -> chunks -> batch -> merge -> postproc -> plot -> datacards.
+
+Open decisions (ask Giacomo/Fabian): `njobs` (their configs: 600 SM, 1000 EFT-7ops; ours 6100 came from the EFT-only
+config); full MC-stat covariance (`covariance_pairs`, batch-level, 82,621 pairs, booked only for cards region/variable in
+PR6; how cov(SM, SMEFT) is treated with MiNNLO SM stat); PDF as 100 `hessian` nuisances (and decorrelation per process);
+processing bkg+data separately from EFT with Giacomo's new merge-results script.
+
+---
+
 ## Next steps
 
 1. ~~Batch jobs~~ done 2026-10-08, all 6100 complete
