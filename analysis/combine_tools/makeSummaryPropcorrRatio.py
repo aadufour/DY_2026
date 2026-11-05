@@ -272,7 +272,10 @@ def build_plot(var):
         ax.set_yticklabels(ops)
         ax.set_xlabel("68% CL width ratio (propcorr / baseline)")
 
-    # no figure title: it overlapped the right-hand label; the variable is in the filename
+    # variable shown inside the axes (a figure title overlapped the right-hand label);
+    # an empty legend with loc="best" keeps it clear of the bars
+    ax.legend(handles=[], title=VARS[var]["label"], loc="best", frameon=False,
+              title_fontsize=LABEL_SIZE)
     hep.cms.label(ax=ax, data=True, label="Preliminary", lumi=LUMI, year=YEAR)
 
     plt.tight_layout()
