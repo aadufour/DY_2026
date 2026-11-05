@@ -46,6 +46,9 @@ WIDTH_PER_OP    = 0.9
 
 BAR_COLOR = "#2166ac"
 
+LUMI = 59.74   # fb^-1, 2018
+YEAR = 2018
+
 VARS = {
     "mll":          {"dirname": "mll",          "label": r"$m_{\ell\ell}$"},
     "rapll":        {"dirname": "rapll_abs",     "label": r"$|y_{\ell\ell}|$"},
@@ -269,12 +272,10 @@ def build_plot(var):
         ax.set_yticklabels(ops)
         ax.set_xlabel("68% CL width ratio (propcorr / baseline)")
 
-    hep.cms.label(ax=ax, data=True, label="Preliminary")
+    # no figure title: it overlapped the right-hand label; the variable is in the filename
+    hep.cms.label(ax=ax, data=True, label="Preliminary", lumi=LUMI, year=YEAR)
 
     plt.tight_layout()
-    top_margin = 0.84 if args.horizontal else 0.90
-    fig.subplots_adjust(top=top_margin)
-    fig.suptitle(VARS[var]["label"], x=0.5, ha="left", y=top_margin + 0.06)
 
     suffix = "_horizontal" if args.horizontal else ""
     outname = f"{args.outname}_{var}{suffix}"

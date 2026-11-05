@@ -60,8 +60,9 @@ OPERATORS=(
     clu  cld  cbl
 )
 
-# enters delta-Gamma_W and/or delta-Gamma_Z per Appendix A
-PROPCORR_OPS=(cHDD cHWB cHl1 cHl3 cll1 cHj1 cHj3 cHQ1 cHQ3)
+# the 15 operators entering dWZ in the model's parameters.py (incl. via dGf, dMZ2);
+# matches auto_detect_operators_propcorr.py
+PROPCORR_OPS=(cHDD cHWB cHl1 cHl3 cll1 cHj1 cHj3 cHQ1 cHQ3 cHu cHd cHbq cHe cbWRe cbBRe)
 
 for op in "${OPERATORS[@]}"; do
     op_outdir="$OUTDIR"
