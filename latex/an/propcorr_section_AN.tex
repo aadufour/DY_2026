@@ -1,0 +1,209 @@
+\subsection{EFT parametrization with propagator corrections at LO LHE level}
+\label{sec:eft_propcorr}
+
+Dimension-six operators modify the masses and widths of the SM particles, and
+for a prediction consistent at $\mathcal{O}(\Lambda^{-2})$ these shifts have to
+be included in the propagators~\cite{Brivio:2020onw}.
+In the default configuration of \smeftsim{}, width corrections are not
+included. Since the correction to a propagator is proportional to
+$D(q^2)^{-1}$, with $D(q^2) = q^2 - m^2 + i m\Gamma$, it is relevant in the
+on-shell region and suppressed far from it~\cite{Brivio:2020onw}: for neutral
+DY production this is the region of the Z peak.
+
+In the $\{m_W, m_Z, G_F\}$ input scheme used in this analysis, mass corrections
+are entirely avoided~\cite{Brivio:2020onw}, so only the width correction
+$\delta\Gamma_Z$ remains. Of the $Z/\gamma^*$ exchange, only the Z propagator is
+corrected. On shell, the relative correction to the propagator is
+$-\delta\Gamma_Z/\Gamma_Z^{\mathrm{SM}}$~\cite[Eq.~(6.10)]{Brivio:2020onw}.
+
+\subsubsection{Implementation and generation}
+
+\smeftsim{} provides the propagator expanded to linear order in the
+shifts~\cite{Brivio:2020onw}. For the Z boson with $\delta m_Z = 0$ this gives
+\begin{equation}
+  P_Z^{\mu\nu} = P_Z^{\mu\nu,\mathrm{SM}}
+  - P_Z^{\mu\nu,\mathrm{SM}}\,\frac{i\, m_Z}{D_Z(q^2)}\,\delta\Gamma_Z ,
+  \qquad D_Z(q^2) = q^2 - m_Z^2 + i\, m_Z \Gamma_Z^{\mathrm{SM}} .
+  \label{eq:propcorr_linear}
+\end{equation}
+The correction term is generated as the propagator of a dummy field $Z'$, which
+has the same SM interactions as the Z boson and does not enter dimension-six
+operators. Vertices with dummy legs are proportional to a flag set by the model
+parameter \texttt{linearPropCorrections}. The width shift $\delta\Gamma_Z$ is an internal parameter
+of the model, an analytic function of the SM couplings and of the Wilson
+coefficients, computed from the Z partial widths~\cite[App.~A]{Brivio:2020onw}.
+The correction is switched on in the restriction card with:
+
+\begin{verbatim}
+Block SWITCHES
+    1 1.000000e+00 # linearPropCorrections
+\end{verbatim}
+
+Since $\delta\Gamma_Z$ is recomputed from the Wilson coefficients at each
+reweighting point, the linear and quadratic templates of
+Eq.~(\ref{eq:eft_parametrization_1op})
+include the propagator correction without changes to the reweighting procedure.
+
+In \smeftsim{}, vertex and propagator insertions are selected by separate
+interaction orders, \texttt{NP} and \texttt{NPprop}, and the latter is disabled
+by default~\cite{Brivio:2020onw}. To generate both at the same order in the EFT
+expansion in a single sample, we added to the model an interaction order
+\texttt{NPall}: each dimension-six vertex
+counts as two units and each $Z'$ vertex as one, so a single $Z'$ propagator
+counts as one dimension-six insertion. The process is generated with:
+
+\begin{verbatim}
+import model SMEFTsim_topU3l_MwScheme_UFO-all_massless
+generate p p > mu+ mu- QCD=0 SMHLOOP=0 NPall<=2 NPprop^2<=2
+\end{verbatim}
+
+\noindent At amplitude level, \texttt{NPall<=2} allows either one dimension-six
+vertex or one $Z'$ propagator. At squared-amplitude level, \texttt{NPprop\^{}2<=2}
+keeps the interference proportional to $\delta\Gamma_Z$ and removes the term
+proportional to $(\delta\Gamma_Z)^2$~\cite{Brivio:2020onw}. Without propagator
+corrections the same process is generated with \texttt{NP<=1}.
+
+Gridpacks with propagator corrections are produced in the same seven
+$m_{\ell\ell}$ bins as those without, with the same restriction card and the same
+406 reweighting points (SM point, $\pm1$ for each operator, and all operator
+pairs). For the validation at LHE level, 100k events per bin are generated.
+
+At the generation point, with all operators at unitary Wilson coefficient, the
+propagator correction changes the cross section by $-8.4\%$ in the
+$50 < m_{\ell\ell} < 120\GeV$ bin and by at most 0.4\% in the other bins,
+consistently with a correction concentrated on shell.
+
+Of the operators affecting neutral DY production
+(Table~\ref{tab:d6operators_smeftsim}),
+15 enter $\delta\Gamma_Z$. They can be read off the expression of
+$\delta\Gamma_Z$ in the model, and were cross-checked by inspecting the generated
+diagrams for $Z'$ insertions~\cite{EFT2Obs}:
+\begin{itemize}
+  \item through the Z couplings to quarks: $\mathcal{O}_{Hq}^{(1)}$,
+    $\mathcal{O}_{Hq}^{(3)}$, $\mathcal{O}_{HQ}^{(1)}$, $\mathcal{O}_{HQ}^{(3)}$,
+    $\mathcal{O}_{Hu}$, $\mathcal{O}_{Hd}$, $\mathcal{O}_{Hb}$, and the dipoles
+    $\mathcal{O}_{bW}$, $\mathcal{O}_{bB}$;
+  \item through the Z couplings to leptons: $\mathcal{O}_{H\ell}^{(1)}$,
+    $\mathcal{O}_{H\ell}^{(3)}$, $\mathcal{O}_{He}$;
+  \item through the input parameters, shifting all Z couplings at once:
+    $\mathcal{O}_{HD}$ and $\mathcal{O}_{HWB}$ via $m_Z$, and
+    $\mathcal{O}_{H\ell}^{(3)}$ and $\mathcal{O}_{\ell\ell}^{(1)}$ via
+    $G_F$~\cite[Table~4]{Brivio:2020onw}.
+\end{itemize}
+The remaining operators are four-fermion contact interactions; they do not
+appear in $\delta\Gamma_Z$, so their templates are not affected.
+
+Two features follow from these expressions. $\mathcal{O}_{HQ}^{(1)}$ and
+$\mathcal{O}_{HQ}^{(3)}$ enter only through their sum, both in $\delta\Gamma_Z$ and
+in the Z coupling to b quarks~\cite[Eq.~(A.5)]{Brivio:2020onw}, so their templates
+are identical event by event and only the sum can be constrained. The dipole
+operators enter $\delta\Gamma_Z$ only through terms proportional to the b-quark
+mass~\cite[Eq.~(A.12)]{Brivio:2020onw}, in line with their vanishing vertex
+contributions in Section~\ref{sec:eft_lo_validation}.
+
+\subsubsection{Linear and quadratic templates}
+
+As in Section~\ref{sec:eft_lo_validation},
+the linear and quadratic templates are derived with
+Eq.~(\ref{eq:eft_parametrization_1op}),
+with and without propagator corrections, and compared in the range
+$80 < m_{\ell\ell} < 102\GeV$
+(Figs.~\ref{fig:propcorr_lin} and~\ref{fig:propcorr_quad}).
+
+The linear term now also contains the interference of the $Z'$ diagrams with
+the SM amplitude, proportional to $\delta\Gamma_Z$~\cite{Brivio:2020onw}. Its
+effect is confined to the Z pole, where it is often larger than the vertex
+contribution and can change the sign of the linear term, as for
+$\mathcal{O}_{H\ell}^{(3)}$ and $\mathcal{O}_{HQ}^{(1,3)}$.
+The quadratic templates change as well, and can become negative at the pole, as
+for $\mathcal{O}_{\ell\ell}^{(1)}$: they now include the interference between
+the diagrams with a dimension-six vertex and those with a $Z'$ propagator.
+The templates of four-fermion operators, which do not enter $\delta\Gamma_Z$,
+are unchanged (Fig.~\ref{fig:propcorr_control}).
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHDD_lin_raw.pdf}%
+  \hfill
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHWB_lin_raw.pdf}%
+  \hfill
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cll1_lin_raw.pdf}%
+  \hfill
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHl1_lin_raw.pdf}%
+  \\
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHl3_lin_raw.pdf}%
+  \hfill
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHe_lin_raw.pdf}%
+  \hfill
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHj1_lin_raw.pdf}%
+  \hfill
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHj3_lin_raw.pdf}%
+  \\
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHQ1_lin_raw.pdf}%
+  \hfill
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHQ3_lin_raw.pdf}%
+  \hfill
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHu_lin_raw.pdf}%
+  \hfill
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHd_lin_raw.pdf}%
+  \\
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHbq_lin_raw.pdf}%
+  \hfill
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cbWRe_lin_raw.pdf}%
+  \hfill
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cbBRe_lin_raw.pdf}%
+  \hfill
+  \caption{Linear ($\Lambda^{-2}$) templates in the Z-peak region at LHE level for
+    the 15 operators entering $\delta\Gamma_Z$, without (blue) and with (red)
+    propagator corrections. The bottom panels show the ratio of the two.}
+  \label{fig:propcorr_lin}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHDD_quad_raw.pdf}%
+  \hfill
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHWB_quad_raw.pdf}%
+  \hfill
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cll1_quad_raw.pdf}%
+  \hfill
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHl1_quad_raw.pdf}%
+  \\
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHl3_quad_raw.pdf}%
+  \hfill
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHe_quad_raw.pdf}%
+  \hfill
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHj1_quad_raw.pdf}%
+  \hfill
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHj3_quad_raw.pdf}%
+  \\
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHQ1_quad_raw.pdf}%
+  \hfill
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHQ3_quad_raw.pdf}%
+  \hfill
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHu_quad_raw.pdf}%
+  \hfill
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHd_quad_raw.pdf}%
+  \\
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cHbq_quad_raw.pdf}%
+  \hfill
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cbWRe_quad_raw.pdf}%
+  \hfill
+  \includegraphics[width=0.24\textwidth]{Figures/propcorr/compare_cbBRe_quad_raw.pdf}%
+  \hfill
+  \caption{Quadratic ($\Lambda^{-4}$) templates in the Z-peak region at LHE level
+    for the 15 operators entering $\delta\Gamma_Z$, without (blue) and with (red)
+    propagator corrections. The bottom panels show the ratio of the two.}
+  \label{fig:propcorr_quad}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.32\textwidth]{Figures/propcorr/compare_cQe_lin_raw.pdf}
+  \includegraphics[width=0.32\textwidth]{Figures/propcorr/compare_cQe_quad_raw.pdf}
+  \caption{Linear (left) and quadratic (right) templates in the Z-peak region at
+    LHE level for a four-fermion operator not entering $\delta\Gamma_Z$, without
+    (blue) and with (red) propagator corrections. The bottom panels show the
+    ratio of the two.}
+  \label{fig:propcorr_control}
+\end{figure}

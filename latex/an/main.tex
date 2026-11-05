@@ -1,0 +1,39 @@
+% Minimal wrapper to compile the propcorr section offline.
+% Missing figures are drawn as labelled boxes, existing ones are included.
+\documentclass[11pt]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath}
+\usepackage{xspace}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\let\realincludegraphics\includegraphics
+\renewcommand{\includegraphics}[2][]{%
+  \IfFileExists{#2}{\realincludegraphics[#1]{#2}}%
+  {\fbox{\parbox[c][0.15\textheight][c]{0.2\textwidth}{\centering\resizebox{0.18\textwidth}{!}{\detokenize{#2}}}}}}
+
+% Stubs for the CMS macros used in the section
+\newcommand{\GeV}{\ensuremath{\,\text{Ge\hspace{-.08em}V}}\xspace}
+\newcommand{\GeVns}{\ensuremath{\text{Ge\hspace{-.08em}V}}}
+\newcommand{\pt}{\ensuremath{p_{\mathrm{T}}}\xspace}
+
+\begin{document}
+
+% Number it as it would appear in the AN (Sec. 7.3)
+\setcounter{section}{6}
+\section{Derivation of the EFT parametrization}
+\setcounter{subsection}{2}
+
+\input{propcorr_section_local}
+
+% Results section, numbered as it would appear in the AN (Sec. 9.4)
+\clearpage
+\setcounter{section}{8}
+\section{Results}
+\setcounter{subsection}{3}
+\input{results_propcorr_local}
+
+\bibliographystyle{unsrturl}
+\bibliography{propcorr}
+
+\end{document}

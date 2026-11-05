@@ -1,0 +1,80 @@
+% =============================================================================
+% Draft: Sec. 9.4 of CMS AN-2024/110, "Expected limits with propagator
+% corrections" (placement agreed with Giacomo, 4 Nov). Same style as 9.3:
+% short text, then the figures.
+%
+% Giacomo, 5 Nov: the 9.3 results already use the propcorr samples with all
+% uncertainties; 9.4 only needs to show the effect of the propagator
+% corrections, not a full study ("10, 30 or 100 more nuisances change nothing").
+%
+% Sources in "% src:" comments, as in propcorr_section_local.tex.
+% Values read off the ratio plot are approximate (+-0.01).
+% =============================================================================
+
+\subsection{Expected limits with propagator corrections}
+\label{sec:results_propcorr}
+
+% src: Giacomo (5 Nov): 9.3 uses the propcorr samples.
+%      Setup: config_v9.py vs config_propcorr_v1.py (only the EFT signal differs,
+%      checked with diff); no MC stat on the EFT signal (SMP-V slides 06/10, p. 12);
+%      stat+syst scans, triple-differential distribution (makeSummaryPropcorr*.py,
+%      figure titles). Fits: spritz_fabian/configs/eft_bkg_fullsyst_v9/datacards and
+%      propcorr_v1/datacards_single (confirmed 5 Nov: rerun gives the 9 Sep values).
+The expected limits of Section~9.3
+include propagator corrections. To show their effect, the expected limits are
+compared with those obtained from EFT templates without propagator corrections
+(Section~\ref{sec:eft_propcorr}). The comparison uses a simplified setup with
+respect to Section~9.3: privately produced samples with lower
+statistics, and no MC statistical uncertainty on the EFT templates. The two fits
+differ only in the EFT templates, so the comparison isolates the effect of the
+propagator corrections. Both use the triple-differential distribution and the
+2018 dataset.
+
+% src: summary plot (four-fermion rows overlap); ratio plot (values).
+Figure~\ref{fig:propcorr_summary} compares the expected 68\% and 95\% CL intervals
+for all operators. As expected, the intervals on the four-fermion operators,
+which do not enter $\delta\Gamma_Z$, are unchanged.
+Figure~\ref{fig:propcorr_widthratio} shows the ratio of the widths of the 68\% CL
+intervals for the 15 operators entering $\delta\Gamma_Z$. The largest effects are
+on $\mathcal{O}_{HQ}^{(1)}$ and $\mathcal{O}_{HQ}^{(3)}$ (ratio 0.22),
+$\mathcal{O}_{\ell\ell}^{(1)}$ (0.25) and $\mathcal{O}_{H\ell}^{(3)}$ (0.50),
+whose intervals become tighter by factors between two and five.
+% src: SMP-V slide 26 (cHQ1 linear template at the Z peak: from about +0.6 to
+%      about -3 pb/bin, with sign flip). Explanation of the tightening as
+%      "dominated by the peak" is NOT checked: kept as a TODO.
+% TODO (check before writing): for cHQ1 the linear term at the Z peak grows by
+%      a factor ~5 and changes sign (Fig. propcorr_lin); is this what drives the
+%      tighter interval?
+The interval on $\mathcal{O}_{Hd}$ becomes wider (1.57), and the one on
+$\mathcal{O}_{HWB}$ slightly wider (1.16); the remaining operators change by
+less than 15\%.
+% TODO: cbWRe (0.70) and cbBRe (1.28) also change, although they enter
+%       delta Gamma_Z only through m_b terms; their intervals are O(1). Not
+%       understood: ask before writing anything about it.
+
+\begin{figure}[htbp]
+  \centering
+  % makeSummaryPropcorr.py --bl-dir <v9> --pc-dir <propcorr_v1>, 9 Sep
+  % (extracted from the SMP-V Keynote, 06/10)
+  % trim: drop the "Triple-diff" title at the top (48 pt), keep legend and CMS label
+  \includegraphics[width=0.6\textwidth,trim=0 0 0 48,clip]{figures/propcorr/eft_summary_propcorr_triple_diff.pdf}
+  \caption{Expected 68\% (solid) and 95\% (dashed) CL intervals on the Wilson
+    coefficients from the triple-differential distribution, at LO in QCD from
+    \textsc{SMEFTsim}, without (blue) and with (red) propagator corrections. The
+    right panel shows the corresponding lower bounds on $\Lambda$ at 95\% CL for
+    $c = 1$ and $c = (4\pi)^2$.}
+  \label{fig:propcorr_summary}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  % makeSummaryPropcorrRatio.py --bl-dir .../eft_bkg_fullsyst_v9/datacards
+  %   --pc-dir .../propcorr_v1/datacards_single --datacards-subpath inc_mm (5 Nov)
+  % LLR: spritz_fabian/configs/propcorr_v1/plots_AN/
+  \includegraphics[width=0.75\textwidth]{figures/propcorr/eft_widthratio_propcorr_triple_diff.pdf}
+  \caption{Ratio of the widths of the expected 68\% CL intervals with and without
+    propagator corrections, from the triple-differential distribution, for the
+    15 operators entering $\delta\Gamma_Z$. A ratio below one corresponds to a
+    tighter interval with propagator corrections.}
+  \label{fig:propcorr_widthratio}
+\end{figure}
