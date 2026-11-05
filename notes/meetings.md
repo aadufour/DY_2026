@@ -7,10 +7,11 @@
 
 - REWEIGHTING: se w1 w wm1 non fossero reweighted non potrei fare algebra -> lin quad
 - TopU3l: è la terza generazione quark singled out o solo top?
+! terza gen
 - MINNLO è NNLO QCD e NLO EWK? da capire
-! NLO EWK is not embedded in the matrix element but comes from pythia (ISR, FSR): missing virtual contributions
+! NLO EW is not embedded in the matrix element but comes from pythia (ISR, FSR): missing virtual contributions (quindi NNLO QCD e circa NLO EW)
 - il k factor da minnlo non dovrebbe propagare incertezza QCD?
-! either take the minnlo or LO, free to choose. MINNLO better (smaller). take the minnlo and add on top a little uncertainty (lognormal). It would be nice to add the generation generate p p > l l j (adding real emission part of the diadgrams) -> prediction gets closer to LO. would need to generate new gridpacks.
+! either take the minnlo or LO, free to choose. MINNLO better (smaller). take the minnlo and add on top a little uncertainty (lognormal). It would be nice to add the generation generate p p > l l j (adding real emission part of the diadgrams) -> prediction gets closer to NLO (now done)
 - cos'è tt_ptrw?
 
 - variare binning: citare come possibilità ma non approfondire
@@ -70,3 +71,31 @@ If we had hessian eigenvariations we should keep all the 100? we can then symmet
 
 - to check the wiggly lines: we can remove qcd and see what happens.
 tuesday 6
+
+
+
+
+
+
+
+
+
+
+## 13-10-2026
+
+
+NO FULL RUN2
+- linear e quadratic interessante: quanto è rilevante non aver implementato dim8
+- 2D operator scan
+- full profiled fit
+
+- aggiungo incertezza MC: già implementata.
+
+USO I MIEI SAMPLE!
+
+
+
+
+
+
+

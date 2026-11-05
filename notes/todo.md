@@ -1,3 +1,41 @@
+# THESIS PLAN (2026-11-03)
+Analysis work is over (talk before pre-approval done). Goal: final presentation + thesis (read by Govoni).
+Only the points discussed with the profs, then writing. No precision uncertainties.
+Own samples, 2018 only, no full Run 2.
+
+Decided with Giacomo (2026-11-05):
+- own samples, 2018 only: OK
+- NO higher-order corrections (N3LO QCD / NLO EW) and NO fakes: would need understanding + explaining in the thesis
+- NO correlated MC stat on the signal (same reason); keep noStat on the EFT templates, state it as a limitation
+- theory uncertainties: PORT THE MiNNLO WAY (per-variation k = MiNNLO_V / LO_sm_V, as Fabian's renormalize_hists):
+  SM part at NNLO, only EFT/SM at LO. Postproc-only change -> post_process_minnlo.py
+
+Analysis
+- [ ] Linear vs quadratic fits (relevance of missing dim-8), with the existing propcorr_v1 templates (13 Oct)
+- [ ] Lean cross-term reprocessing (config_propcorr_v1_crossterms / v2, see notes/combine_2Dscans.md):
+      no Rochester stat toys, no theory variations; lumi + autoMCStats + basic exp. systs. Needed for 2D and profiled.
+      Decide: mll only, or also triple_diff?
+- [ ] 2D operator scans WITH cross terms (13 Oct)
+- [ ] Full profiled fit: largest constrainable operator set (13 Oct, Govoni 23 Sep)
+- [ ] MC stat uncertainty in the fits: already implemented, just check it is on (13 Oct)
+- [ ] Summary plot: fix for operators with two minima (yll, costheta) (Govoni)
+
+Plots (only what is visually wrong)
+- [ ] axis labels: mll and 3D Events/GeV, rapll/costheta Events (Roberto)
+
+Writing only
+- [ ] propcorr section ("never done before")
+- [ ] binning variation: mention as possibility, don't pursue
+- [ ] cHQ1/cHQ3 exact degeneracy (b-quark-only process): one line
+
+Optional (discussed, decide)
+- [ ] K-factor SMEFTsim vs SMEFTatNLO for one operator (Govoni: "interessante, mai fatto") - heaviest
+- [ ] injection test in combine (--setParameters c=x) - easy
+
+=====================================================================
+PARKED: everything below is NOT for the thesis (kept for reference)
+=====================================================================
+
 - [x] combine fits still says 138 fb^-1 -> to change (just visual!)
 
 ---
