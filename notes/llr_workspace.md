@@ -20,8 +20,8 @@ Access: `ssh llrcms` (proxy jump via llrgate01, port 22) -> llruicms01.in2p3.fr.
 | dir | size | what |
 |---|---|---|
 | `spritz_fabian/` | 360G | old spritz env used for all the thesis results; outputs in `configs/` |
-| `LHE/` | 264G | LHE validation: `baseline`, `propcorr`, `SYST_slc7`, `compare_ops_plots` |
-| `spritz_giacomo/` | 83G | spritz on branch pr6 (PR #6 route, parked) |
+| `LHE/` | 137G | LHE validation: `baseline`, `propcorr`, `SYST_slc7`, `compare_ops_plots` (old/ + bugged deleted 2026-11-05) |
+| `spritz_giacomo/` | ~5G | spritz on branch pr6 (PR #6 route, parked) |
 | `gridpacks/` | 41G | `SYST_slc7/DYSMEFTMll*` (7 mll bins, current) + `old/` (incl. `propcorr_BUGGED`) |
 | `spritz/` | 23G | original spritz checkout |
 | `genproductions/` | 19G | gridpack production |
@@ -40,7 +40,7 @@ Access: `ssh llrcms` (proxy jump via llrgate01, port 22) -> llruicms01.in2p3.fr.
 | `propcorr_v2/` | v1 + 351 cross terms; `condor/` deleted 2026-10-08, only a small `histos.root` + config left |
 | `eft_bkg_fullsyst_v9/`, `_v5/` | non-propcorr predecessors, each with full `condor/` (3000 jobs) |
 
-`spritz_giacomo/configs/`: `propcorr_new/` (merged pkl backup 1.2 GB, `merge_condor/` ~80 GB, deletable), `propcorr_pr6/` (config only), plus Giacomo's/Fabian's reference configs (`dy-eft-2018`, `dy-2018`, ...).
+`spritz_giacomo/configs/`: `propcorr_new/` (merged pkl backup 1.2 GB; `merge_condor/` deleted 2026-11-05), `propcorr_pr6/` (config only), plus Giacomo's/Fabian's reference configs (`dy-eft-2018`, `dy-2018`, ...).
 
 ## Samples
 Own propcorr NanoAODs on EOS GRIF:
@@ -50,4 +50,4 @@ Reading them needs a valid grid proxy (`voms-proxy-init`); `~/work/proxy.pem` is
 ## Open
 - MiNNLO postproc (`post_process_minnlo.py`) can run directly on `propcorr_v1/condor/results_merged_new.pkl`.
 - Checking `nLHEScaleWeight` on the own samples needs a fresh proxy.
-- Disk cleanup candidates (ask before deleting): `spritz_giacomo/configs/propcorr_new/merge_condor` (~80G), the `condor/job_*` dirs of v5/v9.
+- Disk cleanup candidates (ask before deleting): the `condor/job_*` dirs of v5/v9.
