@@ -12,3 +12,4 @@ MG5
 *.out
 *.err
 keynote_builder/
+.DS_Store
