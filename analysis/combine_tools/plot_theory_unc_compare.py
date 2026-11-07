@@ -60,8 +60,8 @@ for ax, nuis in zip(axes, a.nuis):
         hep.histplot(dn, edges, ax=ax, color=col, ls="--", label=f"{lab} down")
     ax.axhline(0, color="gray", lw=0.8)
     ax.set_ylabel("variation [%]")
-    ax.set_title(NAME.get(nuis, nuis), fontsize=20, loc="left")
-    ax.legend(fontsize=14, ncol=2)
+    ax.text(0.03, 0.9, NAME.get(nuis, nuis), transform=ax.transAxes, fontsize=20, va="top")
+    ax.legend(fontsize=14, ncol=2, loc="upper right")
     if a.var == "mll":
         ax.set_xscale("log")
 axes[-1].set_xlabel(XLABEL.get(a.var, a.var))
