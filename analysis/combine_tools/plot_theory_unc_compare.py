@@ -65,7 +65,7 @@ for ax, nuis in zip(axes, a.nuis):
     if a.var == "mll":
         ax.set_xscale("log")
 axes[-1].set_xlabel(XLABEL.get(a.var, a.var))
-hep.cms.label("Simulation Preliminary", data=False, ax=axes[0], fontsize=20)
+hep.cms.label("Preliminary", data=False, ax=axes[0], fontsize=20)
 fig.tight_layout()
 out = f"{a.outdir}/theory_unc_compare_{a.proc}_{a.var}"
 for ext in ("pdf", "png"):
