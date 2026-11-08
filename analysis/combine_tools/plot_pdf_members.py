@@ -25,6 +25,7 @@ p.add_argument("--var", default="mll")
 p.add_argument("--proc", default="DYll")
 p.add_argument("--ntop", type=int, default=3, help="highlight the ntop members with the largest |dev|/median in any bin")
 p.add_argument("--outdir", default=".")
+p.add_argument("--label", default=None, help="extra bold text on the plot")
 a = p.parse_args()
 
 f = uproot.open(a.file)
@@ -42,9 +43,11 @@ out = sorted(int(i) + 1 for i in np.argsort(-score)[:a.ntop])
 
 x = edges if a.var != "triple_diff" else np.arange(len(n) + 1)
 fig, ax = plt.subplots(figsize=(12, 7))
+first = True
 for i in range(100):
     if i + 1 not in out:
-        hep.histplot(r[i], x, ax=ax, color="lightgray", lw=0.8)
+        hep.histplot(r[i], x, ax=ax, color="lightgray", lw=0.8, label="other PDF members" if first else None)
+        first = False
 for k, m in enumerate(out):
     hep.histplot(r[m - 1], x, ax=ax, color=f"C{k}", lw=2, label=f"PDFWeight_{m}")
 hep.histplot(quad, x, ax=ax, color="black", ls="--", lw=2, label="quadrature sum (nuisance)")
@@ -54,7 +57,9 @@ ax.set_ylabel(f"PDF member / nominal - 1 [%]")
 ax.set_xlabel({"mll": r"$m_{\ell\ell}$ [GeV]", "triple_diff": "bin index"}.get(a.var, a.var))
 if a.var == "mll":
     ax.set_xscale("log")
-ax.text(0.03, 0.95, f"{a.proc}, {a.region}, members 1-100 (gray)", transform=ax.transAxes, fontsize=16, va="top")
+ax.text(0.03, 0.95, f"{a.proc}, {a.region}, Hessian members 1-100", transform=ax.transAxes, fontsize=16, va="top")
+if a.label:
+    ax.text(0.03, 0.87, a.label, transform=ax.transAxes, fontsize=20, fontweight="bold", va="top")
 ax.legend(fontsize=14, loc="lower left")
 hep.cms.label("Preliminary", data=False, ax=ax, fontsize=20)
 o = f"{a.outdir}/pdf_members_{a.proc}_{a.var}"

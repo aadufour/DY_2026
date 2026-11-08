@@ -58,6 +58,8 @@ def _xlabel_from_bin(bin_name):
     return bin_name  # fallback: show the bin name itself
 
 
+LABEL = None  # optional extra text on the plot (--label)
+
 def plot(d__):
     import numpy as np
 
@@ -98,6 +100,8 @@ def plot(d__):
     ax.set_ylabel("Events / GeV")
     ax.text(0.97, 0.97, f"{sample}  —  {shn}",
             transform=ax.transAxes, ha="right", va="top", fontsize=18)
+    if LABEL:
+        ax.text(0.97, 0.90, LABEL, transform=ax.transAxes, ha="right", va="top", fontsize=22, fontweight="bold")
     ax.legend(loc="upper left")
     if logy:
         ax.set_yscale("log")
@@ -179,7 +183,11 @@ if __name__ == "__main__":
         help="Number of cores to be used, by default 1",
     )  
 
-    (options, args) = parser.parse_args()   
+    parser.add_option("--label", type="string", dest="label", default=None,
+                      help="Extra text drawn on each plot (e.g. sample/generator)")
+
+    (options, args) = parser.parse_args()
+    LABEL = options.label   
 
     print(f"--> Loading datacard {options.datacard}")
 
