@@ -23,7 +23,7 @@ p.add_argument("--file", default="histos.root")
 p.add_argument("--region", default="inc_mm")
 p.add_argument("--var", default="mll")
 p.add_argument("--proc", default="DYll")
-p.add_argument("--nsigma", type=float, default=5, help="member is an outlier if > nsigma x median |dev| in a bin")
+p.add_argument("--ntop", type=int, default=3, help="highlight the ntop members with the largest |dev|/median in any bin")
 p.add_argument("--outdir", default=".")
 a = p.parse_args()
 
@@ -37,7 +37,8 @@ safe = np.where(n != 0, n, 1.0)
 r = 100 * (M / safe - 1)                      # (100 members, nbins)
 quad = np.sqrt((r**2).sum(0))
 med = np.median(np.abs(r), axis=0)
-out = sorted({i + 1 for i, b in zip(*np.where(np.abs(r) > a.nsigma * np.maximum(med, 0.1)))})
+score = (np.abs(r) / np.maximum(med, 0.1)).max(axis=1)
+out = sorted(int(i) + 1 for i in np.argsort(-score)[:a.ntop])
 
 x = edges if a.var != "triple_diff" else np.arange(len(n) + 1)
 fig, ax = plt.subplots(figsize=(12, 7))
@@ -56,7 +57,6 @@ if a.var == "mll":
 ax.text(0.03, 0.95, f"{a.proc}, {a.region}, members 1-100 (gray)", transform=ax.transAxes, fontsize=16, va="top")
 ax.legend(fontsize=14, loc="lower left")
 hep.cms.label("Preliminary", data=False, ax=ax, fontsize=20)
-fig.tight_layout()
 o = f"{a.outdir}/pdf_members_{a.proc}_{a.var}"
 for ext in ("pdf", "png"):
     fig.savefig(f"{o}.{ext}")

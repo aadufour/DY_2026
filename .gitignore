@@ -13,3 +13,4 @@ MG5
 *.err
 keynote_builder/
 .DS_Store
+plots_minnlo_compare/
