@@ -61,10 +61,24 @@ Remaining: member 58 gives -4.3% in 1-1.5 TeV (from `M-1000to1500`).
 
 50to100 not scanned (different dataset name).
 
-9 events > 1e4 in 2000toInf: 3 vetoed; 3 above 3 TeV reco (1:35:23216, 1:443:296350, 1:300:200146);
-3 in 1.5-3 TeV by the quick reco mll (1:16:10077 m10, 1:336:224715 m76, 1:110:73328 m3) but no spike in the
-analysis histograms -> probably fail the analysis selection. Being checked with a tracing copy of the runner
-(`~/work/scratch_pdfcheck/trace`, tmux `pdftrace`).
+9 events > 1e4 in 2000toInf, traced through our runner's selection (copy of runner.py keeping only them):
+
+| run:lumi:event | member | ratio | selection | analysis mll |
+|---|---|---|---|---|
+| 1:141:94231 | 52 | -9.9e4 | passes (vetoed) | ~2998 |
+| 1:130:86524 | 78 | +1.0e5 | passes (vetoed) | ~2604 |
+| 1:219:146025 | 73 | -1.6e4 | passes (vetoed) | 1939 or 2066 |
+| 1:443:296350 | 81 | -1.4e4 | passes | ~1730 |
+| 1:110:73328 | 3 | +1.1e4 | passes | ~1949 |
+| 1:336:224715 | 76 | -1.7e4 | passes | 1939 or 2066 |
+| 1:300:200146 | 74 | +1.2e4 | passes | ~3600 (outside bins) |
+| 1:16:10077 | 10 | -5.1e4 | fails lepton cut | - |
+| 1:35:23216 | 92 | +4.3e4 | fails l2Tight | - |
+
+(trace printed event ids sorted but mll in file order: 146025/224715 pairing ambiguous, both in 1.5-3 TeV.)
+So 3 more ~1e4 events are in the 1.5-3 TeV bin after the veto; each moves its member by only ~1-2%, hidden
+among normal members, part of the remaining 6.8%. 296350's quick reco mll (5.5 TeV) differs from the analysis
+one (~1.7 TeV) because the analysis picks a different muon pair.
 
 ## Plots (`plots_minnlo_compare/`, LLR `propcorr_v1_minnlo/pdf_check/`, `propcorr_v1_veto/pdf_check/`)
 - `nuis_PDFweight_sm_mll_mg5.png`, `nuis_PDFweight_sm_mll_minnlo.png`: the nuisance combine sees (drawNuisances.py --label)
@@ -80,9 +94,7 @@ analysis histograms -> probably fail the analysis selection. Being checked with 
 - `analysis/spritz/runner_pdfveto.py`: runner + 3-event veto (test only)
 
 ## Open
-- trace result for the other 3 events (selection)
 - scan 50to100 and full 1500to2000
 - general rule instead of a hand-picked veto, e.g. drop events with any |r| > 100, all DY mass samples (condor)
 - redo the after-veto members plot with explicit members
 - rebuild mll card + fits from the veto/cut histos (node was loaded by another user)
-- clean up `~/work/scratch_pdfcheck` (ask first)
