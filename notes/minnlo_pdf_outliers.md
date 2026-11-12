@@ -121,4 +121,4 @@ one (~1.7 TeV) because the analysis picks a different muon pair.
   nominal member (event and nominal weight kept). Applies to every sample with LHEPdfWeight.
   Scan: >100 is 0.27% of events in 2000toInf, <= 0.02% below 1.5 TeV (before selection).
 - LLR `configs/propcorr_v3_pdfcut/` = propcorr_v1 config + runner_pdfcut.py, same fileset/chunks.
-  3000 jobs, condor cluster 820771. Next: merge, MiNNLO postproc, PDF nuisance plot (mll), cards, fits.
+  3000 jobs, condor cluster 820772 (long queue, 2 GB as v1; first submit 820771 went to short = 2h limit, cancelled: v1 jobs take up to 143 min). Next: merge, MiNNLO postproc, PDF nuisance plot (mll), cards, fits.
