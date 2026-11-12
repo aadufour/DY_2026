@@ -98,3 +98,14 @@ one (~1.7 TeV) because the analysis picks a different muon pair.
 - general rule instead of a hand-picked veto, e.g. drop events with any |r| > 100, all DY mass samples (condor)
 - redo the after-veto members plot with explicit members
 - rebuild mll card + fits from the veto/cut histos (node was loaded by another user)
+
+## Update 2026-11-12
+- Combine nuisance on `sm` (MiNNLO card, mll last bin): +-29.0% (MG5 card: +-3.4%). The 24.3% above is DYll in
+  histos.root; why `sm` gets 29% instead of 24% through the k-factor is not checked.
+- Full scan of all DY samples: `propcorr_v1_veto/pdf_check/scan_all.txt` (50to100 = `DYJetsToMuMu`: clean).
+  1500to2000 has 2 events at ~1e5 (155212 m93, 101904 m55) + 146952 (8.9e3): all three FAIL the selection
+  (lepton cut, l2Tight, earlier), so irrelevant for us.
+- Member plot with only 52/73/78 labelled by event: `pdf_members_DYll_mll_events.png`.
+- Message sent to Giacomo and Fabian (2026-11-12) with the 4 plots; waiting for their answer.
+- Next time: scan only events passing the analysis selection (runner copy dumping per-event max ratio in
+  inc_mm, on condor) and/or an approximate `--select` in the standalone script.
