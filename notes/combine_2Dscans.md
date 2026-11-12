@@ -185,3 +185,18 @@ checking the first job's output (or a small `njobs` test) before trusting
 the whole batch — matches the same caution that caught the negative-yield
 truncation issue earlier in the 2D-scan boundary work (see
 `notes/combine.md`, "2D (Double) EFT Scans" chapter).
+
+## 2D production v3 (2026-11-12): split run, batched EFT fill
+- `analysis/spritz/runner_2d.py` = runner_pdfcut.py (PDF cut |r|>100) + batched EFT filling (one histogram
+  per variable with a "subsample" axis, megahisto idea), unpacked to the usual per-point entries
+  (output format unchanged). Cross terms `w11_*` filled at NOMINAL ONLY (option 2, user 2026-11-12):
+  full variations on 351 points = ~2 GB of histograms per job (235 variations incl. 100 Rochester toys).
+- `analysis/spritz/config_propcorr_v3_eft2d.py` = config_propcorr_v1_crossterms + runner_2d, `eft_samples`
+  (shape nuisances) = sm/w1/wm1 only, `SIGNAL_ONLY = True` keeps only the 7 EFT datasets.
+- LLR `configs/propcorr_v3_eft2d/`: data/chunks.pkl = v1's 6802 EFT chunks with the 406 subsamples.
+- `analysis/spritz/merge_eft2d.py --bkg propcorr_v3_pdfcut --sig propcorr_v3_eft2d --out propcorr_v3_2d`:
+  EFT from the signal run, everything else from v3_pdfcut; writes config with SIGNAL_ONLY = False.
+- One-chunk test (500 events, mll_50_120): runner_2d 406 points 181 s, 1.8 GB peak; unbatched runner_pdfcut
+  55 points 545 s; first runner_2d with full variations on w11: 424 s, 9.75 GB.
+  sm/w1/wm1: 220 histograms (4 variables, all variations, values + variances) identical to the unbatched runner.
+- Condor: chunks are ~500 events; use the long queue and >= 3 GB (spritz-batch-llr writes short/8 GB).
