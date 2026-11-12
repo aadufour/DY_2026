@@ -1,6 +1,8 @@
 PRIORITY (2026-11-12), after the PDF-cut approach is validated on propcorr_v3_pdfcut:
 - [ ] Cross-term (w11) production for 2D scans: smart/optimised scripts for the whole chain
-      (run jobs -> merge -> postproc), lean (no theory variations), mll + triple_diff.
+      (run jobs -> merge -> postproc), FULL (all theory variations), megahisto-style batching of EFT templates
+      (as in spritz_giacomo runner_3DY_eft_full_morphing_megahisto.py); test a few jobs for memory/time first.
+      Before porting: git fetch in spritz_giacomo to check for newer upstream versions. mll + triple_diff.
       Current state: propcorr_v2 histos predate the gridpack fix, datacards empty; v3_pdfcut has no cross terms.
 
 # THESIS PLAN (2026-11-03)
