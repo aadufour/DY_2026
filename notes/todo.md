@@ -1,3 +1,8 @@
+PRIORITY (2026-11-12), after the PDF-cut approach is validated on propcorr_v3_pdfcut:
+- [ ] Cross-term (w11) production for 2D scans: smart/optimised scripts for the whole chain
+      (run jobs -> merge -> postproc), lean (no theory variations), mll + triple_diff.
+      Current state: propcorr_v2 histos predate the gridpack fix, datacards empty; v3_pdfcut has no cross terms.
+
 # THESIS PLAN (2026-11-03)
 Analysis work is over (talk before pre-approval done). Goal: final presentation + thesis (read by Govoni).
 Only the points discussed with the profs, then writing. No precision uncertainties.
