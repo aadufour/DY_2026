@@ -19,6 +19,7 @@ All of Fabian's logic (lepton sel, SFs, Rochester, fakes, MET) is unchanged.
 """
 import gc
 
+NOM_ONLY_PREFIX = "w11_"  # EFT subsamples filled at nominal only (cross terms)
 EFT_FILL_BATCH = 50  # subsamples per fill call (memory: n_sel * batch * ~5 arrays)
 import json
 import sys
@@ -260,18 +261,30 @@ def process(events, **kwargs):
             }
 
     ### EFT BATCH 1: one histogram per variable for all (mask, weight) subsamples ###
-    eft_names = [s for s in subsamples if isinstance(subsamples[s], (tuple, list)) and len(subsamples[s]) == 2]
-    eft_hists = {}
-    for variable in variables:
-        if eft_names and "axis" in variables[variable]:
-            ax = variables[variable]["axis"]
-            eft_hists[variable] = hist.Hist(
-                *(ax if isinstance(ax, list) else [ax]),
-                hist.axis.IntCategory(list(range(len(eft_names))), name="subsample"),
-                *default_axis,
-                hist.storage.Weight(),
-            )
-    eft_keys = {f"{dataset}_{s}" for s in eft_names}
+    # Two groups: points with all variations (sm, w1, wm1) and NOM_ONLY_PREFIX points (cross terms w11_*),
+    # filled at nominal only, with a syst axis containing just "nom" (memory: 351 points x 235 variations
+    # would be ~2 GB per job). Downstream the cross terms carry no nuisances of their own.
+    eft_all = [s for s in subsamples if isinstance(subsamples[s], (tuple, list)) and len(subsamples[s]) == 2]
+    eft_groups = {
+        "full": [s for s in eft_all if not s.startswith(NOM_ONLY_PREFIX)],
+        "nom": [s for s in eft_all if s.startswith(NOM_ONLY_PREFIX)],
+    }
+    eft_hists = {g: {} for g in eft_groups}
+    for g, names_g in eft_groups.items():
+        if not names_g:
+            continue
+        syst_axis = default_axis[1] if g == "full" else hist.axis.StrCategory(["nom"], name="syst")
+        for variable in variables:
+            if "axis" in variables[variable]:
+                ax = variables[variable]["axis"]
+                eft_hists[g][variable] = hist.Hist(
+                    *(ax if isinstance(ax, list) else [ax]),
+                    hist.axis.IntCategory(list(range(len(names_g))), name="subsample"),
+                    default_axis[0],
+                    syst_axis,
+                    hist.storage.Weight(),
+                )
+    eft_keys = {f"{dataset}_{s}" for s in eft_all}
 
     for dataset_name in results:
         if dataset_name in eft_keys:
@@ -423,7 +436,9 @@ def process(events, **kwargs):
                 regions[region]["mask"] = regions[region]["mask"] & (events.mll < regions[region]["data_mll_max"])
 
         ### EFT BATCH 2: (n_events, n_subsamples) weight matrix, mask folded into the weight ###
-        if eft_names:
+        for g, eft_names in eft_groups.items():
+            if not eft_names or (g == "nom" and variation != "nom"):
+                continue
             w_nom = ak.to_numpy(events.weight)
             wmat = np.empty((len(w_nom), len(eft_names)))
             for k, s_ in enumerate(eft_names):
@@ -435,7 +450,7 @@ def process(events, **kwargs):
                 if n_sel == 0:
                     continue
                 w_sel = wmat[mask_np]
-                for variable, h in eft_hists.items():
+                for variable, h in eft_hists[g].items():
                     ax = variables[variable]["axis"]
                     vnames = [a.name for a in ax] if isinstance(ax, list) else [ax.name]
                     vals = {vn: ak.to_numpy(events[vn])[mask_np] for vn in vnames}
@@ -491,9 +506,10 @@ def process(events, **kwargs):
                         )
 
     ### EFT BATCH 3: unpack into the usual per-subsample entries ###
-    for k, s_ in enumerate(eft_names):
-        results[f"{dataset}_{s_}"]["histos"] = {v: h[{"subsample": k}] for v, h in eft_hists.items()}
-        results[f"{dataset}_{s_}"]["events"] = {v: ak.Array([]) for v in variables}
+    for g, eft_names in eft_groups.items():
+        for k, s_ in enumerate(eft_names):
+            results[f"{dataset}_{s_}"]["histos"] = {v: h[{"subsample": k}] for v, h in eft_hists[g].items()}
+            results[f"{dataset}_{s_}"]["events"] = {v: ak.Array([]) for v in variables}
     del eft_hists
 
     gc.collect()

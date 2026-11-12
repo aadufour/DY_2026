@@ -300,12 +300,12 @@ bkg_samples = [s for s in mc_samples if not samples[s].get("noStat", False) and 
 theory_samples = ["DYll", "DYtt", "Single Top", "TT", "WW"]
 # Single Top does not have reliable LHEPdfWeight in NanoAOD → exclude from PDF/alphaS
 pdf_samples = ["DYll", "DYtt", "TT", "WW"]
-# EFT samples — theory systs apply to sm + all w1/wm1 operators + all w11 cross terms
+# EFT samples with shape nuisances: sm + w1/wm1. The w11 cross terms are filled at nominal only by
+# runner_2d.py (option 2, 2026-11-12): no shape nuisances on them (lnN like lumi still apply via mc_samples).
 eft_samples = (
     ["sm"]
     + [f"w1_{op}" for op in OPERATORS]
     + [f"wm1_{op}" for op in OPERATORS]
-    + [f"w11_{op_i}_{op_j}" for op_i, op_j in itertools.combinations(OPERATORS, 2)]
 )
 
 nuisances = {
