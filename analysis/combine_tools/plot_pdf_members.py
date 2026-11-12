@@ -24,6 +24,9 @@ p.add_argument("--region", default="inc_mm")
 p.add_argument("--var", default="mll")
 p.add_argument("--proc", default="DYll")
 p.add_argument("--ntop", type=int, default=3, help="highlight the ntop members with the largest |dev|/median in any bin")
+p.add_argument("--members", default=None, help="comma-separated members to highlight (overrides --ntop)")
+p.add_argument("--labels", default=None, help="semicolon-separated legend text per --members entry, e.g. event ids")
+p.add_argument("--tag", default="", help="suffix for the output file name")
 p.add_argument("--outdir", default=".")
 p.add_argument("--label", default=None, help="extra bold text on the plot")
 a = p.parse_args()
@@ -39,7 +42,11 @@ r = 100 * (M / safe - 1)                      # (100 members, nbins)
 quad = np.sqrt((r**2).sum(0))
 med = np.median(np.abs(r), axis=0)
 score = (np.abs(r) / np.maximum(med, 0.1)).max(axis=1)
-out = sorted(int(i) + 1 for i in np.argsort(-score)[:a.ntop])
+if a.members:
+    out = [int(x) for x in a.members.split(",")]
+else:
+    out = sorted(int(i) + 1 for i in np.argsort(-score)[:a.ntop])
+labs = a.labels.split(";") if a.labels else [""] * len(out)
 
 x = edges if a.var != "triple_diff" else np.arange(len(n) + 1)
 fig, ax = plt.subplots(figsize=(12, 7))
@@ -49,7 +56,7 @@ for i in range(100):
         hep.histplot(r[i], x, ax=ax, color="lightgray", lw=0.8, label="other PDF members" if first else None)
         first = False
 for k, m in enumerate(out):
-    hep.histplot(r[m - 1], x, ax=ax, color=f"C{k}", lw=2, label=f"PDFWeight_{m}")
+    hep.histplot(r[m - 1], x, ax=ax, color=f"C{k}", lw=2, label=f"PDFWeight_{m}" + (f" ({labs[k]})" if labs[k] else ""))
 hep.histplot(quad, x, ax=ax, color="black", ls="--", lw=2, label="quadrature sum (nuisance)")
 hep.histplot(-quad, x, ax=ax, color="black", ls="--", lw=2)
 ax.axhline(0, color="gray", lw=0.8)
@@ -62,9 +69,9 @@ if a.label:
     ax.text(0.03, 0.87, a.label, transform=ax.transAxes, fontsize=20, fontweight="bold", va="top")
 ax.legend(fontsize=14, loc="lower left")
 hep.cms.label("Preliminary", data=False, ax=ax, fontsize=20)
-o = f"{a.outdir}/pdf_members_{a.proc}_{a.var}"
+o = f"{a.outdir}/pdf_members_{a.proc}_{a.var}{a.tag}"
 for ext in ("pdf", "png"):
     fig.savefig(f"{o}.{ext}")
-print("outliers:", out)
-print("last bin dev% of outliers:", [round(float(r[m - 1, -1]), 1) for m in out], " median |dev|:", round(float(med[-1]), 2))
+print("highlighted:", out)
+print("last bin dev% of highlighted:", [round(float(r[m - 1, -1]), 1) for m in out], " median |dev|:", round(float(med[-1]), 2))
 print("saved", o)
