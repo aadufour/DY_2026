@@ -109,3 +109,9 @@ one (~1.7 TeV) because the analysis picks a different muon pair.
 - Message sent to Giacomo and Fabian (2026-11-12) with the 4 plots; waiting for their answer.
 - Next time: scan only events passing the analysis selection (runner copy dumping per-event max ratio in
   inc_mm, on condor) and/or an approximate `--select` in the standalone script.
+
+## Answer from Giacomo/Fabian (2026-11-12)
+- They changed approach: each Hessian eigenvector is treated as an independent, symmetrized nuisance
+  (not one `square` quadrature nuisance), so a single outlier member is not a problem for the actual analysis.
+- Vetoing unphysical outlier events is fine with them.
+- Thesis: keep the current `square` treatment for simplicity, and cut nonphysical outliers.
