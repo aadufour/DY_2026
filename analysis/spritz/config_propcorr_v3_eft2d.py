@@ -416,4 +416,8 @@ check_weights = {}
 # Signal-only run: only the EFT datasets (406 subsamples incl. the 351 cross terms), filled in batches by
 # runner_2d.py (= runner_pdfcut.py + batched EFT fill). Backgrounds, data and MiNNLO are taken from
 # propcorr_v3_pdfcut (same runner cuts, binning, regions) and merged with merge_eft2d.py before postproc.
-datasets = {k: v for k, v in datasets.items() if k.startswith("DYSMEFTsim_LO_propcorr")}
+# SIGNAL_ONLY = True for the condor run; merge_eft2d.py writes the merged config with SIGNAL_ONLY = False
+# (all datasets, for postproc/cards).
+SIGNAL_ONLY = True
+if SIGNAL_ONLY:
+    datasets = {k: v for k, v in datasets.items() if k.startswith("DYSMEFTsim_LO_propcorr")}
