@@ -115,3 +115,10 @@ one (~1.7 TeV) because the analysis picks a different muon pair.
   (not one `square` quadrature nuisance), so a single outlier member is not a problem for the actual analysis.
 - Vetoing unphysical outlier events is fine with them.
 - Thesis: keep the current `square` treatment for simplicity, and cut nonphysical outliers.
+
+## Soft PDF cut, full reprocessing (2026-11-12)
+- `analysis/spritz/runner_pdfcut.py` = runner.py + LHEPdfWeight members with |ratio to nominal| > 100 reset to the
+  nominal member (event and nominal weight kept). Applies to every sample with LHEPdfWeight.
+  Scan: >100 is 0.27% of events in 2000toInf, <= 0.02% below 1.5 TeV (before selection).
+- LLR `configs/propcorr_v3_pdfcut/` = propcorr_v1 config + runner_pdfcut.py, same fileset/chunks.
+  3000 jobs, condor cluster 820771. Next: merge, MiNNLO postproc, PDF nuisance plot (mll), cards, fits.
