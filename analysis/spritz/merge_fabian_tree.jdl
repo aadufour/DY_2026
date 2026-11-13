@@ -1,0 +1,13 @@
+universe = vanilla
+executable = /grid_mnt/data__data.polcms/cms/adufour/spritz_fabian/configs/propcorr_v3_pdfcut/merge.sh
+arguments = /grid_mnt/data__data.polcms/cms/adufour/spritz_fabian/configs/propcorr_v3_pdfcut 4
+should_transfer_files = YES
+output = /grid_mnt/data__data.polcms/cms/adufour/spritz_fabian/configs/propcorr_v3_pdfcut/merge_final/out.txt
+error  = /grid_mnt/data__data.polcms/cms/adufour/spritz_fabian/configs/propcorr_v3_pdfcut/merge_final/err.txt
+log    = /grid_mnt/data__data.polcms/cms/adufour/spritz_fabian/configs/propcorr_v3_pdfcut/merge_final/log.txt
+request_memory = 120000
+request_cpus = 8
+T3Queue = long
+WNTag   = el9
+include : /opt/exp_soft/cms/t3/t3queue |
+queue 1

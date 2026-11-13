@@ -200,3 +200,8 @@ truncation issue earlier in the 2D-scan boundary work (see
   55 points 545 s; first runner_2d with full variations on w11: 424 s, 9.75 GB.
   sm/w1/wm1: 220 histograms (4 variables, all variations, values + variances) identical to the unbatched runner.
 - Condor: chunks are ~500 events; use the long queue and >= 3 GB (spritz-batch-llr writes short/8 GB).
+- Merges (2026-11-13): local tree merge used ~10-20 GB per worker (all 235 variations) -> ~100 GB with 10 workers
+  on the login node, stopped. Both merges run as condor jobs (`merge_fabian_tree.sh` + `.jdl`: 8-core slot,
+  4 workers, 120 GB; LLR accepts only 1, 8 or 32 cores): v3 cluster 820794, 2D cluster 820795.
+- 2D resubmission: 22 jobs held at 12 GB (jobs with chunks from all 7 EFT samples) split into 213 one-chunk
+  jobs (old folders renamed held_job_*); 641 XRootD-timeout chunks moved into one-chunk jobs (job_913-1553).
