@@ -223,3 +223,9 @@ truncation issue earlier in the 2D-scan boundary work (see
   removed; `analysis/combine_tools/bundle_scan_jobs.py 25` (run in the card dir after runScans --condor) groups
   25 pieces per job (5000 points, ~50 min) in the short queue: 702 jobs, cluster 821420. Output names unchanged,
   so --hadd-only works as before. (Its skip-already-done check uses a wrong file name: it currently bundles all.)
+
+### 2026-11-16 — v3_2d mll scans done
+- Bundled cluster 821420 finished: 17,550/17,550 pieces, 1,993 short (negative-yield truncation), ~26.7k/3.51M points missing (0.8%, mostly `ced` pairs, all of which still close).
+- hadd-only done (351 merged files). readapt: 325 closed, 16 open at 95% (`extrapolated`), 10 flat directions (`degenerate_fallback`: cHQ1_cHQ3, cQl1_cQl3, cHbq with cbBRe/cHQ1/cHQ3/cHl3/cHu, cHj3_cHu, clj3_cQe, clj3_cbl) -> plotted as-is, reported as open.
+- 16 pairs redone with per-pair boxes (`redo_pairs_scan.py`, condor_redo/, 32 short jobs, cluster 821423); old merged files kept as *.oldbox.root.
+- runPlots 2: 335 plots (scan_<pair>.png/pdf/root) made.
