@@ -32,6 +32,8 @@ p.add_argument("--pairs", default="", help="comma list; default: every pair with
 p.add_argument("--keep", default="", help="comma list of pairs whose box is not changed")
 p.add_argument("--level", type=float, default=5.99)
 p.add_argument("--pad", type=float, default=0.35)
+p.add_argument("--tight", type=float, default=0.85, help="95%% extent / box width above which a closed pair is 'tight'")
+p.add_argument("--list-out", default="", help="write the pairs that are open/tight (need another pass) to this file")
 p.add_argument("-o", "--out", default="metadata_pairs.json")
 a = p.parse_args()
 
@@ -50,12 +52,18 @@ def sig(v, n=3):
     return float(f"{v:.{n}g}")
 
 
-new_pairs, n_open = dict(old_pairs), 0
+new_pairs, n_open, redo = dict(old_pairs), 0, []
 print(f"{'pair':16s} {'status':8s} {'op1 box':>22s} {'op2 box':>22s}  95% extent (op1 | op2)")
 for pair in pairs:
     o1, o2 = pair.split("_")
     fn = os.path.join(a.scan_dir, f"higgsCombine.{pair}.individual.MultiDimFit.mH125.root")
-    d = ROOT.RDataFrame("limit", fn).Filter("quantileExpected > -0.5").AsNumpy([f"k_{o1}", f"k_{o2}", "deltaNLL"])
+    try:
+        d = ROOT.RDataFrame("limit", fn).Filter("quantileExpected > -0.5").AsNumpy([f"k_{o1}", f"k_{o2}", "deltaNLL"])
+        assert len(d["deltaNLL"]) > 10
+    except Exception:
+        print(f"{pair:16s} MISSING  (no usable scan in {a.scan_dir}; box unchanged)")
+        redo.append(pair)
+        continue
     x, y, z = d[f"k_{o1}"], d[f"k_{o2}"], 2 * (d["deltaNLL"] - d["deltaNLL"].min())
     box, ext, status = {}, {}, "closed"
     for op, v in ((o1, x), (o2, y)):
@@ -67,6 +75,8 @@ for pair in pairs:
         ext[op] = (lo, hi)
         w = hi - lo
         nlo, nhi = lo - a.pad * w, hi + a.pad * w
+        if (hi - lo) > a.tight * (vmax - vmin) and status == "closed":
+            status = "tight"   # closed but fills the box: re-run with the new box for a nicer plot
         if lo <= vmin + 1.5 * step:
             nlo, status = 2 * vmin, "open"
         if hi >= vmax - 1.5 * step:
@@ -75,10 +85,14 @@ for pair in pairs:
     if pair in keep:
         status, box = "kept", {op: old_pairs.get(pair, meta["operators"])[op] for op in (o1, o2)}
     n_open += status == "open"
+    if status in ("open", "tight"):
+        redo.append(pair)
     new_pairs[pair] = box
     print(f"{pair:16s} {status:8s} {str(box[o1]):>22s} {str(box[o2]):>22s}  "
           f"[{ext[o1][0]:.3g},{ext[o1][1]:.3g}] | [{ext[o2][0]:.3g},{ext[o2][1]:.3g}]")
 
 meta["pairs"] = new_pairs
 json.dump(meta, open(a.out, "w"), indent=4)
-print(f"\nwrote {a.out}: {len(pairs)} pairs, {n_open} still open (re-run them with the new box)")
+if a.list_out:
+    open(a.list_out, "w").write("\n".join(redo) + ("\n" if redo else ""))
+print(f"\nwrote {a.out}: {len(pairs)} pairs, {n_open} still open, {len(redo) - n_open} tight (re-run them with the new box)")
