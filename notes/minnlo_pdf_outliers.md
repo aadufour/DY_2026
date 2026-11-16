@@ -134,3 +134,14 @@ PDF quadrature on DYll (= sm after the MiNNLO k-factor in histos.root), mll bins
 
 Nominal yields unchanged (last bin 41.03 in all three). The cut also removes member 58 in 1-1.5 TeV (5.0 -> 2.5%).
 Plots: `plots_minnlo_compare/pdf_members_DYll_mll_{v1_minnlo,v1_veto,v3_pdfcut}.png` (highlighted members = automatic top 3).
+
+## 1D analysis on v3 (2026-11-16)
+`configs/propcorr_v3_pdfcut/`: spritz-cards-eft, then `run_1d.sh` (copy in `analysis/combine_tools/run_1d_v3.sh`):
+metadata.json copied from v1_minnlo, createCombineJson, createWS, initial + 100-point scans (syst and stat),
+runPlots_compare, summaries (need dy_combine_morphing, not dy_analysis), spritz-plot-eft.
+All 4 variables x 27 operators converged. Nuisances identical to v1_minnlo (13 + autoMCStats).
+v1_minnlo vs v3 shapes.root (mll): nominal identical (<1e-5); only PDFweight (last bin 29.0 -> 4.9%, 1-1.5 TeV
+5.9 -> 2.6%) and alphaS (last bin 0.17 -> 0.87%) change. Limits: high-mass operators tighter (cQe 1s +-0.35 ->
++-0.29), several others ~5-10% looser (cHQ1/cHQ3, cHl1, cHbq); stat-only identical. Likely cause (to verify):
+the single quadrature PDF nuisance is correlated across bins, and in v1 its 29% last-bin effect constrained it,
+which also froze its 0.6-1% low-mass effect. Check: postfit constraint of PDFweight in v1 vs v3 (impacts).
