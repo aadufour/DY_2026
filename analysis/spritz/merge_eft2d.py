@@ -37,8 +37,8 @@ print(f"bkg: {len(bkg)} entries ({n_sm_bkg} EFT dropped), sig: {len(sig)} entrie
 
 os.makedirs(f"{a.out}/condor", exist_ok=True)
 cfg = open(f"{a.sig}/config.py").read()
-assert cfg.count("SIGNAL_ONLY = True") == 1
-open(f"{a.out}/config.py", "w").write(cfg.replace("SIGNAL_ONLY = True", "SIGNAL_ONLY = False"))
+assert cfg.count("\nSIGNAL_ONLY = True\n") == 1
+open(f"{a.out}/config.py", "w").write(cfg.replace("\nSIGNAL_ONLY = True\n", "\nSIGNAL_ONLY = False\n"))
 if os.path.exists(f"{a.bkg}/data") and not os.path.exists(f"{a.out}/data"):
     os.symlink(os.path.abspath(f"{a.bkg}/data"), f"{a.out}/data")
 write_chunks(merged, f"{a.out}/condor/results_merged_new.pkl")
