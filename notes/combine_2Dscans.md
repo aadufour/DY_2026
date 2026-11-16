@@ -213,3 +213,9 @@ truncation issue earlier in the 2D-scan boundary work (see
   `analysis/combine_tools/patch_ws_into_initial.py` puts the text2workspace line before the combine line.
   Test job: 11 s, 640 MB; workspace contains func_sm_linear_quadratic_mixed_* from the w11 template.
   Cluster 821418 (351 jobs). Next: runScans.py 2 scan --points=10000 --doSplitPoints=50 --condor.
+- 2D mll initial: 351/351 workspaces + initial fits, no errors. Scan boxes: per operator max(v1 2D box, 3x the v3 1D
+  95% reach) -- v1 boxes were sized without cross terms and were only 1.6-1.8x the 1D reach for cbe, cbl, cbBRe, cQl1,
+  cQl3, cQe, cHj1. 12 operators widened; v1 boxes kept as metadata_v1double.json.
+  Scans: `runScans.py 2 scan --points=10000 --doSplitPoints=50 --condor --condor-dir condor_scan`, 17550 jobs,
+  cluster 821419 (2026-11-16). After: check_condor_scan_failures.py --condor-dir condor_scan, then --hadd-only,
+  then readapt_double_boundaries.py (redo pairs whose 95% contour touches the box).
