@@ -26,7 +26,7 @@ for obs in mll rapll_abs costhetastar triple_diff; do
   d=$V3/datacards/inc_mm/$obs
   mkdir -p "$STAGE/$obs/scan" "$STAGE/$obs/dist"
   cp "$d"/eft_summary_two_panel.* "$STAGE/$obs/" 2>/dev/null || true
-  cp "$d"/scan_*.png "$d"/scan_*.pdf "$STAGE/$obs/scan/"
+  cp "$d"/scan/scan_*.png "$d"/scan/scan_*.pdf "$STAGE/$obs/scan/"
   cp -r "$V3/plots/inc_mm/$obs/." "$STAGE/$obs/dist/"
 done
 mkdir -p "$STAGE/2D/mll"
