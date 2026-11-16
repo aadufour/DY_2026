@@ -229,3 +229,9 @@ truncation issue earlier in the 2D-scan boundary work (see
 - hadd-only done (351 merged files). readapt: 325 closed, 16 open at 95% (`extrapolated`), 10 flat directions (`degenerate_fallback`: cHQ1_cHQ3, cQl1_cQl3, cHbq with cbBRe/cHQ1/cHQ3/cHl3/cHu, cHj3_cHu, clj3_cQe, clj3_cbl) -> plotted as-is, reported as open.
 - 16 pairs redone with per-pair boxes (`redo_pairs_scan.py`, condor_redo/, 32 short jobs, cluster 821423); old merged files kept as *.oldbox.root.
 - runPlots 2: 335 plots (scan_<pair>.png/pdf/root) made.
+
+### 2026-11-16 — triple diff test (9 pairs) + per-pair boxes
+- Template check (`check_template_degeneracy.py`): only cHQ1/cHQ3 and cQl1/cQl3 are bit-identical (topU3l). In mll ~65 pairs have |cos(lin)|>0.99 (Higgs-current + dipole ops) -> mll near-flat / banana / multi-lobe shapes; triple diff ~20.
+- Triple diff closes all 8 mll-"flat" pairs; cQl1_cQl3 stays flat. EOS: 2D_mll, 2D_triple_diff, 2D_flat_directions (cHj3_cHu, cHbq_cHl3, cHQ1_cHQ3, cQl1_cQl3), 2D_nongaussian_mll (cbBRe/cHQ1/cHQ3/cHu with cHbq, clj3_cQe, clj3_cbl), 2D_overlay_mll_vs_triple_diff.
+- Per-pair boxes: `make_pair_boxes.py` (95% extent of the grid points + pad; open sides doubled) writes metadata "pairs"; `runScans.py` uses it (+ `--pairs` filter). Pass 2 for the 9 pairs: triple_diff/pass2 (pad 0.35, cluster 821429) and mll/compare_td (frame = 3x td 95% extent, pad 1.0, cluster 821430); subdirs symlink the initial fits.
+- Plots: `plot_2d_scans.py` (mplhep CMS style, full grid, smoothed contours; single = colour map, multi = overlay).
