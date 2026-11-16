@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 import mplhep as hep
-from scipy.ndimage import zoom
+from scipy.ndimage import zoom, distance_transform_edt
 
 ROOT.gROOT.SetBatch(True)
 plt.style.use(hep.style.CMS)
@@ -56,6 +56,12 @@ def load(fn, o1, o2):
     Z = np.full((len(ys), len(xs)), np.nan)
     Z[np.searchsorted(ys, np.round(y, 10)), np.searchsorted(xs, np.round(x, 10))] = z
     Z -= np.nanmin(Z)
+    # failed / missing grid points: fill with the nearest valid point (display only)
+    holes = np.isnan(Z)
+    if holes.any():
+        idx = distance_transform_edt(holes, return_distances=False, return_indices=True)
+        Z = Z[tuple(idx)]
+        print(f"  {os.path.basename(fn)}: filled {int(holes.sum())} missing grid points (nearest neighbour)")
     return xs, ys, Z
 
 
@@ -108,7 +114,8 @@ for pair in a.pairs.split(","):
         handles = [Line2D([], [], color="black", lw=2.5, ls="solid", label="68% CL"),
                    Line2D([], [], color="black", lw=2.5, ls="dashed", label="95% CL"),
                    Line2D([], [], color="black", marker="P", ls="none", ms=11, label="SM")]
-        ax.legend(handles=handles, loc="upper right", title=VAR_LABEL.get(lab, lab), framealpha=0.85, fontsize=17, title_fontsize=17)
+        ax.legend(handles=handles, loc="upper right", title=VAR_LABEL.get(lab, lab), frameon=True, facecolor="white",
+                  edgecolor="none", framealpha=0.9, fontsize=17, title_fontsize=17)
         ax.set_xlim(xs[0], xs[-1]); ax.set_ylim(ys[0], ys[-1])
     else:
         handles = []
@@ -122,7 +129,8 @@ for pair in a.pairs.split(","):
         handles += [Line2D([], [], color="black", lw=2.5, ls="solid", label="68% CL"),
                     Line2D([], [], color="black", lw=2.5, ls="dashed", label="95% CL"),
                     Line2D([], [], color="black", marker="P", ls="none", ms=11, label="SM")]
-        ax.legend(handles=handles, loc="upper right", framealpha=0.9, fontsize=16)
+        ax.legend(handles=handles, loc="upper right", frameon=True, facecolor="white", edgecolor="none",
+                  framealpha=0.9, fontsize=16)
         xs0 = np.concatenate([s[1] for s in scans]); ys0 = np.concatenate([s[2] for s in scans])
         ax.set_xlim(xs0.min(), xs0.max()); ax.set_ylim(ys0.min(), ys0.max())
     if pair in frames:
