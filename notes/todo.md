@@ -1,3 +1,10 @@
+## Questions for Giacomo (2026-11-17)
+- [ ] propcorr: quad = (w1+wm1)/2 - sm < 0 for cHj3 and cll1 in the Z-peak mll bin (q/sm ~ -4e-4, ~0.5-0.8% of lin).
+      Identical in propcorr_v1, v1_minnlo, v3; absent in eft_bkg_fullsyst_v9 (no propagator correction).
+      All full templates (sm, w1, wm1, w11) >= 0. Expected from the propagator/width expansion at O(c^2), or a gridpack issue?
+      (check: analysis/combine_tools/check_positivity_morphing.py)
+- [ ] Negative background bins (DYtt ~ -0.1 ev in 3 triple_diff bins, TT ~ -0.03 in 2): clip to 0 / small positive and document, or leave as is?
+
 PRIORITY (2026-11-12), after the PDF-cut approach is validated on propcorr_v3_pdfcut:
 - [ ] Cross-term (w11) production for 2D scans: smart/optimised scripts for the whole chain
       (run jobs -> merge -> postproc), FULL (all theory variations), megahisto-style batching of EFT templates
