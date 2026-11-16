@@ -235,3 +235,9 @@ truncation issue earlier in the 2D-scan boundary work (see
 - Triple diff closes all 8 mll-"flat" pairs; cQl1_cQl3 stays flat. EOS: 2D_mll, 2D_triple_diff, 2D_flat_directions (cHj3_cHu, cHbq_cHl3, cHQ1_cHQ3, cQl1_cQl3), 2D_nongaussian_mll (cbBRe/cHQ1/cHQ3/cHu with cHbq, clj3_cQe, clj3_cbl), 2D_overlay_mll_vs_triple_diff.
 - Per-pair boxes: `make_pair_boxes.py` (95% extent of the grid points + pad; open sides doubled) writes metadata "pairs"; `runScans.py` uses it (+ `--pairs` filter). Pass 2 for the 9 pairs: triple_diff/pass2 (pad 0.35, cluster 821429) and mll/compare_td (frame = 3x td 95% extent, pad 1.0, cluster 821430); subdirs symlink the initial fits.
 - Plots: `plot_2d_scans.py` (mplhep CMS style, full grid, smoothed contours; single = colour map, multi = overlay).
+
+### 2026-11-16 evening — full per-pair runs launched (tmux on LLR)
+- `run_2d_perpair.sh` (td2d): triple_diff, 351 pairs. initial (23 jobs, done) -> pass1 coarse 50x50, box 5x 1D 95% (cluster 821705, 351 jobs) -> open rounds -> pass2 fine 100x100 per-pair box (2 jobs/pair) -> pass3 for open/tight -> full/final, full/plots, xrdcp to EOS 2D_triple_diff. Log: triple_diff/run_2d_perpair.log. Keep: cHQ1_cHQ3, cQl1_cQl3.
+- mll2d: same for mll, starts when triple_diff log says ALL DONE; overwrites EOS 2D_mll scan_<pair> files.
+- EOS RECO3D_propcorr_v3 now: 2D_mll, 2D_triple_diff, 2D_mll_vs_triple_diff (9 pairs) + 1D folders (old 2D folders removed, in EOS recycle bin).
+- v3 1D: scan_* moved into <var>/scan/ (v1 layout); nuis_combine (drawNuisances.py) + nuis_eft (drawNuisancesEFT.py) per variable, tmux nuis3, pushed to RECO3D_propcorr_v3/<var>/. PDF envelope SM mll: ~±1% low mass -> ~±4.5% at 1.5-3 TeV, smooth.
