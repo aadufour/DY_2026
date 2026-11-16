@@ -61,6 +61,15 @@ if __name__ == "__main__":
     )
 
     parser.add_option(
+        "--pairs",
+        type="str",
+        dest="pairs",
+        default="",
+        help="Comma separated list of operator combinations to run, e.g. cHj3_cHu,clj3_cQe "
+             "(names as in metadata order). Applied after --doOnly.",
+    )
+
+    parser.add_option(
         "--verbose",
         type="int",
         dest="verbose",
@@ -296,6 +305,9 @@ if __name__ == "__main__":
     # create a list whose entries will contain the 
     # operators for which we want to create the workspace
     combos = list(combinations(ops, mode__))
+    if options.pairs:
+        wanted = set(options.pairs.split(","))
+        combos = [c for c in combos if "_".join(c) in wanted]
 
     cmds = []
 
@@ -338,7 +350,9 @@ if __name__ == "__main__":
                  additional += f" --pointsRandProf {options.randomprof} "
 
         print(f"---> Additional: {additional}")
-        ranges = ":".join(["k_{}={},{}".format(op, metadata["operators"][op][0], metadata["operators"][op][1]) for op in c])
+        # per-pair box (metadata["pairs"][name], from make_pair_boxes.py) if present, else per-operator range
+        box = metadata.get("pairs", {}).get("_".join(c), metadata["operators"]) if mode__ == 2 else metadata["operators"]
+        ranges = ":".join(["k_{}={},{}".format(op, box[op][0], box[op][1]) for op in c])
         if options.range: ranges += ":" + options.range
         if mode__ >= 3:
             ranges = ":".join(["k_{}={},{}".format(op, metadata["operators"][op][0], metadata["operators"][op][1]) for op in c if op in options.signalPOIs.split(",")]) + ":" +  ":".join(["k_{}={},{}".format(op, -300,300) for op in c if op not in options.signalPOIs.split(",")])
