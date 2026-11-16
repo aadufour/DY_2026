@@ -145,3 +145,13 @@ v1_minnlo vs v3 shapes.root (mll): nominal identical (<1e-5); only PDFweight (la
 +-0.29), several others ~5-10% looser (cHQ1/cHQ3, cHl1, cHbq); stat-only identical. Likely cause (to verify):
 the single quadrature PDF nuisance is correlated across bins, and in v1 its 29% last-bin effect constrained it,
 which also froze its 0.6-1% low-mass effect. Check: postfit constraint of PDFweight in v1 vs v3 (impacts).
+
+### PDF constraint check (2026-11-16, `analysis/combine_tools/pdf_constraint_check.sh`, mll, Asimov)
+| | PDFweight post-fit (prior +-1) | cHQ1 1s | cHQ1 1s, PDF frozen | cHl1 1s | cHl1 1s, PDF frozen |
+|---|---|---|---|---|---|
+| v1_minnlo | -0.30 / +0.36 | -0.136 / +0.139 | -0.124 / +0.123 | -0.041 / +0.043 | -0.036 / +0.039 |
+| v3_pdfcut | -0.44 / +0.45 | -0.150 / +0.153 | -0.125 / +0.124 | -0.045 / +0.046 | -0.036 / +0.039 |
+With PDF frozen v1 = v3: the looser v3 limits come entirely from the PDF nuisance. The single quadrature
+nuisance is constrained by the data in both (+-0.3 in v1, +-0.45 in v3); in v1 the 29% last bin constrained it
+more, which also shrank its low-mass effect. The constraint itself is an artefact of one correlated PDF
+nuisance (the per-eigenvector treatment used by Fabian/Giacomo avoids it). v3 is the more honest result.
