@@ -122,3 +122,15 @@ one (~1.7 TeV) because the analysis picks a different muon pair.
   Scan: >100 is 0.27% of events in 2000toInf, <= 0.02% below 1.5 TeV (before selection).
 - LLR `configs/propcorr_v3_pdfcut/` = propcorr_v1 config + runner_pdfcut.py, same fileset/chunks.
   3000 jobs, condor cluster 820772 (long queue, 2 GB as v1; first submit 820771 went to short = 2h limit, cancelled: v1 jobs take up to 143 min). Next: merge, MiNNLO postproc, PDF nuisance plot (mll), cards, fits.
+
+## Result of the soft cut (propcorr_v3_pdfcut, 2026-11-16)
+PDF quadrature on DYll (= sm after the MiNNLO k-factor in histos.root), mll bins 500-700 / 700-1000 / 1-1.5 TeV / 1.5-3 TeV:
+
+| | 500-700 | 700-1000 | 1-1.5 TeV | 1.5-3 TeV |
+|---|---|---|---|---|
+| v1_minnlo (no cut) | 1.9% | 2.2% | 5.0% | 24.3% |
+| v1_veto (3 events) | 1.9% | 2.2% | 5.0% | 6.8% |
+| v3_pdfcut (|r|>100 reset) | 1.8% | 2.1% | 2.5% | 4.5% |
+
+Nominal yields unchanged (last bin 41.03 in all three). The cut also removes member 58 in 1-1.5 TeV (5.0 -> 2.5%).
+Plots: `plots_minnlo_compare/pdf_members_DYll_mll_{v1_minnlo,v1_veto,v3_pdfcut}.png` (highlighted members = automatic top 3).
