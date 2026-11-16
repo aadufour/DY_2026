@@ -219,3 +219,7 @@ truncation issue earlier in the 2D-scan boundary work (see
   Scans: `runScans.py 2 scan --points=10000 --doSplitPoints=50 --condor --condor-dir condor_scan`, 17550 jobs,
   cluster 821419 (2026-11-16). After: check_condor_scan_failures.py --condor-dir condor_scan, then --hadd-only,
   then readapt_double_boundaries.py (redo pairs whose 95% contour touches the box).
+- Scan jobs of 200 points take ~0.5-2 min (mostly startup), so 17550 jobs only clog the pool. Cluster 821419
+  removed; `analysis/combine_tools/bundle_scan_jobs.py 25` (run in the card dir after runScans --condor) groups
+  25 pieces per job (5000 points, ~50 min) in the short queue: 702 jobs, cluster 821420. Output names unchanged,
+  so --hadd-only works as before. (Its skip-already-done check uses a wrong file name: it currently bundles all.)
