@@ -205,3 +205,11 @@ truncation issue earlier in the 2D-scan boundary work (see
   4 workers, 120 GB; LLR accepts only 1, 8 or 32 cores): v3 cluster 820794, 2D cluster 820795.
 - 2D resubmission: 22 jobs held at 12 GB (jobs with chunks from all 7 EFT samples) split into 213 one-chunk
   jobs (old folders renamed held_job_*); 641 XRootD-timeout chunks moved into one-chunk jobs (job_913-1553).
+- propcorr_v3_2d (2026-11-16): merge_eft2d + MiNNLO postproc as one condor job (8 cores, 120 GB; no LLR node has
+  150 GB), 8 min, 44 GB. histos.root: 351 w11 at nominal, everything else identical to v3. Cards: spritz-cards-eft.
+- 2D mll: metadata.json from propcorr_v1/datacards_double/inc_mm/mll (readapted boundaries), createCombineJson.
+  One condor job per pair = text2workspace + initial fit: `runScans.py 2 initial --condor --condor-dir
+  condor_initial` (needs model files to exist: empty placeholders created then deleted), then
+  `analysis/combine_tools/patch_ws_into_initial.py` puts the text2workspace line before the combine line.
+  Test job: 11 s, 640 MB; workspace contains func_sm_linear_quadratic_mixed_* from the w11 template.
+  Cluster 821418 (351 jobs). Next: runScans.py 2 scan --points=10000 --doSplitPoints=50 --condor.
