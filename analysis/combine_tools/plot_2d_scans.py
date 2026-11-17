@@ -23,6 +23,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
+from matplotlib.colors import LinearSegmentedColormap
 import mplhep as hep
 from scipy.ndimage import zoom, distance_transform_edt
 
@@ -35,18 +36,16 @@ VAR_LABEL = {"mll": r"$m_{\ell\ell}$", "triple_diff": r"$m_{\ell\ell} \times |y_
 VAR_COLOR = {"mll": "#3f90da", "triple_diff": "#e42536", "rapll_abs": "#f89c20", "costhetastar": "#5a9a3a"}
 
 
-def op_label(op):
-    """cHQ1 -> c_{HQ}^{(1)}, cbBRe -> Re c_{bB}, cHDD -> c_{HDD}"""
-    s = op[1:]
-    re_part = s.endswith("Re")
-    if re_part:
-        s = s[:-2]
-    sup = ""
-    m = re.match(r"^(.*?)([13])$", s)
-    if m and m.group(1) not in ("",):
-        s, sup = m.group(1), f"^{{({m.group(2)})}}"
-    lab = f"c_{{{s}}}{sup}"
-    return (r"$\mathrm{Re}\," + lab + "$") if re_part else f"${lab}$"
+# mkEFTScan look (HiggsAnalysis/AnalyticAnomalousCoupling utils/scan.py): white -> orange (2.30) -> blue (5.99) -> dark blue,
+# 80% opacity on white; red contours (solid 1 s.d., long-dashed 2 s.d.); red cross "Expected"; axis titles k_<op>
+def mkeft_cmap(zmax):
+    stops = [0.0, min(2.30 / zmax, 1), min(5.99 / zmax, 1), 1.0]
+    cols = [(1.0, 1.0, 1.0), (1.0, 0.549, 0.0), (0.145, 0.459, 1.0), (0.0, 0.0, 1.0)]
+    cols = [tuple(0.8 * c + 0.2 for c in col) for col in cols]
+    return LinearSegmentedColormap.from_list("mkeft", list(zip(stops, cols)), N=200)
+
+
+LONGDASH = (0, (8, 4))
 
 
 def load(fn, o1, o2):
@@ -72,10 +71,10 @@ def smooth(xs, ys, Z, f=4):
             np.clip(zoom(Z, f, order=3), 0, None))
 
 
-def decorate(ax, o1, o2, lumi):
+def decorate(ax, o1, o2, lumi, mcolor):
     hep.cms.label("Preliminary", data=True, lumi=lumi, com=13, ax=ax, fontsize=20)
-    ax.set_xlabel(op_label(o1)); ax.set_ylabel(op_label(o2))
-    ax.plot(0, 0, marker="P", color="black", ms=11, ls="none", zorder=5)
+    ax.set_xlabel(f"k_{o1}"); ax.set_ylabel(f"k_{o2}")
+    ax.plot(0, 0, marker="P", color=mcolor, ms=14, ls="none", zorder=5)
 
 
 p = argparse.ArgumentParser()
@@ -85,7 +84,7 @@ p.add_argument("-o", "--outdir", default="plots_2d")
 p.add_argument("--prefix", default="")
 p.add_argument("--frame", default="", help="metadata json whose 'pairs' boxes set the axis range")
 p.add_argument("--zmax", type=float, default=10.0)
-p.add_argument("--lumi", type=float, default=59.7)
+p.add_argument("--lumi", type=float, default=59.74)
 a = p.parse_args()
 os.makedirs(a.outdir, exist_ok=True)
 inputs = [x.split("=", 1) for x in a.inputs]
@@ -105,17 +104,16 @@ for pair in a.pairs.split(","):
     if len(scans) == 1:
         lab, xs, ys, Z = scans[0]
         Zc = np.clip(Z, 0, a.zmax)
-        cmap = plt.get_cmap("viridis_r").copy(); cmap.set_bad("white")
-        pc = ax.pcolormesh(xs, ys, np.ma.masked_invalid(Zc), cmap=cmap, vmin=0, vmax=a.zmax, shading="nearest", rasterized=True)
-        cb = fig.colorbar(pc, ax=ax, pad=0.02); cb.set_label(r"$-2\,\Delta\ln L$")
+        pc = ax.pcolormesh(xs, ys, Zc, cmap=mkeft_cmap(a.zmax), vmin=0, vmax=a.zmax, shading="gouraud", rasterized=True)
+        cb = fig.colorbar(pc, ax=ax, pad=0.02); cb.set_label(r"$-2\ \Delta$ lnL")
         sx, sy, sZ = smooth(xs, ys, Z)
-        ax.contour(sx, sy, sZ, levels=[LEVELS[0]], colors="white", linewidths=2.5, linestyles="solid")
-        ax.contour(sx, sy, sZ, levels=[LEVELS[1]], colors="white", linewidths=2.5, linestyles="dashed")
-        handles = [Line2D([], [], color="black", lw=2.5, ls="solid", label="68% CL"),
-                   Line2D([], [], color="black", lw=2.5, ls="dashed", label="95% CL"),
-                   Line2D([], [], color="black", marker="P", ls="none", ms=11, label="SM")]
-        ax.legend(handles=handles, loc="upper right", title=VAR_LABEL.get(lab, lab), frameon=True, facecolor="white",
-                  edgecolor="none", framealpha=0.9, fontsize=17, title_fontsize=17)
+        ax.contour(sx, sy, sZ, levels=[LEVELS[0]], colors="red", linewidths=2, linestyles="solid")
+        ax.contour(sx, sy, sZ, levels=[LEVELS[1]], colors="red", linewidths=2, linestyles=[LONGDASH])
+        handles = [Line2D([], [], color="red", marker="P", ls="none", ms=14, label="Expected"),
+                   Line2D([], [], color="red", lw=2, ls="solid", label=r"$\pm$ 1 s.d."),
+                   Line2D([], [], color="red", lw=2, ls=LONGDASH, label=r"$\pm$ 2 s.d.")]
+        ax.legend(handles=handles, loc="upper right", frameon=True, facecolor="white", edgecolor="none",
+                  framealpha=1.0, fontsize=18)
         ax.set_xlim(xs[0], xs[-1]); ax.set_ylim(ys[0], ys[-1])
     else:
         handles = []
@@ -124,20 +122,18 @@ for pair in a.pairs.split(","):
             sx, sy, sZ = smooth(xs, ys, Z)
             ax.contourf(sx, sy, sZ, levels=[-1, LEVELS[0]], colors=[c], alpha=0.25)
             ax.contour(sx, sy, sZ, levels=[LEVELS[0]], colors=[c], linewidths=2.5, linestyles="solid")
-            ax.contour(sx, sy, sZ, levels=[LEVELS[1]], colors=[c], linewidths=2.5, linestyles="dashed")
+            ax.contour(sx, sy, sZ, levels=[LEVELS[1]], colors=[c], linewidths=2.5, linestyles=[LONGDASH])
             handles.append(Patch(facecolor=c, alpha=0.5, edgecolor=c, lw=2, label=VAR_LABEL.get(lab, lab)))
-        handles += [Line2D([], [], color="black", lw=2.5, ls="solid", label="68% CL"),
-                    Line2D([], [], color="black", lw=2.5, ls="dashed", label="95% CL"),
-                    Line2D([], [], color="black", marker="P", ls="none", ms=11, label="SM")]
+        handles += [Line2D([], [], color="black", marker="P", ls="none", ms=14, label="Expected"),
+                    Line2D([], [], color="black", lw=2.5, ls="solid", label=r"$\pm$ 1 s.d."),
+                    Line2D([], [], color="black", lw=2.5, ls=LONGDASH, label=r"$\pm$ 2 s.d.")]
         ax.legend(handles=handles, loc="upper right", frameon=True, facecolor="white", edgecolor="none",
                   framealpha=0.9, fontsize=16)
         xs0 = np.concatenate([s[1] for s in scans]); ys0 = np.concatenate([s[2] for s in scans])
         ax.set_xlim(xs0.min(), xs0.max()); ax.set_ylim(ys0.min(), ys0.max())
     if pair in frames:
         ax.set_xlim(*frames[pair][o1]); ax.set_ylim(*frames[pair][o2])
-    decorate(ax, o1, o2, a.lumi)
-    ax.text(0.04, 0.04, "Expected", transform=ax.transAxes, fontsize=17, va="bottom",
-            bbox=dict(facecolor="white", alpha=0.8, edgecolor="none"))
+    decorate(ax, o1, o2, a.lumi, "red" if len(scans) == 1 else "black")
     for ext in ("png", "pdf"):
         fig.savefig(os.path.join(a.outdir, f"{a.prefix}{pair}.{ext}"), dpi=150, bbox_inches="tight")
     plt.close(fig)
