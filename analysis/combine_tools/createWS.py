@@ -16,16 +16,22 @@ if __name__ == "__main__":
         metadata = json.load(file)
 
     ops = metadata["operators"].keys()
+    # --ops a,b,c : only these operators are POIs (e.g. a profiled fit on a subset, mode 3);
+    # addToCompleteOperators keeps ALL operators of the datacard
+    sel = list(ops)
+    if "--ops" in sys.argv:
+        only = set(sys.argv[sys.argv.index("--ops") + 1].split(","))
+        sel = [o for o in ops if o in only]
 
-    if mode__ == 3: mode__ = len(ops)
+    if mode__ == 3: mode__ = len(sel)
 
     # create a list whose entries will contain the 
     # operators for which we want to create the workspace
-    combos = list(combinations(ops, mode__))
+    combos = list(combinations(sel, mode__))
 
     model__ = "HiggsAnalysis.AnalyticAnomalousCoupling.AnomalousCouplingMorphing_comb:analiticAnomalousCouplingMorphing_comb"
     suffix__ = ""
-    if len(sys.argv) > 2:
+    if len(sys.argv) > 2 and sys.argv[2] != "--ops":
         if sys.argv[2] == "quad":
             model__ = "HiggsAnalysis.AnalyticAnomalousCoupling.AnomalousCouplingMorphing_comb:analiticAnomalousCouplingMorphing_comb"
         elif sys.argv[2] == "lin":
