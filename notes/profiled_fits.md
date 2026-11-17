@@ -56,9 +56,23 @@ curve has 1-3 points near the minimum; cHd minimum apparently at +0.04, cHj1 cur
 Machinery validated (workspace, mixed terms, profiled fits, outputs). Moved to `profiled/test1_coarse/`.
 Fisher prediction for this subset (profiled/individual): cHu 2.6, cHj1 2.2, cHd 1.6, cHDD 1.1, clj1 1.0.
 
-### test2 (2026-11-17, same 5 operators) — running
+### test2 (2026-11-17, same 5 operators) — OK
 Ranges = 4x the individual 95% interval (cHDD +-0.066, cHj1 +-0.40, cHu +-0.50, cHd +-0.376, clj1 +-0.05),
-200 points, tmux `profiled` on LLR, log `profiled/profiled_test.log`.
+200 points, ~1 min per operator (local, 1 core). All 200 points converged, smooth parabolas, best fit at 0.
+
+| op | individual 68% | profiled 68% | ratio | individual 95% | profiled 95% | ratio |
+|---|---|---|---|---|---|---|
+| cHDD | ±0.0085 | ±0.0096 | 1.13 | ±0.0165 | ±0.0188 | 1.14 |
+| cHj1 | ±0.044 | ±0.050 | 1.14 | ±0.100 | ±0.102 | 1.02 |
+| cHu | ±0.065 | ±0.0725 | 1.12 | ±0.125 | ±0.1425 | 1.14 |
+| cHd | ±0.046 | ±0.047 | 1.02 | [-0.090,+0.094] | [-0.092,+0.096] | 1.02 |
+| clj1 | [-0.0055,+0.0065] | [-0.0058,+0.0068] | 1.04 | [-0.0085,+0.0125] | [-0.0113,+0.0143] | 1.21 |
+
+Profiling is real (--savePOIs: the other POIs move within the 95% region, e.g. cHu up to +-0.06 along the
+cHDD scan), but the widening (2-21%) is far below the stat-only Fisher estimate (up to x2.6). Likely reason:
+the individual intervals are already systematics-dominated (cHj1 68% +-0.044 vs stat-only Fisher +-0.012),
+and the operator correlations matter much less once the nuisances are profiled. To check: stat-only profiled
+scans (`--stat`), which should reproduce the Fisher ratios. Plots `profiled/plots/scan_profiled_<op>.png`.
 
 ## Next
 - Check test2 against the Fisher prediction; then the 12-operator set (condor, `--condor` +
