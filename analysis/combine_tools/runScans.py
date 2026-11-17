@@ -61,6 +61,14 @@ if __name__ == "__main__":
     )
 
     parser.add_option(
+        "--fit-options",
+        type="str",
+        dest="fitoptions",
+        default="",
+        help="Replace the default minimizer options (secret_options) with this string",
+    )
+
+    parser.add_option(
         "--pairs",
         type="str",
         dest="pairs",
@@ -253,6 +261,9 @@ if __name__ == "__main__":
 
     # if len(sys.argv) > 3:
     #     points = int(sys.argv[3])
+
+    if options.fitoptions:
+        secret_options = options.fitoptions
 
     with open(options.metadata) as file:
         metadata = json.load(file)
