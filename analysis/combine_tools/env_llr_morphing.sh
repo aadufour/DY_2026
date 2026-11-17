@@ -8,11 +8,15 @@ TOOLS_DIR="${CMSSW_DIR}/tools"
 cd "${CMSSW_DIR}" && cmsenv && cd - > /dev/null
 cd "${TOOLS_DIR}" && source env.sh && cd - > /dev/null
 
-# Prepend morphing tools to PATH so they take precedence over repo's combine_tools.
-# Order matters: combine_helpers (createWS, runScans) > combination (createCombineJson, createJson) > plotters
-export PATH="${TOOLS_DIR}/combine_helpers:${TOOLS_DIR}/combination:${TOOLS_DIR}/plotters:${PATH}"
+# Morphing tools on PATH (runPlots_compare, mkEFTScan, ...), with the repo's combine_tools FIRST:
+# runScans.py, createWS.py, createCombineJson.py, createJson.py, runPlots.py exist in both, and the
+# repo versions are the maintained ones (the tools copies date from 2026-05 and lack e.g. --points,
+# --condor, --ops). Shell functions in ~/.bashrc already pointed to the repo versions, but nice/xargs/
+# condor/subprocess bypass functions and used to pick the stale tools copies.
+REPO_TOOLS="/grid_mnt/data__data.polcms/cms/adufour/DY_2026/analysis/combine_tools"
+export PATH="${REPO_TOOLS}:${TOOLS_DIR}/combine_helpers:${TOOLS_DIR}/combination:${TOOLS_DIR}/plotters:${PATH}"
 
 echo "LLR combine MORPHING environment ready."
 echo "  CMSSW : ${CMSSW_DIR}"
 echo "  tools : ${TOOLS_DIR} (morphing_model)"
-echo "  PATH  : combine_helpers + combination + plotters prepended"
+echo "  PATH  : repo combine_tools, then combine_helpers + combination + plotters, prepended"
