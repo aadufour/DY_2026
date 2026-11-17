@@ -3,6 +3,8 @@
       Identical in propcorr_v1, v1_minnlo, v3; absent in eft_bkg_fullsyst_v9 (no propagator correction).
       All full templates (sm, w1, wm1, w11) >= 0. Expected from the propagator/width expansion at O(c^2), or a gridpack issue?
       (check: analysis/combine_tools/check_positivity_morphing.py)
+      Also at LHE level (post-fix propcorr cache): mll [80-100] quad/SM = -3.9e-4 (cHj3), -3.0e-4 (cll1), ~22 sigma MC stat;
+      all 20 Z-peak triple_diff bins negative -> generator-level, not reco/morphing (2026-11-17).
 - [ ] Negative background bins (DYtt ~ -0.1 ev in 3 triple_diff bins, TT ~ -0.03 in 2): clip to 0 / small positive and document, or leave as is?
 
 PRIORITY (2026-11-12), after the PDF-cut approach is validated on propcorr_v3_pdfcut:
