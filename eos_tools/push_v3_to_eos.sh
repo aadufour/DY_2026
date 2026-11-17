@@ -30,6 +30,6 @@ for obs in mll rapll_abs costhetastar triple_diff; do
 done
 
 du -sh "$STAGE"
-python3 "$PUSH" -j "$WORKERS" "$STAGE" "$EOS_DEST"
+python3 "$PUSH" -j "$WORKERS" --overwrite "$STAGE" "$EOS_DEST"
 
 rm -rf "$STAGE"

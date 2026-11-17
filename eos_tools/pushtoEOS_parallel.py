@@ -62,10 +62,10 @@ def run(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess:
     return result
 
 
-def upload_item(item: Path, eos_dest: str) -> tuple[Path, bool, str]:
+def upload_item(item: Path, eos_dest: str, overwrite: bool = False) -> tuple[Path, bool, str]:
     """Upload a single top-level item. Returns (item, success, error_msg)."""
     try:
-        run(["xrdcp", "-r", "--silent", str(item), xrd(eos_dest + "/")])
+        run(["xrdcp", "-r", "--silent"] + (["-f"] if overwrite else []) + [str(item), xrd(eos_dest + "/")])
         return item, True, ""
     except subprocess.CalledProcessError as e:
         return item, False, str(e)
@@ -86,6 +86,9 @@ def main() -> None:
     parser.add_argument("eos_subpath",  help="Destination under /eos/user/a/aldufour/www/")
     parser.add_argument("-j", "--workers", type=int, default=4,
                         help="Number of parallel workers (default: 4)")
+    parser.add_argument("--overwrite", action="store_true",
+                        help="Destination may exist: upload into it, replacing files with the same name "
+                             "(files not in local_dir are left untouched)")
     args = parser.parse_args()
 
     local_dir   = Path(args.local_dir).resolve()
@@ -104,7 +107,7 @@ def main() -> None:
     # 1. Check destination doesn't already exist, then create it
     # ------------------------------------------------------------------ #
     result = run(["eos", "ls", eos_dest], check=False)
-    if result.returncode == 0:
+    if result.returncode == 0 and not args.overwrite:
         sys.exit(f"Error: '{eos_dest}' already exists on EOS — refusing to overwrite.")
 
     print(f"\n[1/3] Uploading '{local_dir}' -> {eos_dest}  (workers={workers})")
@@ -113,7 +116,7 @@ def main() -> None:
     items = sorted(local_dir.iterdir())
     failed_uploads = []
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = {pool.submit(upload_item, item, eos_dest): item for item in items}
+        futures = {pool.submit(upload_item, item, eos_dest, args.overwrite): item for item in items}
         for future in as_completed(futures):
             item, ok, err = future.result()
             if not ok:
