@@ -26,6 +26,7 @@ p.add_argument("--free-norm", action="store_true")
 p.add_argument("--greedy", action="store_true")
 p.add_argument("--max-ratio", type=float, default=3.0)
 p.add_argument("--nweak", type=int, default=4)
+p.add_argument("--full", action="store_true", help="print all coefficients of the weakest directions, also in operator units")
 a = p.parse_args()
 
 f = ROOT.TFile.Open(a.shapes)
@@ -60,6 +61,16 @@ def analyse(sel, verbose):
             v = V[:, k]
             top = np.argsort(-np.abs(v))[:5]
             print(f"    lambda={ev[k]:.2e} (x{1 / np.sqrt(max(ev[k], 1e-300)):.0f}): " + " ".join(f"{v[j]:+.2f}*{labels[j]}" for j in top))
+            if a.full:
+                # v is in units of individual sigmas; in operator units the flat direction is c = D v
+                c = np.diag(D) * v
+                c = c / np.abs(c).max()
+                order = np.argsort(-np.abs(v))
+                print("      " + f"{'op':6s} {'sigma units':>12s} {'operator units':>15s}")
+                for j in order:
+                    if abs(v[j]) > 0.01:
+                        print(f"      {labels[j]:6s} {v[j]:+12.3f} {c[j]:+15.4g}")
+                print(f"      residual |sum_i c_i lin_i| / |lin| = {np.linalg.norm(c @ M) / np.linalg.norm(M, axis=1).max():.1e}")
     return dict(zip(sel, prof / ind))
 
 
