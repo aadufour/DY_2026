@@ -473,3 +473,11 @@ Operators whose scan box already reaches a large absolute Wilson coefficient val
 ```bash
 runPlots.py 2 --doOnly=cbBRe,cbe -j 4
 ```
+
+## makeBundle.py (Giacomo's tool, sharing a datacard)
+`CMSSW_spritz/.../src/tools/utils/makeBundle.py --datacard <path>/datacard.txt --output <newdir>`: copies the datacard
+and every shape file it references into one self-contained folder (shapes renamed `<file>_<idx>`, datacard paths
+rewritten). Run from the `tools/` dir in `dy_combine_morphing`. WARNING: it `rm -rf`s `--output` if it exists.
+For the morphing model also copy `jsonComb.json` (+ `metadata.json`) by hand.
+Used 2026-04 (`analysis/combine_tools/old/bundle_test*`) and 2026-11-19: v3 2D mll card for Giacomo ->
+LLR `~/work/bundles/propcorr_v3_2d_mll/`, CERNbox `/eos/user/a/aldufour/bundles/propcorr_v3_2d_mll/` (share link from the CERNbox web UI).
