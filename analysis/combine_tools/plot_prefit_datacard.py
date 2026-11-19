@@ -8,7 +8,7 @@ Middle : ratio to the total with the prefit uncertainty: systematics (shape + ln
          = max(|up|,|down|) shift of the total, summed in quadrature) and MC stat (autoMCStats input)
 Bottom : relative shift of the total for +1 sigma of each nuisance (sign kept). With combine's
          vertical interpolation a bin with relative shift d goes to zero near theta ~ -1/d (linear
-         extrapolation beyond 1 sigma), which is where 'Number of events is negative' / FASTEXIT appears.
+         extrapolation beyond 1 sigma; lnN never goes negative), which is where 'Number of events is negative' / FASTEXIT appears.
 
 Usage (dy_combine_morphing env, from the datacard dir):
   plot_prefit_datacard.py [--card datacard.txt] [--var mll] [-o prefit/prefit_mll] [--per-gev]
@@ -61,6 +61,7 @@ mcstat = np.sqrt(sum(e**2 for e in err.values()))
 
 # per-nuisance relative shift of the total (up, down)
 shifts = {}
+lnN = set()
 for name, nofloat, pdf, args, errline in DC.systs:
     up = np.zeros_like(tot); dn = np.zeros_like(tot)
     for q in procs:
@@ -68,6 +69,7 @@ for name, nofloat, pdf, args, errline in DC.systs:
         if not val:
             continue
         if pdf == "lnN":
+            lnN.add(name)
             if isinstance(val, (list, tuple)):
                 kd, ku = val
             else:
@@ -135,7 +137,7 @@ print(f"{a.var}: {nb} bins, total {tot.sum():.4g} events, processes {procs}")
 print(f"  {'bin':>3s} {'edges':>18s} {'total':>10s} {'syst%':>6s} {'MCstat%':>7s}  largest +1sigma shifts (%), theta where total -> 0 (linear)")
 for i in range(nb):
     top = sorted(shifts, key=lambda n: -abs(shifts[n][0][i]))[:3]
-    s = "  ".join(f"{n} {100 * shifts[n][0][i]:+.2f} (theta~{-1 / shifts[n][0][i]:+.0f})" for n in top if shifts[n][0][i])
+    s = "  ".join(f"{n} {100 * shifts[n][0][i]:+.2f}" + (" (lnN: never <0)" if n in lnN else f" (theta~{-1 / shifts[n][0][i]:+.0f})") for n in top if shifts[n][0][i])
     if i < 20 or not unrolled:
         print(f"  {i:3d} {edges[i]:8.4g}-{edges[i + 1]:<8.4g} {tot[i]:10.4g} {100 * syst[i]:6.2f} {100 * mcrel[i]:7.3f}  {s}")
 print("wrote", out + ".png/.pdf")
