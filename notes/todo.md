@@ -8,6 +8,10 @@
 - [ ] Negative background bins (DYtt ~ -0.1 ev in 3 triple_diff bins, TT ~ -0.03 in 2): clip to 0 / small positive and document, or leave as is?
 
 ## From Giacomo (Mattermost, 2026-11-19)
+- [x] ROOT CAUSE of the bad 2D scans: w11 without shape variations (forgotten step). Applied with exportNuisances.py
+      -> `{mll,triple_diff}_w11export`; 2D production relaunched 17:48 (tmux w11_mll, w11_td). See propcorr_v3.md.
+- [ ] When the w11 production is done: check FASTEXIT/errors per pair, mll vs triple_diff overlays (no cubic spline),
+      push, redo profiled fits (test2 superseded) on triple_diff_w11export.
 - [ ] LATER, before profiled fits on the full set: cQl1==cQl3 and cHQ1==cHQ3 (topU3l, identical mg5 weights) ->
       define ONE operator each, e.g. cQl13 = cQl1 + cQl3 and cHQ13 = cHQ1 + cHQ3, then do the profiled fits.
       Identical templates => yield depends only on the sum, so in practice: use the cQl1/cHQ1 templates as cQl13/cHQ13,

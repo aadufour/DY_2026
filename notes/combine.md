@@ -481,3 +481,14 @@ rewritten). Run from the `tools/` dir in `dy_combine_morphing`. WARNING: it `rm 
 For the morphing model also copy `jsonComb.json` (+ `metadata.json`) by hand.
 Used 2026-04 (`analysis/combine_tools/old/bundle_test*`) and 2026-11-19: v3 2D mll card for Giacomo ->
 LLR `~/work/bundles/propcorr_v3_2d_mll/`, CERNbox `/eos/user/a/aldufour/bundles/propcorr_v3_2d_mll/` (share link from the CERNbox web UI).
+
+## exportNuisances.py (Giacomo's tool, tools/systematic_tools, morphing_model c5d93cd, 2026-11-19)
+Copies nuisances from one process to others in a datacard: for shape nuisances, the Up/nominal and Down/nominal
+ratios of `--from` are applied bin by bin to the nominal of every `--to` process (and the nuisance is switched on for
+them); lnN values are copied. Writes a copy (bundle: `shapes.root_0`) to `--outdir` (must not exist).
+Use it whenever some processes lack variations that others have and the same relative variation is a fair assumption.
+Our case: the 2D cards, w11 produced nominal only, gets the sm variations. ALWAYS after generating 2D cards:
+`PYTHONPATH=$TOOLS/python:$PYTHONPATH python3 $TOOLS/systematic_tools/exportNuisances.py --datacard datacard.txt
+ --from sm --to "w11_.*" --nuis ".*" --outdir <var>_w11export` then copy `jsonComb.json` + `metadata.json` by hand.
+Options: `--bins` (regexp on datacard bins), `--only_missing` (only processes without the nuisance yet).
+Cross-check 2026-11-19: identical to `analysis/combine_tools/add_w11_syst_from_sm.py` on the v3 mll card (0 differences).

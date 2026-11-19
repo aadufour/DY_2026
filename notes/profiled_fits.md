@@ -56,7 +56,10 @@ curve has 1-3 points near the minimum; cHd minimum apparently at +0.04, cHj1 cur
 Machinery validated (workspace, mixed terms, profiled fits, outputs). Moved to `profiled/test1_coarse/`.
 Fisher prediction for this subset (profiled/individual): cHu 2.6, cHj1 2.2, cHd 1.6, cHDD 1.1, clj1 1.0.
 
-### test2 (2026-11-17, same 5 operators) — OK
+### test2 (2026-11-17, same 5 operators) — SUPERSEDED
+Used the v3_2d triple_diff card where w11 had no shape variations (missing step, see `propcorr_v3.md`,
+"w11 systematics step"). Numbers below kept for the record; redo on `triple_diff_w11export`.
+
 Ranges = 4x the individual 95% interval (cHDD +-0.066, cHj1 +-0.40, cHu +-0.50, cHd +-0.376, clj1 +-0.05),
 200 points, ~1 min per operator (local, 1 core). All 200 points converged, smooth parabolas, best fit at 0.
 
