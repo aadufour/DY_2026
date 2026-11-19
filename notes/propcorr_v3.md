@@ -47,6 +47,12 @@ v3_pdfcut and v3_2d shapes are identical except for the w11 templates.
   only lumi / only mu SFs / only PU+prefire / only rochester+tt_ptrw floating: 0 each; lumi+muSF 5; muSF+PU+pref 0;
   lumi+muSF+PU+pref 47; all exp except lumi 131. -> no single culprit nuisance: the errors grow with the number of
   floating nuisances (collective degeneracy of many ~1% normalisation-like nuisances + the flat EFT direction).
+- Background-removal test (2026-11-19, Giacomo), same pair/grid, one frozen rateParam per background (0 = removed
+  from model and Asimov; `~/work/scratch_fastexit/nobkg_run.sh`): all bkg 276; no bkg 1; DYtt only 2; TT only 152;
+  all but TT 1; TT only + QCDScale frozen 227; + PDF frozen 234; + tt_ptrw frozen 11.
+  ORIGINAL setup with only tt_ptrw frozen: 284 -> 1 FASTEXIT. => culprit = tt_ptrw (TT only), in combination with the
+  other nuisances (alone it gives 0). Template looks healthy: symmetric, smooth, +2.1% (bin 0) to +11% (last bin).
+  Bin 0 composition: sm 86%, DYtt 8.1%, TT 4.3%, rest <1%. Why tt_ptrw drives the runaway: not understood yet.
 
 ### Profiled fits
 - In progress on triple_diff, see `profiled_fits.md`.
