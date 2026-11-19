@@ -7,6 +7,18 @@
       all 20 Z-peak triple_diff bins negative -> generator-level, not reco/morphing (2026-11-17).
 - [ ] Negative background bins (DYtt ~ -0.1 ev in 3 triple_diff bins, TT ~ -0.03 in 2): clip to 0 / small positive and document, or leave as is?
 
+## From Giacomo (Mattermost, 2026-11-19)
+- [ ] LATER, before profiled fits on the full set: cQl1==cQl3 and cHQ1==cHQ3 (topU3l, identical mg5 weights) ->
+      define ONE operator each, e.g. cQl13 = cQl1 + cQl3 and cHQ13 = cHQ1 + cHQ3, then do the profiled fits.
+      Identical templates => yield depends only on the sum, so in practice: use the cQl1/cHQ1 templates as cQl13/cHQ13,
+      drop cQl3/cHQ3 (and their w11). Check first that w11_cHQ1_cHQ3 == 4*quad + ... i.e. the mixed term is
+      consistent with a pure function of the sum (2*quad_cHQ1 == mixed), otherwise the sum is not the only combination.
+- [ ] FASTEXIT ("fit not reliable" if it happens): 4277 in mll 2D scans (always bin 0, 40-60 GeV), 339 in triple_diff.
+      Giacomo: "usual method" -> run with NO nuisances, then add them back in blocks until the error appears.
+      Context: nuisances run away to 1e2-1e7 sigma; bin 0 needs >=30 sigma of one nuisance to go negative at
+      large |c| (never at SM); see propcorr_v3.md 2D section. Open question: also for costhetastar / rapll_abs?
+- [x] Prefit plots for mll + triple_diff (blind, SM only is fine): RECO3D_propcorr_v3/<var>/prefit/ (2026-11-19)
+
 PRIORITY (2026-11-12), after the PDF-cut approach is validated on propcorr_v3_pdfcut:
 - [ ] Cross-term (w11) production for 2D scans: smart/optimised scripts for the whole chain
       (run jobs -> merge -> postproc), FULL (all theory variations), megahisto-style batching of EFT templates
