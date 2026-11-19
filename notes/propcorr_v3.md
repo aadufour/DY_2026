@@ -45,8 +45,8 @@ v3_pdfcut and v3_2d shapes are identical except for the w11 templates.
   --freezeParameters changed (`~/work/scratch_fastexit/run.sh`). FASTEXIT counts: all floating 284; no nuisances 0;
   PDF frozen 274; PSWeight frozen 267; alphaS frozen 309; theory frozen (exp floating) 198; exp frozen (theory floating) 20;
   only lumi / only mu SFs / only PU+prefire / only rochester+tt_ptrw floating: 0 each; lumi+muSF 5; muSF+PU+pref 0;
-  lumi+muSF+PU+pref 47; all exp except lumi 131. -> no single culprit nuisance: the errors grow with the number of
-  floating nuisances (collective degeneracy of many ~1% normalisation-like nuisances + the flat EFT direction).
+  lumi+muSF+PU+pref 47; all exp except lumi 131. My conclusion at the time ("no single culprit, collective
+  degeneracy") was WRONG: the test never froze tt_ptrw alone with everything else floating (see next point).
 - Background-removal test (2026-11-19, Giacomo), same pair/grid, one frozen rateParam per background (0 = removed
   from model and Asimov; `~/work/scratch_fastexit/nobkg_run.sh`): all bkg 276; no bkg 1; DYtt only 2; TT only 152;
   all but TT 1; TT only + QCDScale frozen 227; + PDF frozen 234; + tt_ptrw frozen 11.
