@@ -41,6 +41,12 @@ v3_pdfcut and v3_2d shapes are identical except for the w11 templates.
 - Triple diff closes every mll near-flat direction (all 300 distinct pairs closed and compact); exceptions: the exact identities cHQ1/cHQ3, cQl1/cQl3. Remaining strong (closed) correlations among cHDD, cHWB, cHl1, cHl3 (axis ratio ~7).
 - Badly behaved mll scans (27 pairs, hand-checked): pairs of Z-coupling operators (cHj1, cHj3, cHu, cHd, cHQ1, cHbq, cHe, cHl1, cll1) and b-dipoles. Their mll effect is 92-99.7% a Z-peak normalisation change (`check_norm_degeneracy.py`) -> degenerate with each other and with normalisation nuisances -> near-flat, syst-dominated, fits land in different minima. 4x more points (40k) does not help; strict minimizer + per-point minimum helps a little (`merge_min_scans.py`). Not caused by propcorr (v9 templates even more collinear).
 - Negative yields (checked 2026-11-19, pass2 condor logs): combine prints "Number of events is negative" / "underflow to -nan" (always mll bin 0) in 190/351 mll pairs (25 of the 27 bad ones; worst cHd_cHbq, cbBRe_cHbq, cbWRe_cHbq, cbBRe_cHd), 53/351 in triple_diff with far fewer counts. The NOMINAL prediction (sm+lin+quad+mixed, all bins) never goes below 0.63x(sm+bkg) anywhere in the scan boxes, for any pair. At the warning points the nuisances have run away to |theta| ~ 1e2-1e7 (median QCDScale 9e3, alphaS 6e3, PDF 5e3 sigma): the minimizer diverges along the near-flat direction and only then hits negative yields. So: not too few points, not negative templates, but runaway fits. Possible fix to test: bound the nuisances (e.g. +-5 sigma via --setParameterRanges) on a few bad pairs.
+- Nuisance-block test (2026-11-19, Giacomo's method), mll cHd_cHbq, full pass2 10k grid, exact pass2 command, only
+  --freezeParameters changed (`~/work/scratch_fastexit/run.sh`). FASTEXIT counts: all floating 284; no nuisances 0;
+  PDF frozen 274; PSWeight frozen 267; alphaS frozen 309; theory frozen (exp floating) 198; exp frozen (theory floating) 20;
+  only lumi / only mu SFs / only PU+prefire / only rochester+tt_ptrw floating: 0 each; lumi+muSF 5; muSF+PU+pref 0;
+  lumi+muSF+PU+pref 47; all exp except lumi 131. -> no single culprit nuisance: the errors grow with the number of
+  floating nuisances (collective degeneracy of many ~1% normalisation-like nuisances + the flat EFT direction).
 
 ### Profiled fits
 - In progress on triple_diff, see `profiled_fits.md`.
