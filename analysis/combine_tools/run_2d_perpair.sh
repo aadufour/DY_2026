@@ -122,8 +122,13 @@ for p in $(echo $ALL | tr , ' '); do
   if [ -f "$FULL/pass3/$f" ]; then ln -sfn "$FULL/pass3/$f" .; elif [ -f "$FULL/pass2/$f" ]; then ln -sfn "$FULL/pass2/$f" .; fi
 done
 log "final: $(ls | wc -l) pairs"
-python3 "$CT/plot_2d_scans.py" --pairs "$ALL" --inputs "$(basename $VARDIR)=$FULL/final" -o "$FULL/plots" --prefix scan_ > "$FULL/plots.log" 2>&1
+# plots with runPlots.py (mkEFTScan, no interpolation; plot_2d_scans.py upsampled with a cubic spline and drew
+# fake islands around isolated outliers, 2026-11-19)
+mkdir -p "$FULL/plots"; cd "$FULL/plots"
+for f in "$FULL"/final/higgsCombine.*.root; do ln -sfn "$f" .; done
+cp "$VARDIR/metadata.json" .
+python3 "$CT/runPlots.py" 2 --cores 8 > "$FULL/plots.log" 2>&1
+rm -f higgsCombine.*.root metadata.json
 log "plots: $(ls $FULL/plots/*.png | wc -l)"
-export EOS_MGM_URL=root://eosuser.cern.ch
-for f in "$FULL"/plots/*; do xrdcp -f --silent "$f" "root://eosuser.cern.ch//eos/user/a/aldufour/www/$EOSDIR/" || echo "EOS FAIL $f"; done
+python3 "$CT/../../eos_tools/pushtoEOS_parallel.py" -j 8 --overwrite "$FULL/plots" "$EOSDIR" > "$FULL/eos.log" 2>&1 || echo "EOS FAIL, see $FULL/eos.log"
 log "ALL DONE"
