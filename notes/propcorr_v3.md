@@ -53,7 +53,7 @@ v3_pdfcut and v3_2d shapes are identical except for the w11 templates.
 
 ## EOS (https://aldufour.web.cern.ch/RECO3D_propcorr_v3/)
 - top: `eft_summary_multivar.*`
-- `<var>/`: `eft_summary_two_panel.*`, `scan/` (1D), `dist/`, `nuis_combine/`, `nuis_eft/`
+- `<var>/`: `eft_summary_two_panel.*`, `scan/` (1D), `dist/`, `nuis_combine/`, `nuis_eft/`, `prefit/` (datacard prefit, Asimov, no EFT, +1sigma shift per nuisance; `plot_prefit_datacard.py`, 2026-11-19)
 - `2D_mll/`, `2D_triple_diff/` (scan_<pair>, 351 each), `2D_mll_vs_triple_diff/` (overlay_<pair>, 351)
 - `checks/`: `quad_terms_mll.png`, `mll_2d_10k_vs_40k_vs_strict.png`
 - Push: `eos_tools/push_v3_to_eos.sh` (1D + summaries, `--overwrite`), 2D via `run_2d_perpair.sh`; all through `pushtoEOS_parallel.py`.
