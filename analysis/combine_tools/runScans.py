@@ -339,7 +339,7 @@ if __name__ == "__main__":
             outname += "_profiled"
                 
                 
-        setvalue = "--setParameters r=1," + "," + ",".join([f"k_{op}=0" for op in c])
+        setvalue = "--setParameters r=1," + ",".join([f"k_{op}=0" for op in c])
         if options.unblind: 
             if not options.freeze: 
                 setvalue=" "
