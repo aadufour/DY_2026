@@ -85,7 +85,33 @@ triple_diff A/B/C are all compared with the v3 triple_diff (280 bins).
   Z couplings -5 to -12%, four-fermion within +-11%; only cHd loses (x1.35), it needs the angular bins.
 - cHl1, cHe: binning-independent (pure normalisation effects).
 
+## Step 2: how many bins can a single variable use? (2026-11-20)
+Question (user): why not 280 bins for each 1D variable too, as in the v3 triple_diff? Tool:
+`analysis/combine_tools/lhe_binning_saturation.py` (LLR `~/work/binning_study/lhe_saturation/`): stat-only linear
+1 sigma vs N (5 ... 280) per 1D variable; mll with equal LHE events per bin and a 1 GeV minimum width, cos and |y| uniform.
+
+| var | N=5 | 10 | 20 | 40 | 80 | 140 | 280 |
+|---|---|---|---|---|---|---|---|
+| mll: median sigma(N)/sigma(280) | 1.25 | 1.13 | 1.08 | 1.04 | 1.01 | 1.01 | 1.00 |
+| mll: worst MC stat | 5% | 12% | 27% | 51% | 75% | 86% | 93% |
+| mll: min SM events/bin | 399 | 89 | 20 | 5 | 1.6 | 0.6 | 0.2 |
+| costhetastar: median sigma(N)/sigma(280) | 1.32 | 1.31 | 1.13 | 1.09 | 1.04 | 1.02 | 1.00 |
+| costhetastar: worst MC stat | 2% | 3% | 8% | 11% | 26% | 27% | 44% |
+| costhetastar: min SM events/bin | 6e6 | 8e5 | 8e3 | 500 | 18 | 0 | 0 |
+| rapll_abs: median sigma(N)/sigma(280) | 1.03 | 1.03 | 1.05 | 1.02 | 1.03 | 1.04 | 1.00 |
+| rapll_abs: worst MC stat | 2% | 4% | 8% | 15% | 34% | 65% | 99% |
+
+- The 1D information saturates: mll and costhetastar within ~4% of their 280-bin value at N = 40-80; |y| alone carries
+  no shape information whatever the binning. Beyond that, more bins only add MC noise (EFT templates are `noStat`, so it
+  goes untreated into the fit) and empty bins (mll: < 1 SM event per bin at N >= 140; cos: empty bins beyond the
+  acceptance edge at |cos| ~ 0.98). At reco, mll bins below ~1-2 GeV are also below the muon resolution.
+- 280 1D bins are therefore not useful; 40 is on the low side for triple_diff (four-fermion operators lose 10-45% vs v3
+  at 40 bins, step 1). Natural compromise: N ~ 80 (1D saturated, triple_diff e.g. 10x4x2 or 20x2x2).
+- Caveat: one operator at a time, linear, stat only. A finely binned 1D mll is already as good as the 280-bin triple_diff
+  for most single operators (exceptions: cHd 1.30x); the strength of triple_diff is in multi-operator (profiled) fits,
+  where the angular/rapidity bins break degeneracies. This Fisher does not see that.
+
 ## Next
-- Choose N and the triple_diff split (current preference: N = 40, triple_diff C).
+- Choose N (step 2 suggests ~80) and the triple_diff split.
 - New spritz config (copy of `propcorr_v3_pdfcut` with the new axes), then the full chain: jobs, merge, MiNNLO
   postproc, cards, 1D fits, summary plots; compare with v3.
