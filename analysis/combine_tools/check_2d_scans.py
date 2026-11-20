@@ -30,6 +30,7 @@ final_src = {}
 for f in glob.glob(f"{full}/final/higgsCombine.*.root"):
     final_src[os.path.basename(f).split(".")[1]] = os.path.basename(os.path.dirname(os.path.realpath(f)))
 flags = collections.defaultdict(set)
+flags_all = set()
 re_pt = re.compile(r"^Point \d+/\d+ .*?k_(\w+) = (\S+) k_(\w+) = (\S+)")
 for ps in ("pass2", "pass3"):
     for log in glob.glob(f"{full}/{ps}/condor_scan_bundled/logs/*.out"):
@@ -39,6 +40,8 @@ for ps in ("pass2", "pass3"):
             if m:
                 pair = f"{m.group(1)}_{m.group(3)}"
                 key = (pair, round(float(m.group(2)), 6), round(float(m.group(4)), 6)) if final_src.get(pair) == ps else None
+                if key:
+                    flags_all.add(key)
                 continue
             if key is None:
                 continue
@@ -61,11 +64,14 @@ for f in sorted(glob.glob(f"{full}/final/higgsCombine.*.root")):
     d = ROOT.RDataFrame("limit", f).Filter("quantileExpected > -0.5").AsNumpy([f"k_{o1}", f"k_{o2}", "deltaNLL"])
     x, y, z = d[f"k_{o1}"], d[f"k_{o2}"], 2 * d["deltaNLL"]
     z = z - z.min()
-    # grid from the log points (complete, includes the failed ones) + the output
-    lx = {k[1] for k in flags if k[0] == pair}; ly = {k[2] for k in flags if k[0] == pair}
-    xs = np.unique(np.concatenate([np.round(x, 6), list(lx)])); ys = np.unique(np.concatenate([np.round(y, 6), list(ly)]))
+    # grid from the log (all points, also the failed ones); output points snapped to the nearest grid node
+    lk = [k for k in flags_all if k[0] == pair]
+    xs = np.unique([k[1] for k in lk]); ys = np.unique([k[2] for k in lk])
+    if len(xs) < 2:
+        xs, ys = np.unique(np.round(x, 5)), np.unique(np.round(y, 5))
+    ix = np.abs(x[:, None] - xs[None, :]).argmin(1); iy = np.abs(y[:, None] - ys[None, :]).argmin(1)
     Z = np.full((len(xs), len(ys)), np.nan)
-    Z[np.searchsorted(xs, np.round(x, 6)), np.searchsorted(ys, np.round(y, 6))] = z
+    Z[ix, iy] = z
     M = generic_filter(Z, nbmedian, size=3, mode="constant", cval=np.nan)
     n_expected = 10000
     inside = M < 5.99
@@ -74,11 +80,10 @@ for f in sorted(glob.glob(f"{full}/final/higgsCombine.*.root")):
     for (pp, kx, ky), fl in flags.items():
         if pp != pair:
             continue
-        i, j = np.searchsorted(xs, kx), np.searchsorted(ys, ky)
-        if i < len(xs) and j < len(ys) and xs[i] == kx and ys[j] == ky:
-            err[i, j] = "error" in fl; fe[i, j] = "fastexit" in fl
+        i, j = np.abs(xs - kx).argmin(), np.abs(ys - ky).argmin()
+        err[i, j] = "error" in fl; fe[i, j] = "fastexit" in fl
     missing = np.isnan(Z)
-    rows.append(dict(pair=pair, n_missing=int(n_expected - len(z)), missing_in=int((missing & inside).sum()),
+    rows.append(dict(pair=pair, n_missing=int(missing.sum()), missing_in=int((missing & inside).sum()),
                      n_err=int(err.sum()), err_in=int((err & inside).sum()), n_fe=int(fe.sum()), fe_in=int((fe & inside).sum()),
                      outl_in=int(outl.sum()), outl_max=float(np.nanmax(np.where(outl, Z - M, np.nan))) if outl.any() else 0.0,
                      zmax_err=float(np.nanmin(np.where(err, M, np.nan))) if err.any() else np.nan))
