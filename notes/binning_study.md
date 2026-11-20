@@ -196,11 +196,18 @@ normalised to the right cross section of their slice.
 ## Config (2026-11-20)
 N = 80, triple_diff B. `analysis/spritz/config_same_binning_N80.py` (= config_propcorr_v1.py + runner_pdfcut, new axes
 only), deployed to LLR `spritz_fabian/configs/same_binning_N80/config.py`; loads in the spritz env (64 samples,
-47 datasets, 14 nuisances; 80 bins in every variable). Nothing launched yet.
+47 datasets, 14 nuisances; 80 bins in every variable).
 Caveat for the postproc: the MiNNLO k = MiNNLO_V / LO_sm_V is per bin, so with 80 bins it also picks up the MC noise of
 both samples (and the sm weight outliers above).
 
+## Launch (2026-11-20 15:48)
+- Condor cluster **823662**: 3000 jobs (same fileset/chunks as v3_pdfcut), long queue, request_memory 4500
+  (v3: median 93 min, max 155 min, up to 4.2 GB). Proxy renewed for 7 days before submitting.
+- Unattended chain in tmux `n80_chain` on llrcms: `analysis/spritz/run_chain_llr.sh same_binning_N80 823662
+  propcorr_v3_pdfcut N80 v3`, log `same_binning_N80/chain.log`. Steps: wait, retry once bad jobs, merge, MiNNLO
+  postproc, cards, 1D fits (100 points, stat+syst and stat-only) for mll / rapll_abs / costhetastar / triple_diff,
+  summaries (`--logscale`) in `summary_plots/`, comparison with v3 in `compare_ref/`.
+
 ## Next
-- Run the chain on `same_binning_N80` (jobs, merge, MiNNLO postproc, cards, 1D fits, summaries), compare with v3.
-- New spritz config (copy of `propcorr_v3_pdfcut` with the new axes), then the full chain: jobs, merge, MiNNLO
-  postproc, cards, 1D fits, summary plots; compare with v3.
+- When the chain is done: compare N80 vs v3 per variable (`compare_ref/`), push to EOS.
+- Inspect the sm weight outliers at reco level (the 200-400 slice event with ratio 782).
