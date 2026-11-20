@@ -26,6 +26,7 @@ p = argparse.ArgumentParser()
 p.add_argument("--cache", default="/grid_mnt/data__data.polcms/cms/adufour/LHE/propcorr/CACHE/lhe_cache_propcorr_parallel.pkl")
 p.add_argument("-o", "--outdir", default="lhe_binning")
 p.add_argument("--lumi", type=float, default=59740.0, help="pb^-1")
+p.add_argument("--set", default="N40", help="candidate set compared with v3: N40 or N80")
 a = p.parse_args()
 os.makedirs(a.outdir, exist_ok=True)
 plt.style.use(hep.style.CMS)
@@ -58,10 +59,24 @@ BINNINGS = {
             # C: like A, fewer peak bins, more at high mll
             "triple_diff_C": ([50, 76, 86, 96, 106, 150, 250, 400, 600, 1000, 3000], [-1.0, 0.0, 1.0], [0.0, y_med, 2.4])},
 }
-for b in BINNINGS.values():
-    for v, e in b.items():
-        n = np.prod([len(x) - 1 for x in e]) if v.startswith("triple_diff") else len(e) - 1
-        assert b is BINNINGS["v3"] or n == 40, (v, n)
+# 80 bins: 2 GeV below the peak, 1 GeV on the peak core (86-96), 2 GeV to 120, 5 GeV to 200, then widening
+MLL80 = [*range(50, 76, 2), *range(76, 86, 2), *range(86, 96), *range(96, 120, 2), *range(120, 200, 5),
+         *range(200, 300, 20), *range(300, 500, 25), 500, 550, *range(600, 1000, 100), 1000, 1200, 1500, 2000, 2500, 3000]
+BINNINGS["N80"] = {
+    "mll": MLL80,
+    "costhetastar": list(np.round(np.linspace(-1, 1, 81), 4)),
+    "rapll_abs": list(np.round(np.linspace(0, 2.4, 81), 4)),
+    # A: 10 mll (as N40 C) x 4 cos x 2 |y|
+    "triple_diff": ([50, 76, 86, 96, 106, 150, 250, 400, 600, 1000, 3000], [-1.0, -0.5, 0.0, 0.5, 1.0], [0.0, y_med, 2.4]),
+    # B: 20 mll x 2 cos x 2 |y|
+    "triple_diff_B": ([50, 60, 70, 76, 82, 86, 89, 92, 95, 100, 106, 120, 150, 200, 250, 300, 400, 500, 700, 1000, 3000],
+                      [-1.0, 0.0, 1.0], [0.0, y_med, 2.4]),
+}
+NSET = int(a.set[1:])
+BINNINGS = {"v3": BINNINGS["v3"], a.set: BINNINGS[a.set]}
+for v, e in BINNINGS[a.set].items():
+    n = np.prod([len(x) - 1 for x in e]) if v.startswith("triple_diff") else len(e) - 1
+    assert n == NSET, (v, n)
 VAL = {"mll": mll, "costhetastar": cs, "rapll_abs": y}
 XLAB = {"mll": r"$m_{\ell\ell}$ [GeV]", "costhetastar": r"$\cos\theta^*$", "rapll_abs": r"$|y_{\ell\ell}|$",
         "triple_diff": "unrolled bin ($m_{\\ell\\ell}$ inner, then $\\cos\\theta^*$, $|y_{\\ell\\ell}|$ outer; as hist_unroll)"}
@@ -136,7 +151,7 @@ for bname, bdef in BINNINGS.items():
         print("wrote", bname, var, n, "bins; MC stat max", f"{100*mcrel.max():.2f}%", "min LHE events", int(nraw.min()))
 
 # ---- table: expected stat-only 1 sigma (linear) per operator, per binning
-bnames = list(BINNINGS); vars_ = ["mll", "costhetastar", "rapll_abs", "triple_diff", "triple_diff_B", "triple_diff_C"]
+bnames = list(BINNINGS); vars_ = list(BINNINGS[a.set])
 lines = ["| op | " + " | ".join(f"{v} {b} ({summary[(b, v if (b, v) in summary else 'triple_diff')]['nbins']})" for v in vars_ for b in bnames) + " |",
          "|---|" + "---|" * (len(vars_) * len(bnames))]
 for op in OPS:
