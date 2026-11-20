@@ -7,8 +7,8 @@ Several    -> overlay of the 68% (filled + solid) and 95% (dashed) CL contours,
               one colour per variable (e.g. mll vs triple_diff).
 
 Contours: 2*deltaNLL = 2.30 (68%) and 5.99 (95%), from the full scan grid
-(no re-binning; missing points stay empty). The grid is smoothly upsampled
-before contouring when it has no holes.
+(no re-binning). No upsampling by default: a cubic spline (--upsample 4, the old default) drew fake
+islands around isolated outlier points (2026-11-19).
 
 Usage:
   plot_2d_scans.py --pairs cHj3_cHu,clj3_cQe --inputs triple_diff=/path/td -o out/
@@ -64,8 +64,8 @@ def load(fn, o1, o2):
     return xs, ys, Z
 
 
-def smooth(xs, ys, Z, f=4):
-    if np.isnan(Z).any() or len(xs) < 4:
+def smooth(xs, ys, Z, f=1):
+    if f <= 1 or np.isnan(Z).any() or len(xs) < 4:
         return xs, ys, Z
     return (np.linspace(xs[0], xs[-1], len(xs) * f), np.linspace(ys[0], ys[-1], len(ys) * f),
             np.clip(zoom(Z, f, order=3), 0, None))
@@ -85,6 +85,7 @@ p.add_argument("--prefix", default="")
 p.add_argument("--frame", default="", help="metadata json whose 'pairs' boxes set the axis range")
 p.add_argument("--zmax", type=float, default=10.0)
 p.add_argument("--lumi", type=float, default=59.74)
+p.add_argument("--upsample", type=int, default=1, help="cubic-spline upsampling factor before contouring (1 = none)")
 a = p.parse_args()
 os.makedirs(a.outdir, exist_ok=True)
 inputs = [x.split("=", 1) for x in a.inputs]
@@ -106,7 +107,7 @@ for pair in a.pairs.split(","):
         Zc = np.clip(Z, 0, a.zmax)
         pc = ax.pcolormesh(xs, ys, Zc, cmap=mkeft_cmap(a.zmax), vmin=0, vmax=a.zmax, shading="gouraud", rasterized=True)
         cb = fig.colorbar(pc, ax=ax, pad=0.02); cb.set_label(r"$-2\ \Delta$ lnL")
-        sx, sy, sZ = smooth(xs, ys, Z)
+        sx, sy, sZ = smooth(xs, ys, Z, a.upsample)
         ax.contour(sx, sy, sZ, levels=[LEVELS[0]], colors="red", linewidths=2, linestyles="solid")
         ax.contour(sx, sy, sZ, levels=[LEVELS[1]], colors="red", linewidths=2, linestyles=[LONGDASH])
         handles = [Line2D([], [], color="red", marker="P", ls="none", ms=14, label="Expected"),
@@ -119,7 +120,7 @@ for pair in a.pairs.split(","):
         handles = []
         for lab, xs, ys, Z in scans:
             c = VAR_COLOR.get(lab, "gray")
-            sx, sy, sZ = smooth(xs, ys, Z)
+            sx, sy, sZ = smooth(xs, ys, Z, a.upsample)
             ax.contourf(sx, sy, sZ, levels=[-1, LEVELS[0]], colors=[c], alpha=0.25)
             ax.contour(sx, sy, sZ, levels=[LEVELS[0]], colors=[c], linewidths=2.5, linestyles="solid")
             ax.contour(sx, sy, sZ, levels=[LEVELS[1]], colors=[c], linewidths=2.5, linestyles=[LONGDASH])
