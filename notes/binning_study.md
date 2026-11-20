@@ -28,11 +28,13 @@ comparing binnings.
 | mll | in the spirit of `eft_bkg_fullsyst_v5` (34 bins): 50-75 by 5, 75, 78, 80-106 by 2 (Z peak), 110, 115, 120, 130, 140, 150, 175, 200, 250, 300, 350, 400, 500, 600, 700, 800, 1000, 1200, 1500, 3000 |
 | costhetastar | 40 uniform in [-1, 1] |
 | rapll_abs | 40 uniform in [0, 2.4] |
-| triple_diff A | mll [50,70,80,86,90,94,100,120,200,500,3000] x cos [-1,0,1] x \|y\| [0,1.0,2.4] (10x2x2) |
-| triple_diff B | mll [50,80,100,200,500,3000] x cos [-1,-0.5,0,0.5,1] x \|y\| [0,1.0,2.4] (5x4x2) |
-| triple_diff C | mll [50,76,86,96,106,150,250,400,600,1000,3000] x cos [-1,0,1] x \|y\| [0,1.0,2.4] (10x2x2) |
+| triple_diff A | mll [50,70,80,86,90,94,100,120,200,500,3000] x cos [-1,0,1] x \|y\| [0,0.9,2.4] (10x2x2) |
+| triple_diff B | mll [50,80,100,200,500,3000] x cos [-1,-0.5,0,0.5,1] x \|y\| [0,0.9,2.4] (5x4x2) |
+| triple_diff C | mll [50,76,86,96,106,150,250,400,600,1000,3000] x cos [-1,0,1] x \|y\| [0,0.9,2.4] (10x2x2) |
 
-1.0 = SM-weighted median of |y_ll|. A first try with 40 log-spaced mll bins was bad (one bin over the whole Z peak,
+0.9 = SM-weighted median of |y_ll|. Unrolled triple_diff plots use the same order as `hist_unroll` in
+`post_process_minnlo.py` (`view().T.flatten()`): mll fastest, then costhetastar, |y| outermost, i.e. one block per
+(cos, |y|) cell with the full mll spectrum inside (fixed 2026-11-20; the order does not change the 1 sigma numbers). A first try with 40 log-spaced mll bins was bad (one bin over the whole Z peak,
 last bins with ~3 SM events and 40-90% MC stat): replaced by the v5-style binning.
 
 ### Statistics
