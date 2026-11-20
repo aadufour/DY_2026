@@ -12,7 +12,8 @@ Plus a table: stat-only expected 1 sigma per operator at linear order, 1/sqrt(su
 (lin_i^2 corrected for the LHE MC variance of lin_i).
 It ignores reco efficiency, backgrounds and systematics: use it to compare binnings, not as a limit.
 
-Usage: lhe_binning_check.py [--cache ...] [-o outdir] [--N 40]
+Binnings are defined in BINNINGS below (v3 and the N=40 candidate, two triple_diff splits A and B).
+Usage: lhe_binning_check.py [--cache ...] [-o outdir]
 """
 import argparse, json, os, pickle
 import numpy as np
@@ -24,7 +25,6 @@ import mplhep as hep
 p = argparse.ArgumentParser()
 p.add_argument("--cache", default="/grid_mnt/data__data.polcms/cms/adufour/LHE/propcorr/CACHE/lhe_cache_propcorr_parallel.pkl")
 p.add_argument("-o", "--outdir", default="lhe_binning")
-p.add_argument("--N", type=int, default=40)
 p.add_argument("--lumi", type=float, default=59740.0, help="pb^-1")
 a = p.parse_args()
 os.makedirs(a.outdir, exist_ok=True)
@@ -39,31 +39,34 @@ lin = {op: 0.5 * (c["w_p1"][op] - c["w_m1"][op]) / NGEN * a.lumi for op in OPS}
 del c
 SHOW = ["cHj3", "cHe", "clj1", "ced", "clu"]
 
-N = a.N
-# triple_diff factorisation for N: mll x costhetastar x |y|
-if N % 4:
-    raise SystemExit("N must be divisible by 4 (triple_diff = N/4 mll x 2 cos x 2 |y|)")
-nm = N // 4
 _o = np.argsort(y)
 y_med = float(np.round(y[_o][np.searchsorted(np.cumsum(wsm[_o]), 0.5 * wsm.sum())] / 0.05) * 0.05)  # SM-weighted median
-TD_MLL = {10: [50, 70, 81, 101, 120, 150, 200, 300, 500, 1000, 3000]}.get(nm) or \
-    list(np.round(np.geomspace(50, 3000, nm + 1), 0))
 V3_MLL = [50, 60, 80, 100, 120, 140, 180, 220, 270, 350, 500, 700, 1000, 1500, 3000]
+# 40 bins in the spirit of eft_bkg_fullsyst_v5 (5 GeV below the peak, 2 GeV over the Z peak, wide at high mll)
+MLL40 = [50, 55, 60, 65, 70, 75, 78, *range(80, 107, 2), 110, 115, 120, 130, 140, 150, 175, 200, 250, 300, 350, 400,
+         500, 600, 700, 800, 1000, 1200, 1500, 3000]
 BINNINGS = {
     "v3": {"mll": V3_MLL, "costhetastar": [-1.0, -0.6, -0.2, 0.2, 0.6, 1.0], "rapll_abs": [0.0, 0.48, 0.96, 1.44, 2.4],
            "triple_diff": (V3_MLL, [-1.0, -0.6, -0.2, 0.2, 0.6, 1.0], [0.0, 0.48, 0.96, 1.44, 2.4])},
-    f"N{N}": {"mll": list(np.round(np.geomspace(50, 3000, N + 1), 1)),
-              "costhetastar": list(np.round(np.linspace(-1, 1, N + 1), 4)),
-              "rapll_abs": list(np.round(np.linspace(0, 2.4, N + 1), 4)),
-              "triple_diff": (TD_MLL, [-1.0, 0.0, 1.0], [0.0, y_med, 2.4])},
+    "N40": {"mll": MLL40,
+            "costhetastar": list(np.round(np.linspace(-1, 1, 41), 4)),
+            "rapll_abs": list(np.round(np.linspace(0, 2.4, 41), 4)),
+            # A: 10 mll x 2 cos (backward/forward) x 2 |y| (split at the SM median)
+            "triple_diff": ([50, 70, 80, 86, 90, 94, 100, 120, 200, 500, 3000], [-1.0, 0.0, 1.0], [0.0, y_med, 2.4]),
+            # B: 5 mll x 4 cos x 2 |y|
+            "triple_diff_B": ([50, 80, 100, 200, 500, 3000], [-1.0, -0.5, 0.0, 0.5, 1.0], [0.0, y_med, 2.4])},
 }
+for b in BINNINGS.values():
+    for v, e in b.items():
+        n = np.prod([len(x) - 1 for x in e]) if v.startswith("triple_diff") else len(e) - 1
+        assert b is BINNINGS["v3"] or n == 40, (v, n)
 VAL = {"mll": mll, "costhetastar": cs, "rapll_abs": y}
 XLAB = {"mll": r"$m_{\ell\ell}$ [GeV]", "costhetastar": r"$\cos\theta^*$", "rapll_abs": r"$|y_{\ell\ell}|$",
         "triple_diff": "unrolled bin ($m_{\\ell\\ell}$ outer, then $\\cos\\theta^*$, then $|y_{\\ell\\ell}|$)"}
 
 
 def binidx(var, edges):
-    if var != "triple_diff":
+    if not var.startswith("triple_diff"):
         e = np.asarray(edges, float)
         i = np.digitize(VAL[var], e) - 1
         return i, len(e) - 1, e
@@ -113,10 +116,10 @@ for bname, bdef in BINNINGS.items():
         ax[2].axhline(0, color="gray", lw=0.8)
         ax[2].set_ylabel("lin/SM, scaled"); ax[2].set_ylim(-1.15, 1.6)
         ax[2].legend(ncol=2, fontsize=12, loc="upper left")
-        ax[2].set_xlabel(XLAB[var])
+        ax[2].set_xlabel(XLAB["triple_diff" if var.startswith("triple_diff") else var])
         if var == "mll":
             for aa in ax: aa.set_xscale("log")
-        if var == "triple_diff":
+        if var.startswith("triple_diff"):
             nc, ny = len(bdef[var][1]) - 1, len(bdef[var][2]) - 1
             for k in range(1, len(bdef[var][0]) - 1):
                 for aa in ax: aa.axvline(k * nc * ny, color="gray", lw=0.6, ls="--")
@@ -125,16 +128,16 @@ for bname, bdef in BINNINGS.items():
         print("wrote", bname, var, n, "bins; MC stat max", f"{100*mcrel.max():.2f}%", "min LHE events", int(nraw.min()))
 
 # ---- table: expected stat-only 1 sigma (linear) per operator, per binning
-bnames = list(BINNINGS); vars_ = ["mll", "costhetastar", "rapll_abs", "triple_diff"]
-lines = ["| op | " + " | ".join(f"{v} {b} ({summary[(b, v)]['nbins']})" for v in vars_ for b in bnames) + " |",
+bnames = list(BINNINGS); vars_ = ["mll", "costhetastar", "rapll_abs", "triple_diff", "triple_diff_B"]
+lines = ["| op | " + " | ".join(f"{v} {b} ({summary[(b, v if (b, v) in summary else 'triple_diff')]['nbins']})" for v in vars_ for b in bnames) + " |",
          "|---|" + "---|" * (len(vars_) * len(bnames))]
 for op in OPS:
-    lines.append(f"| {op} | " + " | ".join(f"{summary[(b, v)]['sig'][op]:.3g}" for v in vars_ for b in bnames) + " |")
+    lines.append(f"| {op} | " + " | ".join(f"{summary[(b, v if (b, v) in summary else 'triple_diff')]['sig'][op]:.3g}" for v in vars_ for b in bnames) + " |")
 lines.append("")
 lines.append("ratio N/v3 of the expected 1 sigma (>1 = the new binning loses information):")
 lines.append("| op | " + " | ".join(vars_) + " |"); lines.append("|---|" + "---|" * len(vars_))
 for op in OPS:
-    lines.append(f"| {op} | " + " | ".join(f"{summary[(bnames[1], v)]['sig'][op] / summary[(bnames[0], v)]['sig'][op]:.2f}" for v in vars_) + " |")
+    lines.append(f"| {op} | " + " | ".join(f"{summary[(bnames[1], v)]['sig'][op] / summary[(bnames[0], v if (bnames[0], v) in summary else 'triple_diff')]['sig'][op]:.2f}" for v in vars_) + " |")
 lines.append("")
 lines.append("MC-noise bias: ratio (raw, no variance subtraction) / (corrected) of the 1 sigma, N binning:")
 lines.append("| op | " + " | ".join(vars_) + " |"); lines.append("|---|" + "---|" * len(vars_))
