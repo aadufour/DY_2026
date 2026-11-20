@@ -111,7 +111,57 @@ Question (user): why not 280 bins for each 1D variable too, as in the v3 triple_
   for most single operators (exceptions: cHd 1.30x); the strength of triple_diff is in multi-operator (profiled) fits,
   where the angular/rapidity bins break degeneracies. This Fisher does not see that.
 
+## Step 3: candidate N = 80 (2026-11-20)
+`lhe_binning_check.py --set N80`, output LLR `~/work/binning_study/lhe_N80/`.
+
+| variable | binning |
+|---|---|
+| mll | 50-76 by 2, 76-86 by 2, 86-96 by 1 (peak core), 96-120 by 2, 120-200 by 5, 200-300 by 20, 300-500 by 25, 500, 550, 600, 650, 700, 750, 800, 900, 1000, 1200, 1500, 3000 |
+| costhetastar | 80 uniform in [-1, 1] |
+| rapll_abs | 80 uniform in [0, 2.4] |
+| triple_diff A | mll [50,76,86,96,106,150,250,400,600,1000,3000] x cos [-1,-0.5,0,0.5,1] x \|y\| [0,0.9,2.4] (10x4x2) |
+| triple_diff B | mll [50,60,70,76,82,86,89,92,95,100,106,120,150,200,250,300,400,500,700,1000,3000] x cos [-1,0,1] x \|y\| [0,0.9,2.4] (20x2x2) |
+
+mll tail: a first version with 2000-2500-3000 had 77% MC stat in the last bin (about 1 SM event), merging 2-3 TeV
+still 39% (few large-weight events): last bin 1500-3000 as in v3. Worst MC stat now: mll 23% (50-52 GeV),
+costhetastar 26% and rapll_abs 34% (outermost bins), triple_diff A 26%, B 18% (top mll bins).
+1 GeV peak bins are at the muon resolution at reco: expect part of the mll gain to disappear there.
+
+Expected 1 sigma ratio N80 / v3 (triple_diff A and B vs v3 triple_diff, 280 bins):
+
+| op | mll | costhetastar | rapll_abs | td A | td B |
+|---|---|---|---|---|---|
+| cHDD | 0.94 | 0.83 | 0.77 | 0.96 | 0.93 |
+| cHWB | 0.91 | 0.87 | 0.84 | 0.98 | 0.91 |
+| cbWRe | 0.75 | 0.98 | 0.92 | 0.93 | 0.79 |
+| cbBRe | 0.75 | 1.00 | 0.97 | 0.93 | 0.79 |
+| cHj1 | 0.94 | 1.00 | 1.00 | 1.01 | 0.96 |
+| cHQ1 (=cHQ3) | 0.78 | 1.00 | 1.00 | 0.93 | 0.82 |
+| cHj3 | 0.76 | 1.00 | 1.00 | 0.94 | 0.81 |
+| cHu | 0.72 | 1.00 | 1.00 | 0.90 | 0.75 |
+| cHd | 0.73 | 1.18 | 0.81 | 1.20 | 1.15 |
+| cHbq | 0.81 | 0.98 | 0.97 | 0.94 | 0.86 |
+| cHl1 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+| cHl3 | 0.70 | 1.00 | 1.01 | 0.88 | 0.74 |
+| cHe | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+| cll1 | 0.86 | 1.00 | 1.00 | 0.96 | 0.89 |
+| clj1 | 0.95 | 0.87 | 0.95 | 1.14 | 1.03 |
+| clj3 | 0.98 | 0.47 | 1.00 | 0.99 | 0.96 |
+| cQl1 (=cQl3) | 0.96 | 0.47 | 0.96 | 1.01 | 0.98 |
+| ceu | 0.99 | 0.65 | 1.02 | 1.10 | 1.08 |
+| ced | 0.99 | 0.44 | 0.94 | 1.06 | 1.04 |
+| cbe | 0.98 | 0.46 | 0.99 | 1.00 | 0.98 |
+| cje | 0.98 | 0.42 | 0.94 | 1.11 | 1.08 |
+| cQe | 0.84 | 0.26 | 0.33 | 0.91 | 0.81 |
+| clu | 0.98 | 0.73 | 1.00 | 1.10 | 1.08 |
+| cld | 0.97 | 0.79 | 1.01 | 1.04 | 1.03 |
+| cbl | 1.06 | 1.09 | 1.09 | 1.00 | 1.13 |
+
+- 1D at 80 vs 40: mll, cos, |y| essentially unchanged (saturated, step 2).
+- triple_diff B (20x2x2) is within -25% / +15% of the 280-bin v3 for every operator: better for Z couplings, at most
+  8% worse for four-fermion operators (except cHd 1.15, cbl 1.13). A (10x4x2) gains less on Z couplings, similar elsewhere.
+
 ## Next
-- Choose N (step 2 suggests ~80) and the triple_diff split.
+- Choose N (40 or 80) and the triple_diff split (N80: B preferred).
 - New spritz config (copy of `propcorr_v3_pdfcut` with the new axes), then the full chain: jobs, merge, MiNNLO
   postproc, cards, 1D fits, summary plots; compare with v3.
