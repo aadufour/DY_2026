@@ -61,7 +61,7 @@ BINNINGS = {
 }
 # 80 bins: 2 GeV below the peak, 1 GeV on the peak core (86-96), 2 GeV to 120, 5 GeV to 200, then widening
 MLL80 = [*range(50, 76, 2), *range(76, 86, 2), *range(86, 96), *range(96, 120, 2), *range(120, 200, 5),
-         *range(200, 300, 20), *range(300, 500, 25), 500, 550, *range(600, 1000, 100), 1000, 1200, 1500, 2000, 2500, 3000]
+         *range(200, 300, 20), *range(300, 500, 25), 500, 550, 600, 700, 750, 800, 900, 1000, 1200, 1500, 2000, 3000]
 BINNINGS["N80"] = {
     "mll": MLL80,
     "costhetastar": list(np.round(np.linspace(-1, 1, 81), 4)),
