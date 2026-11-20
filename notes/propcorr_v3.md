@@ -52,15 +52,17 @@ v3_pdfcut and v3_2d shapes are identical except for the w11 templates.
   95% to cHbq ~ -11), failed fits 10 -> 0, fallbacks 42 -> 13, points far above neighbours 116 -> 3 (all at 2dNLL ~
   500-4500, far outside the contours). FASTEXITs remain only at 2dNLL >> 100 (huge EFT effects, nuisances pulled far):
   smaller scan boxes from the new contours should remove most of them.
-- Superseded by the fix: all v3 2D scans and plots (`full/` in mll and triple_diff, EOS `2D_mll/`, `2D_triple_diff/`,
-  `2D_mll_vs_triple_diff/`), the "badly behaved mll scans" and FASTEXIT diagnostics below, and the profiled test2
+- Superseded by the fix: all v3 2D scans and plots (`full/` in mll and triple_diff; the old EOS 2D folders were deleted
+  2026-11-20, in the EOS recycle bin), the "badly behaved mll scans" and FASTEXIT diagnostics below, and the profiled test2
   (`profiled_fits.md`). The 1D results (v3_pdfcut, no w11) are NOT affected.
 - Also learnt: `plot_2d_scans.py` upsampled the grid with a cubic spline, drawing fake islands around isolated outliers
   (one bad point at 2dNLL 13727 among ~900 -> spline undershoot to -820). Use `runPlots.py 2` (mkEFTScan); the 2D chain
   now does (2026-11-19).
 - Production on the fixed cards: launched 2026-11-19 17:48, `run_2d_perpair.sh` on `{mll,triple_diff}_w11export`
-  (tmux `w11_mll`, `w11_td`; `chain.log` in each card folder) -> EOS `2D_mll_w11/`, `2D_triple_diff_w11/`.
-- Debug material on EOS: `2D_mll/debug/` (flag plots, stat-only, -v 3 logs, fixed-scan plots).
+  (tmux `w11_mll`, `w11_td`; `chain.log` in each card folder). Done 2026-11-19 20:19: 351/351 pairs in both, no open
+  boxes. Raw FASTEXIT lines in pass2 job logs: mll 2047 (229 logs), triple_diff 387 (63 logs); location vs contours
+  still to check. Overlays: `plot_2d_scans.py` (no upsampling) in `propcorr_v3_2d/datacards/inc_mm/overlay_w11/`.
+- Debug material: LLR `~/work/scratch_fastexit/` (EOS `2D_mll/debug/` deleted with the old 2D folders, 2026-11-20).
 
 ## Fits and results
 
@@ -104,9 +106,8 @@ v3_pdfcut and v3_2d shapes are identical except for the w11 templates.
 ## EOS (https://aldufour.web.cern.ch/RECO3D_propcorr_v3/)
 - top: `eft_summary_multivar.*`
 - `<var>/`: `eft_summary_two_panel.*`, `scan/` (1D), `dist/`, `nuis_combine/`, `nuis_eft/`, `prefit/` (datacard prefit, Asimov, no EFT, +1sigma shift per nuisance; `plot_prefit_datacard.py`, 2026-11-19)
-- `2D_mll/`, `2D_triple_diff/` (scan_<pair>, 351 each), `2D_mll_vs_triple_diff/` (overlay_<pair>, 351): OLD (w11 without variations)
-- `2D_mll_w11/`, `2D_triple_diff_w11/`: fixed cards (production launched 2026-11-19)
-- `2D_mll/debug/`: w11 investigation (flag plots, stat-only scans, -v 3 logs, fixed cHd_cHbq scan)
+- `2D_mll/`, `2D_triple_diff/` (runPlots.py, 351 each), `2D_mll_vs_triple_diff/` (overlay_<pair>, 351): fixed `*_w11export`
+  cards (2026-11-20; uploaded as `*_w11`, renamed after deleting the old folders, which are in the EOS recycle bin)
 - `checks/`: `quad_terms_mll.png`, `mll_2d_10k_vs_40k_vs_strict.png`
 - Push: `eos_tools/push_v3_to_eos.sh` (1D + summaries, `--overwrite`), 2D via `run_2d_perpair.sh`; all through `pushtoEOS_parallel.py`.
 
