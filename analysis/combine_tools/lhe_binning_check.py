@@ -54,7 +54,9 @@ BINNINGS = {
             # A: 10 mll x 2 cos (backward/forward) x 2 |y| (split at the SM median)
             "triple_diff": ([50, 70, 80, 86, 90, 94, 100, 120, 200, 500, 3000], [-1.0, 0.0, 1.0], [0.0, y_med, 2.4]),
             # B: 5 mll x 4 cos x 2 |y|
-            "triple_diff_B": ([50, 80, 100, 200, 500, 3000], [-1.0, -0.5, 0.0, 0.5, 1.0], [0.0, y_med, 2.4])},
+            "triple_diff_B": ([50, 80, 100, 200, 500, 3000], [-1.0, -0.5, 0.0, 0.5, 1.0], [0.0, y_med, 2.4]),
+            # C: like A, fewer peak bins, more at high mll
+            "triple_diff_C": ([50, 76, 86, 96, 106, 150, 250, 400, 600, 1000, 3000], [-1.0, 0.0, 1.0], [0.0, y_med, 2.4])},
 }
 for b in BINNINGS.values():
     for v, e in b.items():
@@ -128,7 +130,7 @@ for bname, bdef in BINNINGS.items():
         print("wrote", bname, var, n, "bins; MC stat max", f"{100*mcrel.max():.2f}%", "min LHE events", int(nraw.min()))
 
 # ---- table: expected stat-only 1 sigma (linear) per operator, per binning
-bnames = list(BINNINGS); vars_ = ["mll", "costhetastar", "rapll_abs", "triple_diff", "triple_diff_B"]
+bnames = list(BINNINGS); vars_ = ["mll", "costhetastar", "rapll_abs", "triple_diff", "triple_diff_B", "triple_diff_C"]
 lines = ["| op | " + " | ".join(f"{v} {b} ({summary[(b, v if (b, v) in summary else 'triple_diff')]['nbins']})" for v in vars_ for b in bnames) + " |",
          "|---|" + "---|" * (len(vars_) * len(bnames))]
 for op in OPS:
