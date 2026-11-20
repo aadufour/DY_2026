@@ -64,7 +64,7 @@ for b in BINNINGS.values():
         assert b is BINNINGS["v3"] or n == 40, (v, n)
 VAL = {"mll": mll, "costhetastar": cs, "rapll_abs": y}
 XLAB = {"mll": r"$m_{\ell\ell}$ [GeV]", "costhetastar": r"$\cos\theta^*$", "rapll_abs": r"$|y_{\ell\ell}|$",
-        "triple_diff": "unrolled bin ($m_{\\ell\\ell}$ outer, then $\\cos\\theta^*$, then $|y_{\\ell\\ell}|$)"}
+        "triple_diff": "unrolled bin ($m_{\\ell\\ell}$ inner, then $\\cos\\theta^*$, $|y_{\\ell\\ell}|$ outer; as hist_unroll)"}
 
 
 def binidx(var, edges):
@@ -75,7 +75,8 @@ def binidx(var, edges):
     em, ec, ey = (np.asarray(x, float) for x in edges)
     im, ic, iy = np.digitize(mll, em) - 1, np.digitize(cs, ec) - 1, np.digitize(y, ey) - 1
     ok = (im >= 0) & (im < len(em) - 1) & (ic >= 0) & (ic < len(ec) - 1) & (iy >= 0) & (iy < len(ey) - 1)
-    i = np.where(ok, (im * (len(ec) - 1) + ic) * (len(ey) - 1) + iy, -1)
+    # same order as hist_unroll in post_process_minnlo.py (view().T.flatten()): mll fastest, then cos, |y| outermost
+    i = np.where(ok, (iy * (len(ec) - 1) + ic) * (len(em) - 1) + im, -1)
     return i, (len(em) - 1) * (len(ec) - 1) * (len(ey) - 1), None
 
 
@@ -105,7 +106,7 @@ for bname, bdef in BINNINGS.items():
         x = np.arange(n + 1) if e is None else e
         hep.histplot(sm, x, ax=ax[0], color="k", lw=2, label="SM (LHE, fiducial)")
         ax[0].set_yscale("log"); ax[0].set_ylabel("Events / bin")
-        ax[0].legend(loc="upper right", fontsize=16)
+        ax[0].legend(loc="lower left" if var.startswith("triple_diff") else "upper right", fontsize=16)
         ax[0].set_title(f"{var}: {bname} binning, {n} bins", fontsize=20, loc="left")
         hep.histplot(100 * mcrel, x, ax=ax[1], color="tab:blue", lw=2, label="LHE MC stat of SM [%]")
         ax[1].axhline(1, color="gray", ls=":")
@@ -122,9 +123,14 @@ for bname, bdef in BINNINGS.items():
         if var == "mll":
             for aa in ax: aa.set_xscale("log")
         if var.startswith("triple_diff"):
-            nc, ny = len(bdef[var][1]) - 1, len(bdef[var][2]) - 1
-            for k in range(1, len(bdef[var][0]) - 1):
-                for aa in ax: aa.axvline(k * nc * ny, color="gray", lw=0.6, ls="--")
+            nmb, nc, ny = (len(x) - 1 for x in bdef[var])
+            ec, ey = bdef[var][1], bdef[var][2]
+            for k in range(1, nc * ny):
+                for aa in ax: aa.axvline(k * nmb, color="gray", lw=0.8 if k % nc else 1.6, ls="--" if k % nc else "-")
+            for k in range(nc * ny):
+                ic, iy = k % nc, k // nc
+                ax[0].text((k + 0.5) * nmb, 0.97, f"cos [{ec[ic]:g},{ec[ic+1]:g}]\n|y| [{ey[iy]:g},{ey[iy+1]:g}]",
+                           transform=ax[0].get_xaxis_transform(), ha="center", va="top", fontsize=9 if nc * ny <= 8 else 6)
         fig.savefig(f"{a.outdir}/{bname}_{var}.png", dpi=100, bbox_inches="tight")
         plt.close(fig)
         print("wrote", bname, var, n, "bins; MC stat max", f"{100*mcrel.max():.2f}%", "min LHE events", int(nraw.min()))
