@@ -59,9 +59,10 @@ BINNINGS = {
             # C: like A, fewer peak bins, more at high mll
             "triple_diff_C": ([50, 76, 86, 96, 106, 150, 250, 400, 600, 1000, 3000], [-1.0, 0.0, 1.0], [0.0, y_med, 2.4])},
 }
-# 80 bins: 2 GeV below the peak, 1 GeV on the peak core (86-96), 2 GeV to 120, 5 GeV to 200, then widening
-MLL80 = [*range(50, 76, 2), *range(76, 86, 2), *range(86, 96), *range(96, 120, 2), *range(120, 200, 5),
-         *range(200, 300, 20), *range(300, 500, 25), 500, 550, 600, 650, 700, 750, 800, 900, 1000, 1200, 1500, 3000]
+# 80 bins: 2 GeV below the peak, 1 GeV on the peak core (86-96), 2 GeV to 106; wide bins at the TOP of the generator
+# slices (106-120, 180-200: few LHE events there, MC stat 5-13%), finer where the samples are dense (200-500)
+MLL80 = [*range(50, 76, 2), *range(76, 86, 2), *range(86, 96), *range(96, 106, 2), 106, 110, 115, *range(120, 185, 5),
+         *range(200, 300, 10), *range(300, 500, 20), 500, 550, 600, 650, 700, 750, 800, 900, 1000, 1200, 1500, 3000]
 BINNINGS["N80"] = {
     "mll": MLL80,
     "costhetastar": list(np.round(np.linspace(-1, 1, 81), 4)),
@@ -119,8 +120,9 @@ for bname, bdef in BINNINGS.items():
 
         fig, ax = plt.subplots(3, 1, figsize=(13, 13), sharex=True, gridspec_kw=dict(height_ratios=[2, 1.2, 1.6], hspace=0.06))
         x = np.arange(n + 1) if e is None else e
-        hep.histplot(sm, x, ax=ax[0], color="k", lw=2, label="SM (LHE, fiducial)")
-        ax[0].set_yscale("log"); ax[0].set_ylabel("Events / bin")
+        dens = var in ("mll", "costhetastar", "rapll_abs")  # 1D: per unit (bin widths vary), triple_diff: per bin
+        hep.histplot(sm / np.diff(x) if dens else sm, x, ax=ax[0], color="k", lw=2, label="SM (LHE, fiducial)")
+        ax[0].set_yscale("log"); ax[0].set_ylabel({"mll": "Events / GeV"}.get(var, "Events / unit") if dens else "Events / bin")
         ax[0].legend(loc="lower left" if var.startswith("triple_diff") else "upper right", fontsize=16)
         ax[0].set_title(f"{var}: {bname} binning, {n} bins", fontsize=20, loc="left")
         hep.histplot(100 * mcrel, x, ax=ax[1], color="tab:blue", lw=2, label="LHE MC stat of SM [%]")
