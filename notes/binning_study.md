@@ -116,7 +116,7 @@ Question (user): why not 280 bins for each 1D variable too, as in the v3 triple_
 
 | variable | binning |
 |---|---|
-| mll | 50-76 by 2, 76-86 by 2, 86-96 by 1 (peak core), 96-120 by 2, 120-200 by 5, 200-300 by 20, 300-500 by 25, 500, 550, 600, 650, 700, 750, 800, 900, 1000, 1200, 1500, 3000 |
+| mll | 50-86 by 2, 86-96 by 1 (peak core), 96-106 by 2, 106, 110, 115, 120-180 by 5, 180-200, 200-300 by 10, 300-500 by 20, 500, 550, 600, 650, 700, 750, 800, 900, 1000, 1200, 1500, 3000 (final, after step 4) |
 | costhetastar | 80 uniform in [-1, 1] |
 | rapll_abs | 80 uniform in [0, 2.4] |
 | triple_diff A | mll [50,76,86,96,106,150,250,400,600,1000,3000] x cos [-1,-0.5,0,0.5,1] x \|y\| [0,0.9,2.4] (10x4x2) |
@@ -161,7 +161,46 @@ Expected 1 sigma ratio N80 / v3 (triple_diff A and B vs v3 triple_diff, 280 bins
 - triple_diff B (20x2x2) is within -25% / +15% of the 280-bin v3 for every operator: better for Z couplings, at most
   8% worse for four-fermion operators (except cHd 1.15, cbl 1.13). A (10x4x2) gains less on Z couplings, similar elsewhere.
 
+## Step 4: generator mll slices, normalisation and MC stat at their boundaries (2026-11-20)
+Concern (user): steps at the gridpack mll slice boundaries (120, 200 GeV) in the N80 plots, i.e. events not
+normalised to the right cross section of their slice.
+- Where the per-slice cross sections come from: `spritz_fabian/data/Full2018v9/samples/samples.json`, entries
+  `DYSMEFTsim_LO_propcorr_mll_<slice>` (xsec 1088.54, 13.138, 4.2912, 2.0757, 1.5693, 1.2393, 4.2038 pb for 50_120 ...
+  1000_3000), read from the `<init>` block (XSECUP) of the regenerated propcorr LHE files (`propagator_correction.md`
+  section 17). This is the cross section at the generation (reweighting base) point; the sm/w1/wm1 templates are that
+  times the LHEReweightingWeight ratio, as usual.
+- LHE cache check: every slice has 10 files x 10000 events = 1e5, every event weight = XSECUP (event_norm average), so
+  weight / 1e5 is the right per-slice normalisation, the same xsec as samples.json.
+- Continuity of dsigma/dm (SM, LHE) across the slice boundaries, windows of +-4% of the boundary:
+
+  | boundary [GeV] | ratio above/below | smooth power-law expectation |
+  |---|---|---|
+  | 120 | 0.78 +- 0.06 | 0.70 |
+  | 200 | 0.86 +- 0.08 | 0.83 |
+  | 400 | 0.85 +- 0.04 | 0.85 |
+  | 600 | 0.89 +- 0.05 | 0.84 |
+  | 800 | 0.80 +- 0.07 | 0.83 |
+  | 1000 | 0.72 +- 0.13 | 0.82 |
+
+  -> no normalisation step; lin/SM (cHe) also continuous. The steps in the plots were the bin-width changes (events per
+  bin, 2 -> 5 GeV at 120, 5 -> 20 at 200): the 1D top panel now shows events / GeV.
+- Real boundary effect: MC stat. Each slice has 1e5 events, but the spectrum falls inside the slice, so the top of each
+  slice is thin (106-120: 5-13%, the Z peak takes the 50-120 events; 180-200: ~10%). N80 mll rebinned: wide bins at
+  106-120 and 180-200, finer bins at 200-500 where the samples are dense. Now 106-120 6-8%, 180-200 5%.
+- Found on the way: the SM template is reweighted from the generation point (all operators = 1), and the SM weights have
+  outliers. 200-400 slice: one event (mll 230.5) with SM/generation weight ratio 782 (median 0.17) -> SM n_eff = 990 of
+  95k events (1%), a 23% MC-stat spike in the 230-240 bin. SM n_eff per slice: 50-120 48%, 120-200 29%, 200-400 1%,
+  400-600 11%, 600-800 3.4%, 800-1000 1.3%, 1000-3000 0.2%. Not a binning issue, but it affects the sm template
+  (noStat) in every binning, v3 included: to check at reco level (open, `todo.md`).
+
+## Config (2026-11-20)
+N = 80, triple_diff B. `analysis/spritz/config_same_binning_N80.py` (= config_propcorr_v1.py + runner_pdfcut, new axes
+only), deployed to LLR `spritz_fabian/configs/same_binning_N80/config.py`; loads in the spritz env (64 samples,
+47 datasets, 14 nuisances; 80 bins in every variable). Nothing launched yet.
+Caveat for the postproc: the MiNNLO k = MiNNLO_V / LO_sm_V is per bin, so with 80 bins it also picks up the MC noise of
+both samples (and the sm weight outliers above).
+
 ## Next
-- Choose N (40 or 80) and the triple_diff split (N80: B preferred).
+- Run the chain on `same_binning_N80` (jobs, merge, MiNNLO postproc, cards, 1D fits, summaries), compare with v3.
 - New spritz config (copy of `propcorr_v3_pdfcut` with the new axes), then the full chain: jobs, merge, MiNNLO
   postproc, cards, 1D fits, summary plots; compare with v3.

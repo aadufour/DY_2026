@@ -7,6 +7,11 @@
       all 20 Z-peak triple_diff bins negative -> generator-level, not reco/morphing (2026-11-17).
 - [ ] Negative background bins (DYtt ~ -0.1 ev in 3 triple_diff bins, TT ~ -0.03 in 2): clip to 0 / small positive and document, or leave as is?
 
+## Same-binning study (2026-11-20, notes/binning_study.md)
+- [ ] sm template weight outliers: propcorr SM is reweighted from all-ops=1; LHE 200-400 slice has one event with
+      SM/gen weight x782 (n_eff 1%). Check the reco sm template (n_eff per bin, spikes) in v3 and N80.
+- [ ] run the chain on spritz_fabian/configs/same_binning_N80 and compare limits with v3
+
 ## From Giacomo (Mattermost, 2026-11-19)
 - [x] ROOT CAUSE of the bad 2D scans: w11 without shape variations (forgotten step). Applied with exportNuisances.py
       -> `{mll,triple_diff}_w11export`; 2D production relaunched 17:48 (tmux w11_mll, w11_td). See propcorr_v3.md.
