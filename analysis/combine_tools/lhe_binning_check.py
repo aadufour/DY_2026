@@ -8,7 +8,8 @@ Per binning and observable, one plot (unrolled for triple_diff):
   1. SM events per bin at 59.74 fb^-1 (parton level, no reco efficiency)
   2. LHE MC stat: sqrt(sum w^2)/sum w of the SM per bin, and the raw number of LHE events
   3. shape of the linear EFT term, lin/SM per bin, scaled to max |lin/SM| = 1, for a few operators
-Plus a table: stat-only expected 1 sigma per operator at linear order, 1/sqrt(sum_i lin_i^2 / SM_i), per binning.
+Plus a table: stat-only expected 1 sigma per operator at linear order, 1/sqrt(sum_i lin_i^2 / SM_i), per binning
+(lin_i^2 corrected for the LHE MC variance of lin_i).
 It ignores reco efficiency, backgrounds and systematics: use it to compare binnings, not as a limit.
 
 Usage: lhe_binning_check.py [--cache ...] [-o outdir] [--N 40]
@@ -87,8 +88,12 @@ for bname, bdef in BINNINGS.items():
         nraw = hsum(i, n, np.ones_like(wsm))
         mcrel = np.sqrt(sw2) / np.where(sm > 0, sm, 1)
         L = {op: hsum(i, n, lin[op]) for op in OPS}
-        sig = {op: 1 / np.sqrt(np.sum(L[op] ** 2 / np.where(sm > 0, sm, np.inf))) for op in OPS}
-        summary[(bname, var)] = dict(nbins=n, sig=sig, mc_max=float(mcrel.max()), nraw_min=int(nraw.min()),
+        # MC fluctuations of lin add to lin^2 on average: subtract the MC variance sum(w_lin^2) per bin (unbiased)
+        LV = {op: hsum(i, n, lin[op] ** 2) for op in OPS}
+        sig = {op: 1 / np.sqrt(max(np.sum(np.clip(L[op] ** 2 - LV[op], 0, None) / np.where(sm > 0, sm, np.inf)), 1e-300))
+               for op in OPS}
+        sig_raw = {op: 1 / np.sqrt(np.sum(L[op] ** 2 / np.where(sm > 0, sm, np.inf))) for op in OPS}
+        summary[(bname, var)] = dict(nbins=n, sig=sig, sig_raw=sig_raw, mc_max=float(mcrel.max()), nraw_min=int(nraw.min()),
                                      sm_min=float(sm.min()))
 
         fig, ax = plt.subplots(3, 1, figsize=(13, 13), sharex=True, gridspec_kw=dict(height_ratios=[2, 1.2, 1.6], hspace=0.06))
@@ -130,6 +135,11 @@ lines.append("ratio N/v3 of the expected 1 sigma (>1 = the new binning loses inf
 lines.append("| op | " + " | ".join(vars_) + " |"); lines.append("|---|" + "---|" * len(vars_))
 for op in OPS:
     lines.append(f"| {op} | " + " | ".join(f"{summary[(bnames[1], v)]['sig'][op] / summary[(bnames[0], v)]['sig'][op]:.2f}" for v in vars_) + " |")
+lines.append("")
+lines.append("MC-noise bias: ratio (raw, no variance subtraction) / (corrected) of the 1 sigma, N binning:")
+lines.append("| op | " + " | ".join(vars_) + " |"); lines.append("|---|" + "---|" * len(vars_))
+for op in OPS:
+    lines.append(f"| {op} | " + " | ".join(f"{summary[(bnames[1], v)]['sig_raw'][op] / summary[(bnames[1], v)]['sig'][op]:.2f}" for v in vars_) + " |")
 open(f"{a.outdir}/sigma_table.md", "w").write("\n".join(lines) + "\n")
 json.dump({b: {v: (bdef[v] if v != "triple_diff" else list(bdef[v])) for v in bdef} for b, bdef in BINNINGS.items()},
           open(f"{a.outdir}/binnings.json", "w"), indent=1, default=float)
