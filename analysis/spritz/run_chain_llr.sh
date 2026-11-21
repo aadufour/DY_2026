@@ -58,6 +58,7 @@ source ~/.bashrc >/dev/null 2>&1
 ( dy_combine_morphing >/dev/null 2>&1
   for v in $VARS; do cd $D/datacards/inc_mm/$v
     [ -f higgsCombine.cbl_stat.individual.MultiDimFit.mH125.root ] && continue
+    [ -f metadata.json ] || cp $REF/datacards/inc_mm/$v/metadata.json .   # same scan ranges as the reference
     createCombineJson.py --datacard datacard.txt --binname w1_ --output jsonComb.json > combjson.log 2>&1
     python3 $CT/createWS.py 1 > createWS.log 2>&1
     runScans.py 1 initial > initial.log 2>&1
@@ -66,8 +67,9 @@ source ~/.bashrc >/dev/null 2>&1
     runScans.py 1 scan --stat --points 100 > scan_stat.log 2>&1
     runPlots_compare.py 1 --label "Stat + Syst" --compare-stat > plots.log 2>&1
     log "1D $v: $(ls higgsCombine.*.individual.MultiDimFit.mH125.root 2>/dev/null | grep -vc _stat) scans, $(ls higgsCombine.*_stat.individual.MultiDimFit.mH125.root 2>/dev/null | wc -l) stat-only"
-  done
-  # ---- 6. summaries
+  done )
+# ---- 6. summaries (analysis env, as propcorr_v3_pdfcut/run_1d.sh)
+( dy_analysis >/dev/null 2>&1
   mkdir -p $D/summary_plots $D/compare_ref
   for v in $VARS; do cd $D/datacards/inc_mm/$v
     python3 $CT/makeSummary.py --indir . --logscale > summary.log 2>&1
