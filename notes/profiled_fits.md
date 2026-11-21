@@ -22,6 +22,34 @@ Result, triple_diff, 25 operators (cHQ3, cQl3 dropped as duplicates):
 Caveats: linear and stat-only, a guide for choosing the subset, not a result. Quadratic terms can close
 linear flat directions far out; the real covariance comes from the combine fit.
 
+### With systematics (2026-11-21, `--systs`, triple_diff_w11export)
+The Fisher input (sm, bkg, w1/wm1) does not involve w11, so the subsets above were not affected by the missing
+w11 step. New option `--systs`: the 12 shape nuisances + lumi lnN are parameters with unit Gaussian constraint and
+profiled (Schur complement), MC stat added to the per-bin variance. Outputs: LLR
+`propcorr_v3_2d/datacards/inc_mm/fisher_triple_diff/{stat,systs,stat_test2,systs_test2}.txt`.
+
+Validation against combine (test2 subset, individual 68% from the 1D scans, profiled/individual from test2):
+
+| op | Fisher+systs sigma_ind | combine 68% | Fisher+systs ratio | combine ratio | stat-only ratio |
+|---|---|---|---|---|---|
+| cHDD | 0.0087 | 0.0085 | 1.1 | 1.13 | 1.1 |
+| cHj1 | 0.052 | 0.044 | 1.0 | 1.14 | 2.2 |
+| cHu | 0.067 | 0.065 | 1.1 | 1.12 | 2.6 |
+| cHd | 0.048 | 0.046 | 1.0 | 1.02 | 1.6 |
+| clj1 | 0.0063 | ~0.006 | 1.0 | 1.04 | 1.0 |
+
+So with systematics the linear Fisher reproduces combine; the stat-only one overestimates the profiling cost
+(systematics dominate, and they absorb the operator correlations).
+
+Result with systematics, 25 operators:
+- The 3 exactly flat directions are still there (eigenvalues ~1e-10): cHDD, cHWB, cHl3, cHe, cll1, cHl1, cHj3.
+  4th weakest: clj3 - ced (+clj1), x16.
+- Greedy, max ratio 3: 16 operators
+  `cHWB,cHbq,cHd,cHe,cHj1,cHj3,cHu,cQe,cQl1,cbBRe,cbWRe,cbe,cbl,ceu,cje,clj1` (worst ratios cbWRe, cbBRe 2.3).
+  Dropped, in order: cHDD, cHl3, cll1 (the 3 flat directions), then clj3, clu, cHl1, ced, cHQ1, cld (ratio > 3).
+  Which 3 of the flat-direction operators to drop is a choice: greedy drops the worst one each time, but any
+  3 that break the 3 flat combinations work (e.g. keep cHDD and drop cHWB instead).
+
 ## How it is run (machinery already in runScans.py / createWS.py)
 
 Folder: LLR `propcorr_v3_2d/datacards/inc_mm/triple_diff/profiled/` (symlinks to the 2D datacard, shapes,
