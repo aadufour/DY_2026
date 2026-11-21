@@ -243,6 +243,31 @@ on one side). Width ratios N80/v3 (95%, stat+syst | stat-only), table `compare_r
   cbWRe 0.67; worse for cHDD, cHWB, cHl1 (~1.4) and the four-fermion operators (1.1-1.7, clj1 1.69): the coarser
   angular binning costs the four-fermion sensitivity, as expected from the LHE study (but more than the LHE +3-8%).
 
+## Nuisance pulls/constraints: why stat+syst gains so much (2026-11-21, `~/work/scratch_nuis/`)
+Test case cHd in |y| (N80 stat+syst 0.04 x v3).
+1. Fixed-point fits (algo fixed, nuisances saved): 2dNLL stat+syst at k_cHd = 0.03 / 0.3: v3 0.008 / 0.47, N80 2.2 / 184.
+   In v3 the nuisances absorb the shift; in N80 they are pulled up to 1.3 sigma (mu_idiso, PU, PSWeight) and cannot.
+   combine's Hesse on N80 is degenerate (covQual 2, all nuisance sigmas ~0): not usable.
+2. N80 templates merged to the v3 |y| bins (exact nesting) reproduce v3 (templates equal to 1e-4; 2dNLL 0.007 / 0.59):
+   same events, the difference is purely the binning.
+3. Bin-to-bin noise of the nuisance templates is negligible (residual of a deg-6 polynomial: 2dNLL <= 24 for a
+   1 sigma shift vs 4000-8000 for the smooth part).
+4. Linearised Asimov Fisher (`analysis/combine_tools/fisher_template_check.py`) reproduces combine: cHd |y| sigma
+   stat-only / stat+syst = 0.017 / 0.020 (80 bins), 0.034 / 0.42 (4 bins; v3 0.033 / 0.37). With 4 bins the 13
+   nuisances span any 4-bin pattern (no single nuisance responsible: freezing any one changes sigma by ~10%).
+5. **The EFT linear templates are MC-noisy** (cHe lin/sm -9% +- 0.3% bin to bin = ~1400 events vs ~700 data stat per
+   bin): once the nuisances absorb the smooth part, the fit reads the noise as shape. Smoothing only the EFT template
+   (deg-6 polynomial of lin/nominal), sigma stat+syst at 4 / 20 / 80 bins:
+   cHd 0.36 / 0.16 / 0.155 (raw 0.23 / 0.034 / 0.020), cHu 0.78 / 0.34 / 0.30 (raw 0.60 / 0.14 / 0.060),
+   cHe 0.20 / 0.13 / 0.12 (raw 0.20 / 0.097 / 0.050). Even cHd stat-only 0.017 -> 0.033 at 80 bins.
+   => most of the N80 1D gain (stat+syst and part of stat-only) is an MC-noise artefact of the EFT templates;
+   the genuine part is ~2x (cHd, cHu) / 1.3x (cHe) from 4 to 80 bins, saturated by ~20 bins.
+   Not covered by autoMCStats (it treats the nominal template stat only). The same can affect every fine binning,
+   including the v3 triple_diff (280 bins): to check. Cause of the noise: reweighting from all-ops=1 with large
+   weights (n_eff 0.2-48% per slice, step 4).
+- Options: smooth / fit the EFT templates, binning with a minimum EFT-template n_eff per bin, or include the EFT
+  template MC stat in the likelihood; check how much v3 triple_diff moves.
+
 ## EOS: https://aldufour.web.cern.ch/RECO3D_same_binning_N80/ (`eos_tools/push_N80_to_eos.sh`)
 top: `eft_summary_multivar_{N80,v3}` (rescans), `widths_N80_vs_v3.txt`; `compare/` per-variable v3 vs N80;
 `<var>/` two-panel summary + `scan/` N80 1D scans (stat-only overlaid); `lhe/` LHE checks + saturation.
