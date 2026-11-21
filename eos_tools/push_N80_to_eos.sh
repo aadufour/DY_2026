@@ -28,7 +28,8 @@ cp "$CMP"/widths_N80_vs_v3.md "$STAGE"/widths_N80_vs_v3.txt
 cp "$CMP"/eft_summary_compare_*.png "$CMP"/eft_summary_compare_*.pdf "$STAGE/compare/"
 for obs in mll rapll_abs costhetastar triple_diff; do
   mkdir -p "$STAGE/$obs/scan"
-  cp "$N80"/datacards/inc_mm/$obs/rescan/scan/scan_*.png "$N80"/datacards/inc_mm/$obs/rescan/scan/scan_*.pdf "$STAGE/$obs/scan/"
+  cp "$N80"/datacards/inc_mm/$obs/rescan/scan_*.png "$N80"/datacards/inc_mm/$obs/rescan/scan_*.pdf "$STAGE/$obs/scan/"
+  cp "$N80"/datacards/inc_mm/$obs/rescan/eft_summary_two_panel.* "$STAGE/$obs/"
 done
 cp "$LHE"/lhe_N80/*.png "$LHE"/lhe_saturation/saturation.png "$STAGE/lhe/"
 cp "$LHE"/lhe_N80/sigma_table.md "$STAGE/lhe/sigma_table_N80.txt"
