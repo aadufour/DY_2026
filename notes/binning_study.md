@@ -207,6 +207,10 @@ both samples (and the sm weight outliers above).
   propcorr_v3_pdfcut N80 v3`, log `same_binning_N80/chain.log`. Steps: wait, retry once bad jobs, merge, MiNNLO
   postproc, cards, 1D fits (100 points, stat+syst and stat-only) for mll / rapll_abs / costhetastar / triple_diff,
   summaries (`--logscale`) in `summary_plots/`, comparison with v3 in `compare_ref/`.
+- Condor done 11-20 23:05 (all 3000 ok, no retry), merge 00:10, postproc + cards 00:16. The 1D fits then failed: no
+  `metadata.json` (scan ranges) in the new cards. Fixed the chain to copy v3's per-variable `metadata.json` (same
+  ranges -> like-for-like comparison) and to run the summaries in `dy_analysis`; relaunched 11-21 10:13 (first log
+  kept as `chain_try1.log`).
 
 ## Next
 - When the chain is done: compare N80 vs v3 per variable (`compare_ref/`), push to EOS.
