@@ -19,12 +19,22 @@ p.add_argument("mode", choices=["prepare", "merge"])
 p.add_argument("vardir")
 p.add_argument("badlist", nargs="?")
 p.add_argument("--per-job", type=int, default=90)
+p.add_argument("--tag", default="refit", help="work dir under full/ (a new one per refit round, e.g. refit2)")
+p.add_argument("--extra", default="", help="extra combine options for this round (appended)")
 a = p.parse_args()
 vardir = os.path.abspath(a.vardir)
 full = f"{vardir}/full"
-R = f"{full}/refit"
+R = f"{full}/{a.tag}"
 FALLBACK = "--cminFallbackAlgo Minuit2,Migrad,0:0.2 --cminFallbackAlgo Minuit2,Simplex,0:0.1 --cminFallbackAlgo Minuit2,Migrad,1:0.2"
 final = lambda pair: f"{full}/final/higgsCombine.{pair}.individual.MultiDimFit.mH125.root"
+
+
+def orig_scan(pair):
+    """production scan (pass2/pass3) behind final/, following earlier refit merges"""
+    src = os.path.realpath(final(pair))
+    while os.path.basename(os.path.dirname(src)) == "merged":
+        src = dict(l.split() for l in open(f"{os.path.dirname(os.path.dirname(src))}/final_before.txt"))[pair]
+    return src
 
 if a.mode == "prepare":
     pts = collections.defaultdict(list)
@@ -35,7 +45,7 @@ if a.mode == "prepare":
     os.makedirs(f"{R}/scripts", exist_ok=True); os.makedirs(f"{R}/logs", exist_ok=True)
     header, cmds = None, []
     for pair, ns in sorted(pts.items()):
-        ps = os.path.dirname(os.path.realpath(final(pair)))          # pass2 or pass3 dir of the final scan
+        ps = os.path.dirname(orig_scan(pair))          # pass2 or pass3 dir of the production scan
         line = None
         for s in glob.glob(f"{ps}/condor_scan/scripts/*.sh"):
             txt = open(s).read().splitlines()
@@ -48,7 +58,7 @@ if a.mode == "prepare":
         assert "--cminDefaultMinimizerStrategy=0" in line and "--cminFallbackAlgo Minuit2,Migrad,0:0.2" in line, line
         line = line.replace("--cminDefaultMinimizerStrategy=0", "--cminDefaultMinimizerStrategy=2")
         line = line.replace("--cminFallbackAlgo Minuit2,Migrad,0:0.2", FALLBACK)
-        line = re.sub(r"--firstPoint \d+ --lastPoint \d+ -n \S+", "", line).rstrip()
+        line = re.sub(r"--firstPoint \d+ --lastPoint \d+ -n \S+", "", line).rstrip() + (" " + a.extra if a.extra else "")
         ini = f"higgsCombine.initialFit_{pair}.MultiDimFit.mH125.root"
         if not os.path.exists(f"{R}/{ini}"):
             os.symlink(f"{vardir}/{ini}", f"{R}/{ini}")

@@ -31,6 +31,13 @@ full = os.path.join(a.vardir, "full")
 final_src = {}
 for f in glob.glob(f"{full}/final/higgsCombine.*.root"):
     final_src[os.path.basename(f).split(".")[1]] = os.path.basename(os.path.dirname(os.path.realpath(f)))
+# pairs merged by refit_2d_points.py: grid/flags from the pass the merge started from (flags then refer to the old fit)
+for f in glob.glob(f"{full}/final/higgsCombine.*.root"):
+    src = os.path.realpath(f)
+    while os.path.basename(os.path.dirname(src)) == "merged":
+        rd = os.path.dirname(os.path.dirname(src))
+        src = dict(l.split() for l in open(f"{rd}/final_before.txt"))[os.path.basename(f).split(".")[1]]
+    final_src[os.path.basename(f).split(".")[1]] = os.path.basename(os.path.dirname(src))
 flags = collections.defaultdict(set)
 flags_all = set()
 index = {}  # (pair, x, y) -> grid point index
