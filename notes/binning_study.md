@@ -228,6 +228,25 @@ both samples (and the sm weight outliers above).
   `<vardir>/rescan/`, original scans untouched; summaries, comparison and `compare_1d_widths.py` table in
   `same_binning_N80/compare_ref_rescan/`). Launched 11-21 12:22 in tmux `rescan1d`.
 
+## Results after the rescans (2026-11-21 12:30)
+All 1D scans resolved (no "coarse" flag in `compare_1d_widths.py`; only v3 costhetastar cbWRe stat+syst has no crossing
+on one side). Width ratios N80/v3 (95%, stat+syst | stat-only), table `compare_ref_rescan/widths_N80_vs_v3.md`:
+- stat-only: mll 0.8-1.0, cos 0.5-1.0 (four-fermion gain most), |y| 1.00 for the pure-normalisation operators
+  (cHe, cHl1, cHj3, ...) and 0.5-0.7 only for a few (cHd, cbe, ced, clu): consistent with the LHE expectation.
+- stat+syst: large gains in every 1D variable for Z couplings and b dipoles (mll cHd 0.12, cHj1 0.13, cHbq 0.17;
+  |y| cHd 0.04, cHu 0.03, cbBRe 0.09; cos cHbq 0.07). In N80 all four 1D variables end up close to triple_diff for
+  these operators, while in v3 the 1D were syst-dominated (degenerate with the normalisation nuisances).
+  A stat+syst gain this much larger than the stat-only gain needs checking before believing it: candidate cause =
+  the nuisances are much less able to absorb a normalisation change with 80 bins (MC noise of the 80-bin shape
+  systematics constraining them, or a genuine shape handle). To check: nuisance constraints/pulls N80 vs v3.
+- triple_diff (20x2x2 = 80 vs v3 14x5x4 = 280): stat+syst better for cHj3 0.39, cHQ1 0.53, cll1 0.55, cHu 0.63,
+  cbWRe 0.67; worse for cHDD, cHWB, cHl1 (~1.4) and the four-fermion operators (1.1-1.7, clj1 1.69): the coarser
+  angular binning costs the four-fermion sensitivity, as expected from the LHE study (but more than the LHE +3-8%).
+
+## EOS: https://aldufour.web.cern.ch/RECO3D_same_binning_N80/ (`eos_tools/push_N80_to_eos.sh`)
+top: `eft_summary_multivar_{N80,v3}` (rescans), `widths_N80_vs_v3.txt`; `compare/` per-variable v3 vs N80;
+`<var>/` two-panel summary + `scan/` N80 1D scans (stat-only overlaid); `lhe/` LHE checks + saturation.
+
 ## Next
 - When the chain is done: compare N80 vs v3 per variable (`compare_ref/`), push to EOS.
 - Inspect the sm weight outliers at reco level (the 200-400 slice event with ratio 782).
