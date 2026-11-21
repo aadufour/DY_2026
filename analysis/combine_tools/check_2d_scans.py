@@ -10,7 +10,8 @@ Per grid point (final/ scan, i.e. pass3 if present else pass2):
 "inside" = the point lies in the 95% region, judged on the neighbour median (2dNLL < 5.99), so a bad point
 does not hide itself by its own wrong value.
 
-Usage: check_2d_scans.py <VARDIR> [--excess 1] [--csv out.csv]
+Usage: check_2d_scans.py <VARDIR> [--excess 1] [--csv out.csv] [--list-out bad.txt]
+  --list-out: one line "pair point_index flags" per bad point inside 95% (input of refit_2d_points.py)
 """
 import argparse, collections, glob, os, re
 import numpy as np
@@ -22,6 +23,7 @@ p = argparse.ArgumentParser()
 p.add_argument("vardir")
 p.add_argument("--excess", type=float, default=1.0)
 p.add_argument("--csv", default="")
+p.add_argument("--list-out", default="")
 a = p.parse_args()
 full = os.path.join(a.vardir, "full")
 
@@ -31,17 +33,18 @@ for f in glob.glob(f"{full}/final/higgsCombine.*.root"):
     final_src[os.path.basename(f).split(".")[1]] = os.path.basename(os.path.dirname(os.path.realpath(f)))
 flags = collections.defaultdict(set)
 flags_all = set()
-re_pt = re.compile(r"^Point \d+/\d+ .*?k_(\w+) = (\S+) k_(\w+) = (\S+)")
+index = {}  # (pair, x, y) -> grid point index
+re_pt = re.compile(r"^Point (\d+)/\d+ .*?k_(\w+) = (\S+) k_(\w+) = (\S+)")
 for ps in ("pass2", "pass3"):
     for log in glob.glob(f"{full}/{ps}/condor_scan_bundled/logs/*.out"):
         key = None
         for l in open(log, errors="ignore"):
             m = re_pt.match(l)
             if m:
-                pair = f"{m.group(1)}_{m.group(3)}"
-                key = (pair, round(float(m.group(2)), 6), round(float(m.group(4)), 6)) if final_src.get(pair) == ps else None
+                pair = f"{m.group(2)}_{m.group(4)}"
+                key = (pair, round(float(m.group(3)), 6), round(float(m.group(5)), 6)) if final_src.get(pair) == ps else None
                 if key:
-                    flags_all.add(key)
+                    flags_all.add(key); index[key] = int(m.group(1))
                 continue
             if key is None:
                 continue
@@ -58,6 +61,7 @@ def nbmedian(v):
 
 
 rows = []
+badlist = []
 for f in sorted(glob.glob(f"{full}/final/higgsCombine.*.root")):
     pair = os.path.basename(f).split(".")[1]
     o1, o2 = pair.split("_")
@@ -83,6 +87,12 @@ for f in sorted(glob.glob(f"{full}/final/higgsCombine.*.root")):
         i, j = np.abs(xs - kx).argmin(), np.abs(ys - ky).argmin()
         err[i, j] = "error" in fl; fe[i, j] = "fastexit" in fl
     missing = np.isnan(Z)
+    if a.list_out:
+        node = {(np.abs(xs - k[1]).argmin(), np.abs(ys - k[2]).argmin()): n for k, n in index.items() if k[0] == pair}
+        for i, j in zip(*np.nonzero((missing | err | outl) & inside)):
+            fl = [n for n, b in (("missing", missing), ("error", err), ("outlier", outl)) if b[i, j]]
+            if (i, j) in node:
+                badlist.append(f"{pair} {node[(i, j)]} {','.join(fl)}")
     rows.append(dict(pair=pair, n_missing=int(missing.sum()), missing_in=int((missing & inside).sum()),
                      n_err=int(err.sum()), err_in=int((err & inside).sum()), n_fe=int(fe.sum()), fe_in=int((fe & inside).sum()),
                      outl_in=int(outl.sum()), outl_max=float(np.nanmax(np.where(outl, Z - M, np.nan))) if outl.any() else 0.0,
@@ -105,6 +115,9 @@ if bad:
     print("pairs with problems inside 95%  (outliers / errors / missing, max outlier excess):")
     for r in bad:
         print(f"   {r['pair']:18s} {r['outl_in']:3d} {r['err_in']:3d} {r['missing_in']:3d}   {r['outl_max']:.1f}")
+if a.list_out:
+    open(a.list_out, "w").write("\n".join(badlist) + "\n")
+    print(f"{len(badlist)} bad points inside 95% -> {a.list_out}")
 if a.csv:
     import csv
     with open(a.csv, "w", newline="") as fo:
