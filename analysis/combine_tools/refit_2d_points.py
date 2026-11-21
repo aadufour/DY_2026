@@ -3,8 +3,10 @@
 Re-fit single bad points of a run_2d_perpair.sh production with a more robust minimizer setting, then merge them back.
 
 Bad points (missing / error status / stuck outlier inside 95%) come from check_2d_scans.py --list-out.
-Refit setting (tested 2026-11-20 on 14 points, recovers all): strategy 2 + fallbacks Migrad0 -> Simplex -> Migrad1;
-all other options as in the production command of that pair.
+Round 1 (setting F, tested 2026-11-20): strategy 2 + fallbacks Migrad0:0.2 -> Simplex -> Migrad1.
+Round 2 (setting G, 2026-11-21): F's loose Migrad0:0.2 fallback returns "valid" false minima, so tight first:
+  --extra "--cminDefaultMinimizerTolerance=0.01" --fallback "Migrad,1:0.01 -> Simplex,0:0.01 -> Migrad,2:0.05 -> Migrad,0:0.2"
+All other options as in the production command of that pair.
 
   refit_2d_points.py prepare <VARDIR> <badlist> [--per-job 90]   -> <VARDIR>/full/refit/{scripts,logs,joblist.txt,scan.sub}
   condor_submit <VARDIR>/full/refit/scan.sub
@@ -20,12 +22,14 @@ p.add_argument("vardir")
 p.add_argument("badlist", nargs="?")
 p.add_argument("--per-job", type=int, default=90)
 p.add_argument("--tag", default="refit", help="work dir under full/ (a new one per refit round, e.g. refit2)")
+p.add_argument("--fallback", default="--cminFallbackAlgo Minuit2,Migrad,0:0.2 --cminFallbackAlgo Minuit2,Simplex,0:0.1 --cminFallbackAlgo Minuit2,Migrad,1:0.2",
+               help="fallback chain replacing the production one (default: round-1 setting F)")
 p.add_argument("--extra", default="", help="extra combine options for this round (appended)")
 a = p.parse_args()
 vardir = os.path.abspath(a.vardir)
 full = f"{vardir}/full"
 R = f"{full}/{a.tag}"
-FALLBACK = "--cminFallbackAlgo Minuit2,Migrad,0:0.2 --cminFallbackAlgo Minuit2,Simplex,0:0.1 --cminFallbackAlgo Minuit2,Migrad,1:0.2"
+FALLBACK = a.fallback
 final = lambda pair: f"{full}/final/higgsCombine.{pair}.individual.MultiDimFit.mH125.root"
 
 
