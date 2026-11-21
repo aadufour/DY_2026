@@ -212,6 +212,22 @@ both samples (and the sm weight outliers above).
   ranges -> like-for-like comparison) and to run the summaries in `dy_analysis`; relaunched 11-21 10:13 (first log
   kept as `chain_try1.log`).
 
+## First results and a scan-range artefact (2026-11-21)
+- Chain done 11-21 10:26 (1D fits 100 points, v3 per-variable ranges from `metadata.json`). Summaries had to be rerun in
+  `dy_combine_morphing` (the `dy_analysis` venv has no ROOT); `run_chain_llr.sh` fixed.
+- v3 1D binnings were coarse: mll 14 bins (whole Z peak in 80-100), cos 5, |y| 4. N80 vs v3 came out up to 50x tighter
+  (stat+syst) and 4-10x (stat-only) even for |y|, where the LHE study shows no shape information beyond 4-5 bins.
+- Cause: scan-grid resolution. With the fixed ranges the points next to the minimum already sit at 2dNLL >> 4
+  (N80 |y| cHe stat-only: points at +-0.05 with 2dNLL ~800) and the 2dNLL = 4 crossing is a linear interpolation
+  between 0 and 800 -> +-0.0002 instead of the parabolic +-0.0035 (= what mll, cos, triple_diff give). The artefact
+  scales like sigma^2, so ratios get exaggerated. It also affects some v3 scans (even with 1000 stat-only points).
+- Template check (`~/work/scratch_missing/noise2.py`): N80 |y| lin/sm is flat for cHe (-9%), cHl1 (+14%), cHj1 (+1.5%):
+  same template information in 80 or 4 bins, so the |y| gains were not from shape or MC noise.
+- Fix: `adapt_scan_ranges.py` (per-operator range = +-3.5 x the 95% half-width per side, parabolic estimate when the
+  old scan does not resolve it; separate stat-only ranges) + `rescan_1d.sh` (two passes, both productions, in
+  `<vardir>/rescan/`, original scans untouched; summaries, comparison and `compare_1d_widths.py` table in
+  `same_binning_N80/compare_ref_rescan/`). Launched 11-21 12:22 in tmux `rescan1d`.
+
 ## Next
 - When the chain is done: compare N80 vs v3 per variable (`compare_ref/`), push to EOS.
 - Inspect the sm weight outliers at reco level (the 200-400 slice event with ratio 782).
