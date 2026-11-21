@@ -270,7 +270,7 @@ Test case cHd in |y| (N80 stat+syst 0.04 x v3).
 
 ## EOS: https://aldufour.web.cern.ch/RECO3D_same_binning_N80/ (`eos_tools/push_N80_to_eos.sh`)
 top: `eft_summary_multivar_{N80,v3}` (rescans), `widths_N80_vs_v3.txt`; `compare/` per-variable v3 vs N80;
-`<var>/` two-panel summary + `scan/` N80 1D scans (stat-only overlaid); `lhe/` LHE checks + saturation.
+`<var>/` two-panel summary + `scan/` N80 1D scans (stat-only overlaid), `nuis_combine/` + `nuis_eft/` (`analysis/spritz/nuis_plots_N80.sh`); `lhe/` LHE checks + saturation.
 
 ## Next
 - When the chain is done: compare N80 vs v3 per variable (`compare_ref/`), push to EOS.
