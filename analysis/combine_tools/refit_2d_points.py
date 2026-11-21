@@ -59,8 +59,17 @@ if a.mode == "prepare":
         open(f, "w").write("\n".join(header + [f"cd {R}"] + cmds[k:k + a.per_job]) + "\n"); os.chmod(f, 0o755)
         jobs.append(f)
     open(f"{R}/joblist.txt", "w").write("\n".join(jobs) + "\n")
-    sub = open(f"{full}/pass2/condor_scan_bundled/scan.sub").read().replace(f"{full}/pass2/condor_scan_bundled", R)
-    open(f"{R}/scan.sub", "w").write(sub)
+    # write the submit file from the pass2 one, with every path line pointing to refit/ (never to pass2's joblist)
+    sub = []
+    for l in open(f"{full}/pass2/condor_scan_bundled/scan.sub").read().splitlines():
+        k = l.split("=")[0].strip()
+        if k in ("output", "error", "log"):
+            l = f"{k} = {R}/logs/$(Process).{ {'output': 'out', 'error': 'err', 'log': 'log'}[k] }"
+        elif l.startswith("queue"):
+            l = f"queue script from {R}/joblist.txt"
+        sub.append(l)
+    assert sum("pass2" in l for l in sub) == 0, sub
+    open(f"{R}/scan.sub", "w").write("\n".join(sub) + "\n")
     print(f"{len(cmds)} points, {len(pts)} pairs, {len(jobs)} jobs -> {R}/scan.sub")
 
 else:
