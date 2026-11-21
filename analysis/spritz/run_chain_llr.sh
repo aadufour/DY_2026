@@ -68,8 +68,8 @@ source ~/.bashrc >/dev/null 2>&1
     runPlots_compare.py 1 --label "Stat + Syst" --compare-stat > plots.log 2>&1
     log "1D $v: $(ls higgsCombine.*.individual.MultiDimFit.mH125.root 2>/dev/null | grep -vc _stat) scans, $(ls higgsCombine.*_stat.individual.MultiDimFit.mH125.root 2>/dev/null | wc -l) stat-only"
   done )
-# ---- 6. summaries (analysis env, as propcorr_v3_pdfcut/run_1d.sh)
-( dy_analysis >/dev/null 2>&1
+# ---- 6. summaries (need ROOT + HiggsAnalysis: combine env; the dy_analysis venv has no ROOT)
+( dy_combine_morphing >/dev/null 2>&1
   mkdir -p $D/summary_plots $D/compare_ref
   for v in $VARS; do cd $D/datacards/inc_mm/$v
     python3 $CT/makeSummary.py --indir . --logscale > summary.log 2>&1
