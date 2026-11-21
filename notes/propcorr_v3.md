@@ -93,6 +93,23 @@ v3_pdfcut and v3_2d shapes are identical except for the w11 templates.
   -v 3 showed that the logged errors mostly recover (status 0) while the stripe points are silent, continuous ridges of
   the NLL. Root cause = the missing w11 step above, not tt_ptrw/PSWeight.
 
+### 2D w11export quality check (2026-11-20/21, `check_2d_scans.py`, output `full/check_2d.{txt,csv}`)
+- "inside 95%" = neighbour median 2dNLL < 5.99. mll: 12997 missing points (2324 inside, 236 pairs), 915 error status,
+  20 outliers inside. triple_diff: 2192 missing (64 inside), 223 error, 99 outliers inside (20 pairs, ~5 units above
+  neighbours: cHl3 x cld/ced, cHQ1 x clu/cje/ceu) = the islands in the overlays.
+- mll missing points (2026-11-21, `~/work/scratch_missing/`): failed minimizations, silently not written by combine
+  (RandStartPt commits a point only if minimize() is ok; at -v 0 nothing is logged). Not jobs/chunks: spread uniformly
+  over the 200-point chunks; 811/2324 isolated, 805 with one missing neighbour. They cluster at specific values of one
+  operator, whatever the partner: cHl1 grid row 62 (k=0.048) in 9 pairs (also as y axis), cHj1 62, cHe 42/45, cHl3 39.
+  Reproduced on cHl1_cld 6225 (k_cHl1=0.048, k_cld=-0.039, 2dNLL ~3.7 from neighbours): Migrad strategy 0 status 3,
+  FVAL 0, EDM 4.6e5 after 56 calls, "No improvement in line search"; fallback fails the same way.
+  Strategy 1 (main + fallback): still fails. Same point alone with --setParameters k at the point: converges
+  (EDM 5e-8). Whole chunk 6200-6399 with start k_cHl1=0.048,k_cld=0: 200/200 points, BUT the 2dNLL surface changes
+  by O(1) w.r.t. production (not a constant offset; also rows that fitted fine before, e.g. row 63 j=40 1.57 -> ~0.5,
+  and points next to the minimum move by +-0.17) => the fit result depends on the starting POI values
+  (= the state in which the snapshot is taken, `snap` is taken after nll0 = nll.getVal() in MultiDimFit::doGrid).
+  Production (start k=0) is self-consistent with strategy 1 to ~0.1. Not understood; to settle before re-running points.
+
 ### Profiled fits
 - In progress on triple_diff, see `profiled_fits.md`. test2 used the old v3_2d card (w11 without variations):
   redo on `triple_diff_w11export`.
