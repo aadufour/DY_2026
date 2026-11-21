@@ -4,6 +4,7 @@ Width of the 1D 95% intervals (2dNLL = 4 crossings), production B vs production 
 stat+syst and stat-only. Flags scans whose crossing is not clean:
   edge  : fewer than 2 crossings (interval = scan range edge, i.e. the scan range is too small or the curve is broken)
   multi : more than 2 crossings (non-parabolic / several minima)
+  coarse: fewer than 5 scan points with 2dNLL < 4 on one side (interval not resolved by the grid, see adapt_scan_ranges.py)
 
 Usage: compare_1d_widths.py <config_dir_A> <config_dir_B> [--labels v3 N80] [--vars mll rapll_abs ...] [-o out.md]
 """
@@ -16,6 +17,7 @@ p = argparse.ArgumentParser()
 p.add_argument("A"); p.add_argument("B")
 p.add_argument("--labels", nargs=2, default=["A", "B"])
 p.add_argument("--vars", nargs="+", default=["mll", "rapll_abs", "costhetastar", "triple_diff"])
+p.add_argument("--subdir", default="", help="scans in <vardir>/<subdir> (e.g. rescan)")
 p.add_argument("-o", "--out", default="")
 a = p.parse_args()
 
@@ -28,13 +30,16 @@ def interval(f, op):
     idx = np.where(s[1:] * s[:-1] < 0)[0]
     xs = [x[i] + (4 - y[i]) * (x[i + 1] - x[i]) / (y[i + 1] - y[i]) for i in idx]
     flag = "edge" if len(xs) < 2 else ("multi" if len(xs) > 2 else "")
+    x0 = x[np.argmin(y)]
+    if min(np.sum((y < 4) & (x < x0)), np.sum((y < 4) & (x > x0))) < 5:
+        flag = (flag + " coarse").strip()
     lo, hi = (min(xs), max(xs)) if len(xs) >= 2 else (x.min() if not xs or xs[0] > 0 else xs[0], x.max() if not xs or xs[0] < 0 else xs[0])
     return lo, hi, flag
 
 
 lines = []
 for v in a.vars:
-    da, db = [f"{c}/datacards/inc_mm/{v}" for c in (a.A, a.B)]
+    da, db = [f"{c}/datacards/inc_mm/{v}/{a.subdir}".rstrip("/") for c in (a.A, a.B)]
     ops = sorted({os.path.basename(f).split(".")[1] for f in glob.glob(f"{db}/higgsCombine.*.individual.MultiDimFit.mH125.root")
                   if "_stat" not in f})
     lines += [f"\n### {v}: 95% width ratio {a.labels[1]}/{a.labels[0]} (< 1 = {a.labels[1]} tighter)", "",
