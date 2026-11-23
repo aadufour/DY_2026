@@ -110,6 +110,41 @@ v3_pdfcut and v3_2d shapes are identical except for the w11 templates.
   (= the state in which the snapshot is taken, `snap` is taken after nll0 = nll.getVal() in MultiDimFit::doGrid).
   Production (start k=0) is self-consistent with strategy 1 to ~0.1. Not understood; to settle before re-running points.
 
+### 2D w11export refit of bad points (2026-11-21) — ON HOLD, ask Giacomo whether to pursue
+- Single-point refits of the bad points inside 95% (missing / error / outlier from `check_2d_scans.py --list-out`), same
+  command as production (same snapshot, start k=0) except the minimizer; `refit_2d_points.py prepare|merge`. Merge keeps,
+  per grid node, the lower 2dNLL of production and refit; `final/` repointed to `full/<tag>/merged/` (previous targets in
+  `full/<tag>/final_before.txt`, production pass2/pass3 files untouched). Then runPlots, overlays, EOS (same 3 folders,
+  overwritten). Chains: `inc_mm/refit_chain.sh`, `refit2_chain.sh` (logs next to them).
+- Settings tested on single points (`~/work/scratch_refit_test/`, round2/):
+  - production (strategy 0, fallback Migrad0:0.2) reproduces the failures.
+  - F = strategy 2 + fallbacks Migrad0:0.2 -> Simplex0:0.1 -> Migrad1:0.2: fixes most outliers and missing points.
+    No effect: MINIMIZER_analytic off, --cminPreScan.
+  - G = F + --cminDefaultMinimizerTolerance=0.01, fallbacks tight first: Migrad1:0.01 -> Simplex0:0.01 -> Migrad2:0.05
+    -> Migrad0:0.2. Reason: in F the loose Migrad0:0.2 fallback returns a "valid" false minimum, so the better ones never
+    run. G recovered all 12 test points that F lost (values = neighbour median within ~0.05).
+- Round 1 (F, `full/refit/`): mll 2410 points (249 pairs), triple_diff 168 (29 pairs); 0 failed jobs.
+  mll: 2305 recovered, 60 lowered, 26 not lower. triple_diff: 64 recovered, 99 lowered, 5 not lower.
+- Round 2 (G, `full/refit2/`, cQl1_cQl3 excluded: flat by cQl1 = cQl3): mll 36 points, triple_diff 23.
+  mll: 30 recovered, 6 lowered. triple_diff: 7 recovered, 14 lowered, 2 not lower.
+- After round 2 (inside 95%; "error status" counts in `check_2d_refit2.txt` refer to the pre-refit pass2 logs, ignore):
+
+  | | mll before -> after | triple_diff before -> after |
+  |---|---|---|
+  | missing | 2324 -> 0 | 64 -> 2 |
+  | outliers > 1 | 20 -> 12 (8 in cQl1_cQl3) | 99 -> 23 (7 pairs) |
+
+- Left, not understood: (a) isolated triple_diff spikes ~+5 (cHQ1_clu i,j=77,40: 9.52 vs neighbours 4.5; cHl1_ced
+  21,57: 10.05 vs 5.4) identical under 8 settings (F, G, tolerance, Combined, preScan, no analytic, no stepSize,
+  no FITTER_BOUND); minimizer never converges (EDM 0.16 -> 0.009), only the loose last fallback returns a value.
+  Warm start from a neighbour is awkward: with -t -1 a different snapshot changes the Asimov. (b) mll cbWRe_clj1: two
+  interleaved branches (~3.5 and ~5.5-7) over a band of points; the outlier check catches only part of it.
+  (c) relation to the start-value dependence above (missing points section): the refits use the production start, so
+  they are consistent with production, but the dependence itself is open.
+- Rejected submission: the first prepare wrote a scan.sub still queueing pass2's joblist (path spelled /grid_mnt vs
+  ~/work); 1404 jobs removed while idle, none ran; only condor event lines appended to `pass2/condor_scan_bundled/logs/*.log`.
+  Fixed (scan.sub written explicitly, asserts no pass2 path).
+
 ### Profiled fits
 - In progress on triple_diff, see `profiled_fits.md`. test2 used the old v3_2d card (w11 without variations):
   redo on `triple_diff_w11export`.
@@ -124,7 +159,8 @@ v3_pdfcut and v3_2d shapes are identical except for the w11 templates.
 - top: `eft_summary_multivar.*`
 - `<var>/`: `eft_summary_two_panel.*`, `scan/` (1D), `dist/`, `nuis_combine/`, `nuis_eft/`, `prefit/` (datacard prefit, Asimov, no EFT, +1sigma shift per nuisance; `plot_prefit_datacard.py`, 2026-11-19)
 - `2D_mll/`, `2D_triple_diff/` (runPlots.py, 351 each), `2D_mll_vs_triple_diff/` (overlay_<pair>, 351): fixed `*_w11export`
-  cards (2026-11-20; uploaded as `*_w11`, renamed after deleting the old folders, which are in the EOS recycle bin)
+  cards (2026-11-20; uploaded as `*_w11`, renamed after deleting the old folders, which are in the EOS recycle bin);
+  overwritten 2026-11-21 with the refit grids (rounds 1+2, see "refit of bad points")
 - `checks/`: `quad_terms_mll.png`, `mll_2d_10k_vs_40k_vs_strict.png`
 - Push: `eos_tools/push_v3_to_eos.sh` (1D + summaries, `--overwrite`), 2D via `run_2d_perpair.sh`; all through `pushtoEOS_parallel.py`.
 

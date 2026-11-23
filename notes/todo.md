@@ -15,8 +15,13 @@
 ## From Giacomo (Mattermost, 2026-11-19)
 - [x] ROOT CAUSE of the bad 2D scans: w11 without shape variations (forgotten step). Applied with exportNuisances.py
       -> `{mll,triple_diff}_w11export`; 2D production relaunched 17:48 (tmux w11_mll, w11_td). See propcorr_v3.md.
-- [ ] When the w11 production is done: check FASTEXIT/errors per pair, mll vs triple_diff overlays (no cubic spline),
-      push, redo profiled fits (test2 superseded) on triple_diff_w11export.
+- [x] When the w11 production is done: check FASTEXIT/errors per pair, mll vs triple_diff overlays (no cubic spline),
+      push (2026-11-20). Profiled redo on triple_diff_w11export: separate fork / profiled_fits.md.
+- [ ] ASK GIACOMO (Mon 2026-11-23): do we need to chase the remaining bad 2D grid points? Refit rounds 1+2 done
+      (2026-11-21, propcorr_v3.md "refit of bad points"): inside 95% missing mll 2324 -> 0, triple_diff 64 -> 2;
+      outliers mll 20 -> 12 (8 in flat cQl1_cQl3), triple_diff 99 -> 23. Left: deterministic triple_diff spikes
+      (+5, any minimizer setting), mll cbWRe_clj1 two-branch surface, start-value dependence of the grid fits.
+      Also ask: adopt setting G (strategy 2, tol 0.01, tight fallbacks first) as runScans.py default?
 - [ ] LATER, before profiled fits on the full set: cQl1==cQl3 and cHQ1==cHQ3 (topU3l, identical mg5 weights) ->
       define ONE operator each, e.g. cQl13 = cQl1 + cQl3 and cHQ13 = cHQ1 + cHQ3, then do the profiled fits.
       Identical templates => yield depends only on the sum, so in practice: use the cQl1/cHQ1 templates as cQl13/cHQ13,
