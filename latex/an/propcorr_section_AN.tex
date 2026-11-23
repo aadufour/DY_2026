@@ -54,7 +54,9 @@ counts as one dimension-six insertion. The process is generated with:
 
 \begin{verbatim}
 import model SMEFTsim_topU3l_MwScheme_UFO-all_massless
+define p = p b b~
 generate p p > mu+ mu- QCD=0 SMHLOOP=0 NPall<=2 NPprop^2<=2
+add process p p > mu+ mu- j SMHLOOP=0 NPall<=2 NPprop^2<=2
 \end{verbatim}
 
 \noindent At amplitude level, \texttt{NPall<=2} allows either one dimension-six
