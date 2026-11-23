@@ -105,6 +105,13 @@ the individual intervals are already systematics-dominated (cHj1 68% +-0.044 vs 
 and the operator correlations matter much less once the nuisances are profiled. To check: stat-only profiled
 scans (`--stat`), which should reproduce the Fisher ratios. Plots `profiled/plots/scan_profiled_<op>.png`.
 
+### test2 on triple_diff_w11export (2026-11-23, same 5 operators, ranges, 200 points)
+LLR `propcorr_v3_2d/datacards/inc_mm/triple_diff_w11export/profiled/test2/` (run.sh, post.sh, plots/).
+~1 min per operator, all 200 points converged, no error status. Intervals IDENTICAL to the old test2 at the grid
+resolution (table above still holds); point by point the 2dNLL curves differ by < 0.11 (clj1: up to 1.5 at the
+far edge, 2dNLL ~111). Expected: w11 enters as c_i*c_j, so its missing shape variations matter far from the
+minimum (where the 2D scans broke), not near it. Fisher+systs reproduces these ratios (table above).
+
 ## Next
 - Check test2 against the Fisher prediction; then the 12-operator set (condor, `--condor` +
   `bundle_scan_jobs.py`, short queue), and stat-only profiled for comparison.
