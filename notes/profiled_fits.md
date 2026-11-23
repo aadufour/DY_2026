@@ -112,6 +112,35 @@ resolution (table above still holds); point by point the 2dNLL curves differ by 
 far edge, 2dNLL ~111). Expected: w11 enters as c_i*c_j, so its missing shape variations matter far from the
 minimum (where the 2D scans broke), not near it. Fisher+systs reproduces these ratios (table above).
 
+### set16 (2026-11-23, greedy Fisher+systs set, triple_diff_w11export)
+`cHWB,cHbq,cHd,cHe,cHj1,cHj3,cHu,cQe,cQl1,cbBRe,cbWRe,cbe,cbl,ceu,cje,clj1` (cHDD, cHl3, cll1 dropped for the 3
+flat directions). LLR `triple_diff_w11export/profiled/set16/` (metadata_profiled.json = 4x individual 95% from
+v3_pdfcut 1D, condor/ = 16 short jobs, cluster 824068, post.sh). 200 points; 1-3 missing points in 6 scans, inside
+95% only for cHWB (3, 2dNLL~2.5), cHe (2, ~4.6-5.1), cHj3 (1, ~0.6): no interval crossing falls in a gap.
+EOS: https://aldufour.web.cern.ch/RECO3D_propcorr_v3/profiled_triple_diff/ (plots + intervals.txt).
+
+| op | ind 68% | prof 68% | ratio 68% | ratio 95% | Fisher+systs |
+|---|---|---|---|---|---|
+| cHj3 | ±0.0232 | [-0.0373,+0.0591] | 2.08 | 1.84 | 1.8 |
+| cbWRe | [-0.34,+0.39] | [-0.56,+0.90] | 2.02 | 1.57 | 2.3 |
+| cHWB | ±0.0054 | [-0.0125,+0.0074] | 1.85 | 1.64 | 1.6 |
+| ceu | ±0.0042 | [-0.0056,+0.0088] | 1.71 | 1.84 | 1.4 |
+| cHe | ±0.0161 | [-0.0233,+0.0283] | 1.60 | 1.52 | 1.5 |
+| cHbq | ±0.126 | [-0.170,+0.201] | 1.47 | 1.43 | 1.5 |
+| cbBRe | [-0.53,+0.65] | [-0.81,+0.90] | 1.46 | 1.28 | 2.3 |
+| cQe | [-0.17,+0.19] | ±0.254 | 1.41 | 1.32 | 1.7 |
+| cQl1 | [-0.26,+0.19] | [-0.32,+0.29] | 1.36 | 1.30 | 1.4 |
+| cbe | [-0.24,+0.19] | [-0.30,+0.28] | 1.36 | 1.29 | 1.3 |
+| cHu | ±0.065 | ±0.0875 | 1.35 | 1.38 | 1.3 |
+| cbl | [-0.25,+0.21] | [-0.30,+0.29] | 1.28 | 1.24 | 1.2 |
+| cHj1 | ±0.044 | ±0.054 | 1.23 | 1.10 | 1.1 |
+| clj1 | [-0.0055,+0.0065] | [-0.0068,+0.0072] | 1.17 | 1.31 | 1.1 |
+| cje | [-0.0065,+0.0146] | [-0.0079,+0.0163] | 1.15 | 1.19 | 1.4 |
+| cHd | ±0.046 | ±0.0508 | 1.10 | 1.10 | 1.1 |
+
+All 16 constrained with others floating; widening 1.1-2.1, in line with the linear Fisher+systs (largest
+differences cbBRe, cQe lower; ceu higher). Profiled intervals become asymmetric (quadratic terms + correlations).
+
 ## Next
 - Check test2 against the Fisher prediction; then the 12-operator set (condor, `--condor` +
   `bundle_scan_jobs.py`, short queue), and stat-only profiled for comparison.
