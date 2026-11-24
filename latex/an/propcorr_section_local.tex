@@ -85,14 +85,11 @@ expansion in a single sample, we added to the model an interaction order
 counts as two units and each $Z'$ vertex as one, so a single $Z'$ propagator
 counts as one dimension-six insertion. The process is generated with:
 
-% src: proc card DYSMEFTMll{bin}_1j_propcorr (genproductions cards/DY_SMEFT_Gridpacks/,
-%      identical in all 7 bins; checked in the 50_120 tarball process/madevent/Cards/proc_card_mg5.dat,
-%      2026-11-23), relevant lines only. j = g u c d s u~ c~ d~ s~ (no b); MLM, xqcut 15, ptj 10.
+% src: proc card DYSMEFTMll50_120_propcorr_proc_card.dat (genproductions
+%      cards/DY_SMEFT_Gridpacks/), relevant lines only.
 \begin{verbatim}
 import model SMEFTsim_topU3l_MwScheme_UFO-all_massless
-define p = p b b~
 generate p p > mu+ mu- QCD=0 SMHLOOP=0 NPall<=2 NPprop^2<=2
-add process p p > mu+ mu- j SMHLOOP=0 NPall<=2 NPprop^2<=2
 \end{verbatim}
 
 % src: [G] Sec. 8.2.2 (XX=n at amplitude level, XX^2 at squared-amplitude level);
@@ -110,6 +107,17 @@ Gridpacks with propagator corrections are produced in the same seven
 $m_{\ell\ell}$ bins as those without, with the same restriction card and the same
 406 reweighting points (SM point, $\pm1$ for each operator, and all operator
 pairs). For the validation at LHE level, 100k events per bin are generated.
+
+Gridpacks including the one-jet process are produced with the same model,
+restriction card, $m_{\ell\ell}$ bins and reweighting points, with:
+
+\begin{verbatim}
+generate p p > mu+ mu- QCD=0 SMHLOOP=0 NPall<=2 NPprop^2<=2
+add process p p > mu+ mu- j SMHLOOP=0 NPall<=2 NPprop^2<=2
+\end{verbatim}
+
+\noindent The zero- and one-jet multiplicities are merged with the MLM scheme
+(\texttt{xqcut = 15}\GeV).
 % NanoAOD production deliberately not described here: the samples used for the
 % results are Giacomo's large production (ask him how he wants it documented).
 

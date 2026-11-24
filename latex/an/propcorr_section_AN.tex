@@ -54,9 +54,7 @@ counts as one dimension-six insertion. The process is generated with:
 
 \begin{verbatim}
 import model SMEFTsim_topU3l_MwScheme_UFO-all_massless
-define p = p b b~
 generate p p > mu+ mu- QCD=0 SMHLOOP=0 NPall<=2 NPprop^2<=2
-add process p p > mu+ mu- j SMHLOOP=0 NPall<=2 NPprop^2<=2
 \end{verbatim}
 
 \noindent At amplitude level, \texttt{NPall<=2} allows either one dimension-six
@@ -69,6 +67,17 @@ Gridpacks with propagator corrections are produced in the same seven
 $m_{\ell\ell}$ bins as those without, with the same restriction card and the same
 406 reweighting points (SM point, $\pm1$ for each operator, and all operator
 pairs). For the validation at LHE level, 100k events per bin are generated.
+
+Gridpacks including the one-jet process are produced with the same model,
+restriction card, $m_{\ell\ell}$ bins and reweighting points, with:
+
+\begin{verbatim}
+generate p p > mu+ mu- QCD=0 SMHLOOP=0 NPall<=2 NPprop^2<=2
+add process p p > mu+ mu- j SMHLOOP=0 NPall<=2 NPprop^2<=2
+\end{verbatim}
+
+\noindent The zero- and one-jet multiplicities are merged with the MLM scheme
+(\texttt{xqcut = 15}\GeV).
 
 At the generation point, with all operators at unitary Wilson coefficient, the
 propagator correction changes the cross section by $-8.4\%$ in the
