@@ -1,4 +1,4 @@
-## Questions for Giacomo (2026-11-17)
+## Questions for Giacomo (from 2026-11-25, after the SMP-26-014 preapproval)
 - [ ] propcorr: quad = (w1+wm1)/2 - sm < 0 for cHj3 and cll1 in the Z-peak mll bin (q/sm ~ -4e-4, ~0.5-0.8% of lin).
       Identical in propcorr_v1, v1_minnlo, v3; absent in eft_bkg_fullsyst_v9 (no propagator correction).
       All full templates (sm, w1, wm1, w11) >= 0. Expected from the propagator/width expansion at O(c^2), or a gridpack issue?
@@ -6,39 +6,37 @@
       Also at LHE level (post-fix propcorr cache): mll [80-100] quad/SM = -3.9e-4 (cHj3), -3.0e-4 (cll1), ~22 sigma MC stat;
       all 20 Z-peak triple_diff bins negative -> generator-level, not reco/morphing (2026-11-17).
 - [ ] Negative background bins (DYtt ~ -0.1 ev in 3 triple_diff bins, TT ~ -0.03 in 2): clip to 0 / small positive and document, or leave as is?
+- [ ] Do we need to chase the remaining bad 2D grid points? Refit rounds 1+2 done (2026-11-21, propcorr_v3.md
+      "refit of bad points"): inside 95% missing mll 2324 -> 0, triple_diff 64 -> 2; outliers mll 20 -> 12 (8 in flat
+      cQl1_cQl3), triple_diff 99 -> 23. Left: deterministic triple_diff spikes (+5, any minimizer setting), mll
+      cbWRe_clj1 two-branch surface, start-value dependence of the grid fits.
+      Also: adopt setting G (strategy 2, tol 0.01, tight fallbacks first) as runScans.py default?
+- [ ] Lin-only / quad-only fits (relevance of missing dim-8, validity of the linear approx, sm+lin vs full):
+      check his model on Mattermost first (createWS.py options; separate fork).
+- [ ] EFT-template MC noise (binning_study.md, N80 nuisance study): most of the N80 1D gain is an artefact of noisy
+      EFT linear templates (reweighting from all-ops=1, n_eff 0.2-48% per slice), not covered by autoMCStats.
+      Options: smooth/fit the EFT templates, min EFT n_eff per bin, or EFT template MC stat in the likelihood.
 
-## Same-binning study (2026-11-20, notes/binning_study.md)
-- [ ] sm template weight outliers: propcorr SM is reweighted from all-ops=1; LHE 200-400 slice has one event with
-      SM/gen weight x782 (n_eff 1%). Check the reco sm template (n_eff per bin, spikes) in v3 and N80.
-- [ ] run the chain on spritz_fabian/configs/same_binning_N80 and compare limits with v3
+## Analysis, open
+- [ ] EFT-template MC noise: check how much the v3 triple_diff (280 bins) moves (smoothed EFT templates).
+- [ ] sm template weight outliers: LHE 200-400 slice has one event with SM/gen weight x782 (n_eff 1%).
+      Check the reco sm template (n_eff per bin, spikes) in v3 and N80.
+- [ ] Profiled fits on the full set: combine cQl1+cQl3 -> cQl13, cHQ1+cHQ3 -> cHQ13 (identical templates: use the
+      cQl1/cHQ1 templates, drop cQl3/cHQ3 and their w11; check w11_cHQ1_cHQ3 = sm + 2*lin + 4*quad).
+      set16 on triple_diff_w11export done 2026-11-23 (profiled_fits.md, EOS profiled_triple_diff/): ratios 1.1-2.1.
+      3 exactly flat linear directions (cHl1, cll1, cHe, cHj3, cHl3, cHDD, cHWB): all 25 cannot be profiled together.
+- [ ] FASTEXIT: after the w11 fix only at 2dNLL >> 100 (huge EFT effects, nuisances pulled far), see propcorr_v3.md.
+      If needed, Giacomo's "usual method": run with NO nuisances, then add them back in blocks. Also costhetastar / rapll_abs?
+- [ ] Summary plot: fix for operators with two minima (yll, costheta) (Govoni)
+- [ ] MC stat uncertainty in the fits: already implemented, just check it is on (13 Oct)
 
-## From Giacomo (Mattermost, 2026-11-19)
-- [x] ROOT CAUSE of the bad 2D scans: w11 without shape variations (forgotten step). Applied with exportNuisances.py
-      -> `{mll,triple_diff}_w11export`; 2D production relaunched 17:48 (tmux w11_mll, w11_td). See propcorr_v3.md.
-- [x] When the w11 production is done: check FASTEXIT/errors per pair, mll vs triple_diff overlays (no cubic spline),
-      push (2026-11-20). Profiled redo on triple_diff_w11export: separate fork / profiled_fits.md.
-- [ ] ASK GIACOMO (after the SMP-26-014 preapproval of 2026-11-24, i.e. from 2026-11-25): do we need to chase the remaining bad 2D grid points? Refit rounds 1+2 done
-      (2026-11-21, propcorr_v3.md "refit of bad points"): inside 95% missing mll 2324 -> 0, triple_diff 64 -> 2;
-      outliers mll 20 -> 12 (8 in flat cQl1_cQl3), triple_diff 99 -> 23. Left: deterministic triple_diff spikes
-      (+5, any minimizer setting), mll cbWRe_clj1 two-branch surface, start-value dependence of the grid fits.
-      Also ask: adopt setting G (strategy 2, tol 0.01, tight fallbacks first) as runScans.py default?
-- [ ] LATER, before profiled fits on the full set: cQl1==cQl3 and cHQ1==cHQ3 (topU3l, identical mg5 weights) ->
-      define ONE operator each, e.g. cQl13 = cQl1 + cQl3 and cHQ13 = cHQ1 + cHQ3, then do the profiled fits.
-      Identical templates => yield depends only on the sum, so in practice: use the cQl1/cHQ1 templates as cQl13/cHQ13,
-      drop cQl3/cHQ3 (and their w11). Quick check that the sum is the only combination: if the yield is a function of
-      c1+c3 only, then w11_cHQ1_cHQ3 = sm + 2*lin + 4*quad (lin, quad of cHQ1), i.e. mixed term = 2*quad. Same for cQl.
-- [ ] FASTEXIT ("fit not reliable" if it happens): 4277 in mll 2D scans (always bin 0, 40-60 GeV), 339 in triple_diff.
-      Giacomo: "usual method" -> run with NO nuisances, then add them back in blocks until the error appears.
-      Context: nuisances run away to 1e2-1e7 sigma; bin 0 needs >=30 sigma of one nuisance to go negative at
-      large |c| (never at SM); see propcorr_v3.md 2D section. Open question: also for costhetastar / rapll_abs?
-- [x] Prefit plots for mll + triple_diff (blind, SM only is fine): RECO3D_propcorr_v3/<var>/prefit/ (2026-11-19)
-
-PRIORITY (2026-11-12), after the PDF-cut approach is validated on propcorr_v3_pdfcut:
-- [ ] Cross-term (w11) production for 2D scans: smart/optimised scripts for the whole chain
-      (run jobs -> merge -> postproc), FULL (all theory variations), megahisto-style batching of EFT templates
-      (as in spritz_giacomo runner_3DY_eft_full_morphing_megahisto.py); test a few jobs for memory/time first.
-      Before porting: git fetch in spritz_giacomo to check for newer upstream versions. mll + triple_diff.
-      Current state: propcorr_v2 histos predate the gridpack fix, datacards empty; v3_pdfcut has no cross terms.
+## Done (recent)
+- [x] w11 cross terms for 2D (propcorr_v3_2d, mll + triple_diff) + exportNuisances step (`*_w11export`), 2D scans,
+      overlays, EOS (2026-11-19/20); bad-point refits (2026-11-21).
+- [x] Prefit plots for mll + triple_diff: RECO3D_propcorr_v3/<var>/prefit/ (2026-11-19)
+- [x] Same-binning N80 chain run + compared with v3 (2026-11-21, binning_study.md, EOS RECO3D_same_binning_N80/)
+- [x] Profiled test2 redone on triple_diff_w11export (unchanged) + set16 (2026-11-23)
+- [x] AN propcorr section (§7.3) + one-jet gridpack paragraph in §7.3.1 (2026-11-24)
 
 # THESIS PLAN (2026-11-03)
 Analysis work is over (talk before pre-approval done). Goal: final presentation + thesis (read by Govoni).
@@ -52,21 +50,14 @@ Decided with Giacomo (2026-11-05):
 - theory uncertainties: PORT THE MiNNLO WAY (per-variation k = MiNNLO_V / LO_sm_V, as Fabian's renormalize_hists):
   SM part at NNLO, only EFT/SM at LO. Postproc-only change -> post_process_minnlo.py
 
-Analysis
-- [ ] Linear vs quadratic fits (relevance of missing dim-8), with the existing propcorr_v1 templates (13 Oct)
-- [ ] Lean cross-term reprocessing (config_propcorr_v1_crossterms / v2, see notes/combine_2Dscans.md):
-      no Rochester stat toys, no theory variations; lumi + autoMCStats + basic exp. systs. Needed for 2D and profiled.
-      Decide: mll only, or also triple_diff?
-- [ ] 2D operator scans WITH cross terms (13 Oct)
-- [ ] Full profiled fit: largest constrainable operator set (13 Oct, Govoni 23 Sep)
-- [ ] MC stat uncertainty in the fits: already implemented, just check it is on (13 Oct)
-- [ ] Summary plot: fix for operators with two minima (yll, costheta) (Govoni)
+Analysis: see "Analysis, open" at the top.
 
-Plots (only what is visually wrong)
+Plots (only what is visually wrong; spritz-eft-plot list below)
 - [ ] axis labels: mll and 3D Events/GeV, rapll/costheta Events (Roberto)
+- [ ] stat uncertainty band (another colour, separate from syst) (Roberto)
 
 Writing only
-- [ ] propcorr section ("never done before")
+- [x] propcorr section ("never done before"): AN §7.3
 - [ ] binning variation: mention as possibility, don't pursue
 - [ ] cHQ1/cHQ3 exact degeneracy (b-quark-only process): one line
 
@@ -80,8 +71,6 @@ PARKED: everything below is NOT for the thesis (kept for reference)
 
 - [x] combine fits still says 138 fb^-1 -> to change (just visual!)
 
----
-- [ ] WRITE ON THE NOTE?? For sure this part on propcorr ("never done by anyone before")
 
 ----
 
@@ -93,16 +82,6 @@ checkPositibity assume shapes che si chiamano "sm", "quad_" mentre tu hai "sm", 
 - [ ] tolgo QCD scale dai fit.
 - [ ] alphaS entra?
 
-----------
-- [ ]
-
-------------
-
-
-
-
-- [ ] Introduce mixed terms fo 2D fits
-    - cannot MERGE them!
 ----
 
 - [ ] check SM of this plot against by SMEFTsim SM (reweighting weight)(l'ha fatto fiacomo nella '/Users/albertodufour/Desktop/3DY_Fabian_Samples_LO - Presentazioni Google.pdf')
@@ -120,33 +99,15 @@ checkPositibity assume shapes che si chiamano "sm", "quad_" mentre tu hai "sm", 
 
 
 ---
-
-2. [ ] cHQ1 and cHQ3 are the same!
-
-
--------
-
-
-3. [x] Plots with SAME BINNING FOR EACH VARIABLE! 
-
----
-
-
-4. [ ] Scan with ONLY LINEAR/QUADRATIC (maybe very close to c=0) -> check giacomos model on mattermost
-
----
 roberto
 - [ ] ceu vs clu (fattore 3?)
-- [ ] add stat uncertainty band (another color, unrelated to the systematic)
-- [ ] mll e 3D sono events/GeV!!
 - [ ] make better plots for the ratios of propcorr/baseline
+(stat band and Events/GeV labels: in "Plots" above)
 
 -----
 
 - [ ] FABIAN UPDATED THE REPO?? (anche no)
 
------
-- [ ] need to check for validity of the linear approx? e.g. checking sm+lin vs full. chiedo a giacomo
 
 -----
 Meeting notes moved to notes/meetings.md (2026-10-03)
