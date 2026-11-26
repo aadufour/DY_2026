@@ -6,13 +6,13 @@
       Also at LHE level (post-fix propcorr cache): mll [80-100] quad/SM = -3.9e-4 (cHj3), -3.0e-4 (cll1), ~22 sigma MC stat;
       all 20 Z-peak triple_diff bins negative -> generator-level, not reco/morphing (2026-11-17).
 - [ ] Negative background bins (DYtt ~ -0.1 ev in 3 triple_diff bins, TT ~ -0.03 in 2): clip to 0 / small positive and document, or leave as is?
-- [ ] Do we need to chase the remaining bad 2D grid points? Refit rounds 1+2 done (2026-11-21, propcorr_v3.md
-      "refit of bad points"): inside 95% missing mll 2324 -> 0, triple_diff 64 -> 2; outliers mll 20 -> 12 (8 in flat
-      cQl1_cQl3), triple_diff 99 -> 23. Left: deterministic triple_diff spikes (+5, any minimizer setting), mll
-      cbWRe_clj1 two-branch surface, start-value dependence of the grid fits.
-      Also: adopt setting G (strategy 2, tol 0.01, tight fallbacks first) as runScans.py default?
+- [x] Remaining bad 2D grid points: Giacomo 2026-11-25 "per la tesi direi che va bene così" -> leave as is.
+      (Refit rounds 1+2, propcorr_v3.md "refit of bad points"; left: isolated stuck spikes, e.g. cHl1_ced, strict
+      minimizers never converge there, only the loose last fallback returns a value.)
+      Still open (minor): adopt setting G (strategy 2, tol 0.01, tight fallbacks first) as runScans.py default?
 - [ ] Lin-only / quad-only fits (relevance of missing dim-8, validity of the linear approx, sm+lin vs full):
-      check his model on Mattermost first (createWS.py options; separate fork).
+      formulas (Giacomo's whiteboard + N-operator generalisation) in notes/lin_quad_only.md. No combine model yet;
+      Giacomo will look at it soon (2026-11-25) -> pick up his version if it comes, else implement.
 - [ ] EFT-template MC noise (binning_study.md, N80 nuisance study): most of the N80 1D gain is an artefact of noisy
       EFT linear templates (reweighting from all-ops=1, n_eff 0.2-48% per slice), not covered by autoMCStats.
       Options: smooth/fit the EFT templates, min EFT n_eff per bin, or EFT template MC stat in the likelihood.
